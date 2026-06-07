@@ -21,8 +21,8 @@ export function Footer() {
               <MapPin className="h-4 w-4" /> Dirección
             </h3>
             <p className="text-sm text-gray-400">
-              [Dirección de la Iglesia]<br />
-              [Ciudad, País]
+              Gasolinera Uno Tipitapa. 10c 1/2 al Oeste.<br />
+              Tipitapa, Nicaragua
             </p>
           </div>
 
@@ -31,8 +31,8 @@ export function Footer() {
               <Phone className="h-4 w-4" /> Contacto
             </h3>
             <p className="space-y-1 text-sm text-gray-400">
-              <span className="flex items-center gap-2"><Phone className="h-3 w-3" /> [Teléfono]</span>
-              <span className="flex items-center gap-2"><Mail className="h-3 w-3" /> [Email]</span>
+              <span className="flex items-center gap-2"><Phone className="h-3 w-3" /> 8438-6180 / 8321-2177</span>
+              <span className="flex items-center gap-2"><Mail className="h-3 w-3" /> iglesiamadreesf@gmail.com</span>
             </p>
           </div>
         </div>
