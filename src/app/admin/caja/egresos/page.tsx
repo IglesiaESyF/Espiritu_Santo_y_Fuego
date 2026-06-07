@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Camera, User } from 'lucide-react'
+import { ArrowLeft, Save, Camera, User, X } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,13 +10,16 @@ import { CATEGORIAS_EGRESO } from '@/types'
 
 export default function NuevoEgresoPage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [categoria, setCategoria] = useState('')
   const [monto, setMonto] = useState('')
   const [concepto, setConcepto] = useState('')
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
-  const [ingresadoPor, setIngresadoPor] = useState('')
+  const [solicitadoPor, setSolicitadoPor] = useState('')
+  const [aprobadoPor, setAprobadoPor] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [fotoFactura, setFotoFactura] = useState('')
+  const [fotoPreview, setFotoPreview] = useState('')
   const [firmaTesorera, setFirmaTesorera] = useState('')
   const [firmaSolicitante, setFirmaSolicitante] = useState('')
   const [firmaPastor, setFirmaPastor] = useState('')
@@ -24,16 +27,34 @@ export default function NuevoEgresoPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem('iesfuego-user')
-    if (saved) setIngresadoPor(saved)
+    if (saved) setSolicitadoPor(saved)
   }, [])
 
   useEffect(() => {
     setShowFirmas(categoria === 'actividades')
   }, [categoria])
 
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string
+      setFotoPreview(dataUrl)
+      setFotoFactura(dataUrl)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const clearFoto = () => {
+    setFotoPreview('')
+    setFotoFactura('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (ingresadoPor) localStorage.setItem('iesfuego-user', ingresadoPor)
+    if (solicitadoPor) localStorage.setItem('iesfuego-user', solicitadoPor)
     // TODO: save to Firebase
     router.push('/admin/caja')
   }
@@ -92,14 +113,28 @@ export default function NuevoEgresoPage() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                <User className="mr-1 inline h-4 w-4" /> Ingresado por
+                <User className="mr-1 inline h-4 w-4" /> Dinero Solicitado por
               </label>
               <input
                 type="text"
-                value={ingresadoPor}
-                onChange={(e) => setIngresadoPor(e.target.value)}
-                placeholder="Tu nombre"
+                value={solicitadoPor}
+                onChange={(e) => setSolicitadoPor(e.target.value)}
+                placeholder="Nombre de quien solicita"
                 className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Aprobado por
+              </label>
+              <input
+                type="text"
+                value={aprobadoPor}
+                onChange={(e) => setAprobadoPor(e.target.value)}
+                placeholder="Nombre de quien aprueba"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
                 required
               />
             </div>
@@ -109,12 +144,21 @@ export default function NuevoEgresoPage() {
                 <Camera className="mr-1 inline h-4 w-4" /> Foto de Factura <span className="text-gray-400">(opcional)</span>
               </label>
               <input
-                type="text"
-                value={fotoFactura}
-                onChange={(e) => setFotoFactura(e.target.value)}
-                placeholder="URL de la imagen"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFotoChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:text-white hover:file:bg-primary-dark focus:border-primary focus:outline-none"
               />
+              {fotoPreview && (
+                <div className="relative mt-2 inline-block">
+                  <img src={fotoPreview} alt="Vista previa" className="h-32 w-48 rounded-lg border object-cover" />
+                  <button type="button" onClick={clearFoto} className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white shadow hover:bg-red-600">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
