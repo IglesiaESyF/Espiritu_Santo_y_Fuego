@@ -46,7 +46,7 @@ export function Header() {
             href="/login"
             className="ml-2 inline-flex items-center gap-1.5 rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary hover:text-white"
           >
-            <Lock className="h-3.5 w-3.5" /> Admin
+            <Lock className="h-3.5 w-3.5" /> Identifícate
           </Link>
         </nav>
 
@@ -74,7 +74,7 @@ export function Header() {
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-2 border-t border-gray-100 px-4 py-3 text-sm font-medium text-primary"
           >
-            <Lock className="h-4 w-4" /> Admin
+            <Lock className="h-4 w-4" /> Identifícate
           </Link>
         </div>
       )}
