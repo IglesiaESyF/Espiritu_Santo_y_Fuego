@@ -8,8 +8,8 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: DollarSign, label: 'Caja', value: 'RD$ 0.00', color: 'text-green-600', bg: 'bg-green-100' },
-          { icon: TrendingUp, label: 'Ingresos del Mes', value: 'RD$ 0.00', color: 'text-blue-600', bg: 'bg-blue-100' },
+          { icon: DollarSign, label: 'Caja', value: 'C$ 0.00', color: 'text-green-600', bg: 'bg-green-100' },
+          { icon: TrendingUp, label: 'Ingresos del Mes', value: 'C$ 0.00', color: 'text-blue-600', bg: 'bg-blue-100' },
           { icon: CalendarDays, label: 'Actividades', value: '0', color: 'text-amber-600', bg: 'bg-amber-100' },
           { icon: Tv, label: 'Cultos', value: '0', color: 'text-purple-600', bg: 'bg-purple-100' },
         ].map((item) => (

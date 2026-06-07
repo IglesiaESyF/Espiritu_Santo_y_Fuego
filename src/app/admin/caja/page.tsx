@@ -22,7 +22,6 @@ export default function CajaPage() {
         </Link>
       </div>
 
-      {/* Resumen */}
       <div className="mb-6 grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
@@ -31,7 +30,7 @@ export default function CajaPage() {
             </div>
             <div>
               <p className="text-xs text-gray-500">Total Ingresos</p>
-              <p className="text-xl font-bold text-green-600">RD$ 0.00</p>
+              <p className="text-xl font-bold text-green-600">C$ 0.00</p>
             </div>
           </CardContent>
         </Card>
@@ -43,7 +42,7 @@ export default function CajaPage() {
             </div>
             <div>
               <p className="text-xs text-gray-500">Total Egresos</p>
-              <p className="text-xl font-bold text-red-600">RD$ 0.00</p>
+              <p className="text-xl font-bold text-red-600">C$ 0.00</p>
             </div>
           </CardContent>
         </Card>
@@ -55,13 +54,12 @@ export default function CajaPage() {
             </div>
             <div>
               <p className="text-xs text-gray-500">Saldo Actual</p>
-              <p className="text-xl font-bold text-blue-600">RD$ 0.00</p>
+              <p className="text-xl font-bold text-blue-600">C$ 0.00</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
       <div className="mb-4 flex gap-1 rounded-xl bg-gray-100 p-1">
         <button
           onClick={() => setTab('ingresos')}
@@ -81,7 +79,6 @@ export default function CajaPage() {
         </button>
       </div>
 
-      {/* Lista */}
       <Card>
         <CardContent className="p-6 text-center text-gray-500">
           <DollarSign className="mx-auto mb-2 h-10 w-10 text-gray-300" />

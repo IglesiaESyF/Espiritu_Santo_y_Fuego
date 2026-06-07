@@ -20,9 +20,9 @@ export default function ReportesPage() {
             </CardHeader>
             <CardContent>
               <div className="mb-4 space-y-1 text-sm text-gray-600">
-                <p>Ingresos: <span className="font-semibold text-green-600">RD$ 0.00</span></p>
-                <p>Egresos: <span className="font-semibold text-red-600">RD$ 0.00</span></p>
-                <p>Saldo: <span className="font-semibold text-blue-600">RD$ 0.00</span></p>
+                <p>Ingresos: <span className="font-semibold text-green-600">C$ 0.00</span></p>
+                <p>Egresos: <span className="font-semibold text-red-600">C$ 0.00</span></p>
+                <p>Saldo: <span className="font-semibold text-blue-600">C$ 0.00</span></p>
               </div>
               <Button variant="outline" size="sm">
                 <Download className="mr-1 h-4 w-4" /> Descargar Reporte

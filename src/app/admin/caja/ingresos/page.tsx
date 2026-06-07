@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { ArrowLeft, Save, Camera, User } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CATEGORIAS_INGRESO } from '@/types'
@@ -13,10 +13,25 @@ export default function NuevoIngresoPage() {
   const [categoria, setCategoria] = useState('')
   const [monto, setMonto] = useState('')
   const [concepto, setConcepto] = useState('')
+  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
+  const [ingresadoPor, setIngresadoPor] = useState('')
   const [descripcion, setDescripcion] = useState('')
+  const [fotoFactura, setFotoFactura] = useState('')
+  const [firmaTesorera, setFirmaTesorera] = useState('')
+  const [showFirma, setShowFirma] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('iesfuego-user')
+    if (saved) setIngresadoPor(saved)
+  }, [])
+
+  useEffect(() => {
+    setShowFirma(categoria === 'actividades')
+  }, [categoria])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (ingresadoPor) localStorage.setItem('iesfuego-user', ingresadoPor)
     // TODO: save to Firebase
     router.push('/admin/caja')
   }
@@ -49,7 +64,7 @@ export default function NuevoIngresoPage() {
             </div>
 
             <Input
-              label="Monto (RD$)"
+              label="Monto (C$)"
               type="number"
               placeholder="0.00"
               value={monto}
@@ -59,14 +74,49 @@ export default function NuevoIngresoPage() {
 
             <Input
               label="Concepto"
-              placeholder="Ej: Diezmo dominical"
+              placeholder="Ej: Ofrenda dominical"
               value={concepto}
               onChange={(e) => setConcepto(e.target.value)}
               required
             />
 
+            <Input
+              label="Fecha de Ingreso"
+              type="date"
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              required
+            />
+
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Descripción (opcional)</label>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                <User className="mr-1 inline h-4 w-4" /> Ingresado por
+              </label>
+              <input
+                type="text"
+                value={ingresadoPor}
+                onChange={(e) => setIngresadoPor(e.target.value)}
+                placeholder="Tu nombre"
+                className="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                <Camera className="mr-1 inline h-4 w-4" /> Foto de Factura <span className="text-gray-400">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={fotoFactura}
+                onChange={(e) => setFotoFactura(e.target.value)}
+                placeholder="URL de la imagen"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Descripción <span className="text-gray-400">(opcional)</span></label>
               <textarea
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
@@ -74,6 +124,22 @@ export default function NuevoIngresoPage() {
                 rows={3}
               />
             </div>
+
+            {showFirma && (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Firma de quien entrega el dinero
+                </label>
+                <input
+                  type="text"
+                  value={firmaTesorera}
+                  onChange={(e) => setFirmaTesorera(e.target.value)}
+                  placeholder="Nombre completo"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
+                  required
+                />
+              </div>
+            )}
 
             <Button type="submit" variant="primary" size="lg" className="w-full">
               <Save className="mr-2 h-4 w-4" /> Registrar Ingreso

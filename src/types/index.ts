@@ -1,10 +1,7 @@
 export const CATEGORIAS_INGRESO = [
-  { value: 'diezmo', label: 'Diezmo' },
-  { value: 'ofrenda', label: 'Ofrenda' },
-  { value: 'donacion', label: 'Donación' },
-  { value: 'evento', label: 'Evento Especial' },
-  { value: 'alquiler', label: 'Alquiler' },
-  { value: 'otro', label: 'Otro' },
+  { value: 'ofrendas', label: 'Ofrendas' },
+  { value: 'donaciones', label: 'Donaciones (Regalías)' },
+  { value: 'actividades', label: 'Actividades' },
 ] as const
 
 export const CATEGORIAS_EGRESO = [
@@ -12,8 +9,8 @@ export const CATEGORIAS_EGRESO = [
   { value: 'agua', label: 'Agua' },
   { value: 'telefono', label: 'Teléfono/Internet' },
   { value: 'mantenimiento', label: 'Mantenimiento' },
-  { value: 'salario', label: 'Salario/Pastor' },
   { value: 'evento', label: 'Gasto de Evento' },
+  { value: 'actividades', label: 'Actividades' },
   { value: 'otro', label: 'Otro' },
 ] as const
 
@@ -23,7 +20,12 @@ export interface MovimientoCaja {
   categoria: string
   monto: number
   concepto: string
-  descripcion?: string
   fecha: string
+  ingresadoPor: string
+  descripcion?: string
+  fotoFactura?: string
+  firmaTesorera?: string
+  firmaSolicitante?: string
+  firmaPastor?: string
   creadoEn: number
 }
