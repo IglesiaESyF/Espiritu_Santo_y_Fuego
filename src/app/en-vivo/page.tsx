@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Flame, Youtube, Tv, Wifi, WifiOff } from 'lucide-react'
+import { Flame, Video, Wifi, WifiOff } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,7 +10,8 @@ import { Button } from '@/components/ui/button'
 const STORAGE_KEY = 'iesfuego-live-settings'
 
 export default function EnVivoPage() {
-  const [channelId, setChannelId] = useState('')
+  const [paginaFacebook, setPaginaFacebook] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
   const [activo, setActivo] = useState(false)
   const [mensaje, setMensaje] = useState('')
 
@@ -19,12 +20,19 @@ export default function EnVivoPage() {
     if (stored) {
       try {
         const data = JSON.parse(stored)
-        setChannelId(data.channelId || '')
+        setPaginaFacebook(data.paginaFacebook || '')
+        setVideoUrl(data.videoUrl || '')
         setActivo(data.activo || false)
         setMensaje(data.mensaje || '')
       } catch {}
     }
   }, [])
+
+  const embedUrl = videoUrl
+    ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
+    : paginaFacebook
+      ? `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(paginaFacebook)}&tabs=events&width=500&height=500&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false`
+      : ''
 
   return (
     <>
@@ -36,21 +44,25 @@ export default function EnVivoPage() {
           <p className="mt-2 text-gray-600">Transmisiones en vivo de nuestros cultos</p>
         </div>
 
-        {activo && channelId ? (
+        {activo && embedUrl ? (
           <Card className="mb-8 overflow-hidden">
-            <div className="flex items-center gap-2 bg-red-500 px-4 py-2 text-white">
+            <div className="flex items-center gap-2 bg-blue-600 px-4 py-2 text-white">
               <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
               <span className="text-sm font-semibold">EN VIVO</span>
               <Wifi className="ml-auto h-4 w-4" />
             </div>
-            <div className="aspect-video w-full">
+            <div className="w-full" style={{ height: 450 }}>
               <iframe
-                src={`https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=1`}
+                src={embedUrl}
                 className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                style={{ border: 'none', overflow: 'hidden' }}
+                scrolling="no"
+                frameBorder={0}
                 allowFullScreen
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
               />
             </div>
+
           </Card>
         ) : (
           <Card className="mb-8">
@@ -70,17 +82,19 @@ export default function EnVivoPage() {
           </Card>
         )}
 
-        <div className="text-center">
-          <a
-            href={channelId ? `https://www.youtube.com/channel/${channelId}/live` : '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="primary" size="lg">
-              <Youtube className="mr-2 h-5 w-5" /> Ir a YouTube
-            </Button>
-          </a>
-        </div>
+        {paginaFacebook && (
+          <div className="text-center">
+            <a
+              href={paginaFacebook.startsWith('http') ? paginaFacebook : `https://www.facebook.com/${paginaFacebook}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="primary" size="lg">
+                <Video className="mr-2 h-5 w-5" /> Ir a Facebook
+              </Button>
+            </a>
+          </div>
+        )}
       </main>
       <Footer />
     </>

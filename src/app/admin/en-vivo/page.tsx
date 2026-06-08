@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Youtube, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Save, Video, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,8 @@ const STORAGE_KEY = 'iesfuego-live-settings'
 
 export default function AdminEnVivoPage() {
   const router = useRouter()
-  const [channelId, setChannelId] = useState('')
+  const [paginaFacebook, setPaginaFacebook] = useState('')
+  const [videoUrl, setVideoUrl] = useState('')
   const [activo, setActivo] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [saved, setSaved] = useState(false)
@@ -21,7 +22,8 @@ export default function AdminEnVivoPage() {
     if (stored) {
       try {
         const data = JSON.parse(stored)
-        setChannelId(data.channelId || '')
+        setPaginaFacebook(data.paginaFacebook || '')
+        setVideoUrl(data.videoUrl || '')
         setActivo(data.activo || false)
         setMensaje(data.mensaje || '')
       } catch {}
@@ -30,10 +32,16 @@ export default function AdminEnVivoPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ channelId, activo, mensaje }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ paginaFacebook, videoUrl, activo, mensaje }))
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
+
+  const embedUrl = videoUrl
+    ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
+    : paginaFacebook
+      ? `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(paginaFacebook)}&tabs=timeline&width=500&height=500&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false`
+      : ''
 
   return (
     <div>
@@ -48,10 +56,17 @@ export default function AdminEnVivoPage() {
         <CardContent className="p-6">
           <form onSubmit={handleSave} className="space-y-4">
             <Input
-              label="ID del Canal de YouTube"
-              placeholder="Ej: UC_X19lVhHj3U4mGkUpRqY8w"
-              value={channelId}
-              onChange={(e) => setChannelId(e.target.value)}
+              label="Nombre o URL de la página de Facebook"
+              placeholder="Ej: https://www.facebook.com/IglesiaEspirituSantoFuego"
+              value={paginaFacebook}
+              onChange={(e) => setPaginaFacebook(e.target.value)}
+            />
+
+            <Input
+              label="URL del video en vivo (opcional)"
+              placeholder="Ej: https://www.facebook.com/.../videos/..."
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
             />
 
             <div className="flex items-center gap-3">
@@ -89,45 +104,42 @@ export default function AdminEnVivoPage() {
         </CardContent>
       </Card>
 
-      {channelId && (
+      {embedUrl && (
         <Card className="mx-auto mt-6 max-w-lg">
           <CardHeader>
             <h3 className="flex items-center gap-2 font-semibold text-dark">
-              <Youtube className="h-5 w-5 text-red-500" /> Vista Previa
+              <Video className="h-5 w-5 text-primary" /> Vista Previa
             </h3>
           </CardHeader>
           <CardContent>
-            <div className="aspect-video w-full overflow-hidden rounded-lg bg-dark/5">
+            <div className="w-full overflow-hidden rounded-lg bg-dark/5" style={{ height: 400 }}>
               <iframe
-                src={`https://www.youtube.com/embed/live_stream?channel=${channelId}&autoplay=0`}
+                src={embedUrl}
                 className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                style={{ border: 'none', overflow: 'hidden' }}
+                scrolling="no"
+                frameBorder={0}
                 allowFullScreen
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
               />
             </div>
-            <a
-              href={`https://www.youtube.com/channel/${channelId}/live`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center justify-center gap-1 text-center text-sm text-primary hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" /> Abrir en YouTube
-            </a>
           </CardContent>
         </Card>
       )}
 
       <Card className="mx-auto mt-6 max-w-lg">
         <CardHeader>
-          <h3 className="font-semibold text-dark">¿Cómo transmitir?</h3>
+          <h3 className="font-semibold text-dark">Cómo transmitir desde Facebook</h3>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600">
-          <p>1. Abre YouTube en tu celular o computadora.</p>
-          <p>2. Toca el icono de <strong>"+"</strong> (crear) → <strong>"Transmitir en vivo"</strong>.</p>
-          <p>3. Configura tu transmisión y presiona <strong>"Transmitir"</strong>.</p>
-          <p>4. La página mostrará automáticamente tu live.</p>
+          <p>1. Crea una página de Facebook para la iglesia.</p>
+          <p>2. Abre la página en la app de Facebook en tu celular.</p>
+          <p>3. Toca <strong>"Publicar"</strong> → <strong>"Video en vivo"</strong>.</p>
+          <p>4. Configura y presiona <strong>"Transmitir en vivo"</strong>.</p>
+          <p>5. Vuelve acá y activa el interruptor <strong>"En Vivo ahora"</strong>.</p>
+          <p>6. Opcional: pega la URL del video para mostrarlo directamente.</p>
           <p className="mt-2 text-xs text-gray-400">
-            Asegúrate de que el ID del canal de YouTube esté configurado arriba.
+            Facebook no tiene límite de seguidores para transmitir en vivo desde páginas.
           </p>
         </CardContent>
       </Card>
