@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Menu, X, Cross as CrossIcon, Lock } from 'lucide-react'
+import { Menu, X, Lock } from 'lucide-react'
 
 const links = [
   { href: '/', label: 'Inicio' },
@@ -22,7 +23,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-primary/20 bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <CrossIcon className="h-7 w-7 text-primary" />
+          <Image src="/logo.png" alt="IESFuego" width={32} height={32} className="h-8 w-8 object-contain" />
           <span className="text-lg font-bold text-dark">
             IES<span className="text-primary">Fuego</span>
           </span>
