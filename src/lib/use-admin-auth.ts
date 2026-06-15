@@ -15,8 +15,10 @@ export function useAdminAuth() {
     setLoading(false)
   }, [])
 
+  const adminPin = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234'
+
   const login = useCallback((pin: string) => {
-    if (pin === '1234') {
+    if (pin === adminPin) {
       localStorage.setItem(STORAGE_KEY, 'true')
       setIsAuthenticated(true)
       return true

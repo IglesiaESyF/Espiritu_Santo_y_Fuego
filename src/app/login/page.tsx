@@ -7,7 +7,7 @@ import { Flame, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-const ADMIN_PIN = '1234'
+const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234'
 
 export default function AdminLoginPage() {
   const router = useRouter()

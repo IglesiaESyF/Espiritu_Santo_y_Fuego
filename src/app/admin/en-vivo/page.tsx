@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Video, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Save, Video } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { db } from '@/lib/firebase'
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 const STORAGE_KEY = 'iesfuego-live-settings'
+const FIRESTORE_PATH = 'config/live'
 
 export default function AdminEnVivoPage() {
   const router = useRouter()
@@ -16,8 +19,26 @@ export default function AdminEnVivoPage() {
   const [activo, setActivo] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
+    loadData()
+  }, [])
+
+  async function loadData() {
+    try {
+      const snap = await getDoc(doc(db, FIRESTORE_PATH))
+      if (snap.exists()) {
+        const d = snap.data()
+        setPaginaFacebook(d.paginaFacebook || '')
+        setVideoUrl(d.videoUrl || '')
+        setActivo(d.activo || false)
+        setMensaje(d.mensaje || '')
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(d))
+        return
+      }
+    } catch {}
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
@@ -28,13 +49,28 @@ export default function AdminEnVivoPage() {
         setMensaje(data.mensaje || '')
       } catch {}
     }
-  }, [])
+  }
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ paginaFacebook, videoUrl, activo, mensaje }))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setSaving(true)
+    setError('')
+    const data = { paginaFacebook, videoUrl, activo, mensaje }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+    try {
+      await setDoc(doc(db, FIRESTORE_PATH), {
+        ...data,
+        updatedAt: serverTimestamp(),
+      })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setError('No se pudo guardar en la nube. Se guardó localmente.')
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const embedUrl = videoUrl
@@ -97,8 +133,10 @@ export default function AdminEnVivoPage() {
               />
             </div>
 
-            <Button type="submit" variant="primary" size="lg" className="w-full">
-              <Save className="mr-2 h-4 w-4" /> {saved ? '✓ Guardado' : 'Guardar Configuración'}
+            {error && <p className="text-sm text-amber-600">{error}</p>}
+
+            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={saving}>
+              <Save className="mr-2 h-4 w-4" /> {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar Configuración'}
             </Button>
           </form>
         </CardContent>

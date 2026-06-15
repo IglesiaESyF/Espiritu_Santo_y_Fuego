@@ -5,28 +5,50 @@ import { Flame, Video, Wifi, WifiOff } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { db } from '@/lib/firebase'
+import { doc, onSnapshot } from 'firebase/firestore'
 
 const STORAGE_KEY = 'iesfuego-live-settings'
+const FIRESTORE_PATH = 'config/live'
+
+interface LiveData {
+  paginaFacebook: string
+  videoUrl: string
+  activo: boolean
+  mensaje: string
+}
 
 export default function EnVivoPage() {
-  const [paginaFacebook, setPaginaFacebook] = useState('')
-  const [videoUrl, setVideoUrl] = useState('')
-  const [activo, setActivo] = useState(false)
-  const [mensaje, setMensaje] = useState('')
+  const [liveData, setLiveData] = useState<LiveData>({
+    paginaFacebook: '',
+    videoUrl: '',
+    activo: false,
+    mensaje: '',
+  })
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        setPaginaFacebook(data.paginaFacebook || '')
-        setVideoUrl(data.videoUrl || '')
-        setActivo(data.activo || false)
-        setMensaje(data.mensaje || '')
-      } catch {}
-    }
+    const unsub = onSnapshot(
+      doc(db, FIRESTORE_PATH),
+      (snap) => {
+        if (snap.exists()) {
+          const d = snap.data() as LiveData
+          setLiveData(d)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(d))
+        }
+      },
+      () => {
+        const stored = localStorage.getItem(STORAGE_KEY)
+        if (stored) {
+          try {
+            setLiveData(JSON.parse(stored))
+          } catch {}
+        }
+      }
+    )
+    return () => unsub()
   }, [])
+
+  const { paginaFacebook, videoUrl, activo, mensaje } = liveData
 
   const embedUrl = videoUrl
     ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
@@ -88,10 +110,9 @@ export default function EnVivoPage() {
               href={paginaFacebook.startsWith('http') ? paginaFacebook : `https://www.facebook.com/${paginaFacebook}`}
               target="_blank"
               rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-8 py-3.5 text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:bg-primary-dark hover:shadow-xl"
             >
-              <Button variant="primary" size="lg">
-                <Video className="mr-2 h-5 w-5" /> Ir a Facebook
-              </Button>
+                <Video className="h-5 w-5" /> Ir a Facebook
             </a>
           </div>
         )}

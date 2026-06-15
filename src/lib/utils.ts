@@ -1,13 +1,13 @@
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('es-DO', {
+  return new Intl.NumberFormat('es-NI', {
     style: 'currency',
-    currency: 'DOP',
+    currency: 'NIO',
   }).format(amount)
 }
 
 export function formatDate(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-DO', {
+  return d.toLocaleDateString('es-NI', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -16,7 +16,7 @@ export function formatDate(dateStr: string): string {
 
 export function formatDateTime(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-DO', {
+  return d.toLocaleDateString('es-NI', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -27,7 +27,7 @@ export function formatDateTime(dateStr: string): string {
 
 export function getMonthYear(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-DO', { year: 'numeric', month: 'long' })
+  return d.toLocaleDateString('es-NI', { year: 'numeric', month: 'long' })
 }
 
 export function cn(...classes: (string | boolean | undefined | null)[]): string {

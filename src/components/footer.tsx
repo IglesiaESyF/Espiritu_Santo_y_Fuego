@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Cross, Church, MapPin, Phone, Mail, Lock } from 'lucide-react'
+import { Cross, MapPin, Phone, Mail, Lock } from 'lucide-react'
 
 export function Footer() {
   return (
