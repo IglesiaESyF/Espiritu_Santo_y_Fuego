@@ -20,3 +20,16 @@ html {
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+@keyframes logo-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.logo-spin {
+  animation: logo-spin 8s linear infinite;
+}
+
+.logo-spin:hover {
+  animation-duration: 1.5s;
+}
