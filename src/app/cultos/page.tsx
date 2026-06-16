@@ -7,7 +7,7 @@ import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
 import { doc, onSnapshot } from 'firebase/firestore'
 
-interface DiaCulto {
+interface SlotCulto {
   titulo: string
   preside: string
   lectura: string
@@ -17,7 +17,7 @@ interface DiaCulto {
   hora_fin: string
 }
 
-type SemanaCultos = Record<string, DiaCulto>
+type SemanaCultos = Record<string, SlotCulto[]>
 
 const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
 const DIAS_LABEL: Record<string, string> = {
@@ -25,10 +25,27 @@ const DIAS_LABEL: Record<string, string> = {
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo',
 }
 
-const defaultDay = (): DiaCulto => ({
-  titulo: '', preside: '', lectura: '', predicacion: '', limpieza: '',
-  hora_inicio: '', hora_fin: '',
-})
+function SlotCard({ slot }: { slot: SlotCulto }) {
+  return (
+    <>
+      {slot.titulo && <h3 className="mb-1 text-sm font-bold text-dark">{slot.titulo}</h3>}
+      <table className="w-full">
+        <tbody>
+          {slot.preside && <tr><td className="w-1/2 pr-2 font-medium text-gray-500">Preside</td><td className="text-dark">{slot.preside}</td></tr>}
+          {slot.lectura && <tr><td className="pr-2 font-medium text-gray-500">Lectura</td><td className="text-dark">{slot.lectura}</td></tr>}
+          {slot.predicacion && <tr><td className="pr-2 font-medium text-gray-500">Predicación</td><td className="text-dark">{slot.predicacion}</td></tr>}
+          {slot.limpieza && <tr><td className="pr-2 font-medium text-gray-500">Limpieza</td><td className="text-dark">{slot.limpieza}</td></tr>}
+        </tbody>
+      </table>
+      {(slot.hora_inicio || slot.hora_fin) && (
+        <div className="mt-auto flex items-center gap-1.5 pt-3 text-xs text-gray-500">
+          <Clock className="h-3 w-3" />
+          <span>{slot.hora_inicio}{slot.hora_inicio && slot.hora_fin ? ' — ' : ''}{slot.hora_fin}</span>
+        </div>
+      )}
+    </>
+  )
+}
 
 export default function CultosPage() {
   const [semana, setSemana] = useState<SemanaCultos>({})
@@ -52,50 +69,29 @@ export default function CultosPage() {
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           {DIAS.map((dia) => {
-            const d = semana[dia] || defaultDay()
-            const tieneInfo = d.titulo || d.preside || d.lectura || d.predicacion
+            const slots = semana[dia] || []
             return (
               <div
                 key={dia}
                 className={`flex flex-col rounded-xl border p-4 shadow-sm ${
-                  tieneInfo ? 'border-primary/20 bg-white' : 'border-gray-100 bg-gray-50'
+                  slots.length ? 'border-primary/20 bg-white' : 'border-gray-100 bg-gray-50'
                 }`}
               >
                 <div className={`mb-3 rounded-lg px-3 py-1.5 text-center text-sm font-bold ${
-                  tieneInfo ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'
+                  slots.length ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'
                 }`}>
                   {DIAS_LABEL[dia]}
                 </div>
 
-                {!tieneInfo ? (
+                {!slots.length ? (
                   <p className="py-6 text-center text-xs text-gray-400">Sin actividad</p>
                 ) : (
-                  <div className="flex flex-1 flex-col gap-2 text-xs">
-                    {d.titulo && <h3 className="mb-1 text-sm font-bold text-dark">{d.titulo}</h3>}
-
-                    <table className="w-full">
-                      <tbody>
-                        {d.preside && (
-                          <tr><td className="pr-2 font-medium text-gray-500 w-1/2">Preside</td><td className="text-dark">{d.preside}</td></tr>
-                        )}
-                        {d.lectura && (
-                          <tr><td className="pr-2 font-medium text-gray-500">Lectura</td><td className="text-dark">{d.lectura}</td></tr>
-                        )}
-                        {d.predicacion && (
-                          <tr><td className="pr-2 font-medium text-gray-500">Predicación</td><td className="text-dark">{d.predicacion}</td></tr>
-                        )}
-                        {d.limpieza && (
-                          <tr><td className="pr-2 font-medium text-gray-500">Limpieza</td><td className="text-dark">{d.limpieza}</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-
-                    {(d.hora_inicio || d.hora_fin) && (
-                      <div className="mt-auto flex items-center gap-1.5 pt-3 text-xs text-gray-500 border-t border-gray-100">
-                        <Clock className="h-3 w-3" />
-                        <span>{d.hora_inicio}{d.hora_inicio && d.hora_fin ? ' — ' : ''}{d.hora_fin}</span>
+                  <div className="flex flex-1 flex-col gap-4 text-xs">
+                    {slots.map((slot, i) => (
+                      <div key={i} className={i > 0 ? 'border-t border-gray-200 pt-4' : ''}>
+                        <SlotCard slot={slot} />
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>
