@@ -1,33 +1,48 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { CalendarDays, MapPin, Clock } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Card, CardContent } from '@/components/ui/card'
+import { db } from '@/lib/firebase'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 
-const actividades = [
-  {
-    titulo: 'Escuela Bíblica Dominical',
-    fecha: 'Cada Domingo',
-    hora: '9:00 AM',
-    lugar: 'Templo Principal',
-    descripcion: 'Estudio sistemático de la Palabra de Dios para todas las edades.',
-  },
-  {
-    titulo: 'Grupos de Hogar',
-    fecha: 'Cada Jueves',
-    hora: '7:00 PM',
-    lugar: 'Hogares de Miembros',
-    descripcion: 'Reuniones en casas para compartir la palabra y fortalecer la comunión.',
-  },
-  {
-    titulo: 'Ayuno y Oración',
-    fecha: 'Primer Sábado del Mes',
-    hora: '8:00 AM - 12:00 PM',
-    lugar: 'Templo Principal',
-    descripcion: 'Jornada de ayuno, oración y búsqueda de Dios.',
-  },
-]
+interface Actividad {
+  id?: string
+  titulo: string
+  descripcion: string
+  fecha: string
+  hora: string
+  lugar: string
+}
+
+const STORAGE_KEY = 'iesfuego-actividades'
 
 export default function ActividadesPage() {
+  const [actividades, setActividades] = useState<Actividad[]>([])
+
+  useEffect(() => {
+    loadActividades()
+  }, [])
+
+  async function loadActividades() {
+    try {
+      const q = query(collection(db, 'actividades'), orderBy('createdAt', 'desc'))
+      const snap = await getDocs(q)
+      if (!snap.empty) {
+        const list: Actividad[] = []
+        snap.forEach((d) => list.push({ id: d.id, ...d.data() as Actividad }))
+        setActividades(list)
+        return
+      }
+    } catch {}
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      try { setActividades(JSON.parse(stored)) } catch {}
+    }
+  }
+
   return (
     <>
       <Header />
@@ -39,25 +54,27 @@ export default function ActividadesPage() {
         </div>
 
         <div className="space-y-4">
-          {actividades.map((a, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <h2 className="mb-3 text-xl font-bold text-dark">{a.titulo}</h2>
-                <div className="mb-3 flex flex-wrap gap-4 text-sm text-gray-600">
-                  <span className="flex items-center gap-1.5">
-                    <CalendarDays className="h-4 w-4 text-primary" /> {a.fecha}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4 text-primary" /> {a.hora}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-primary" /> {a.lugar}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600">{a.descripcion}</p>
+          {actividades.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                <p>No hay actividades registradas aún.</p>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            actividades.map((a) => (
+              <Card key={a.id}>
+                <CardContent className="p-6">
+                  <h2 className="mb-3 text-xl font-bold text-dark">{a.titulo}</h2>
+                  {a.descripcion && <p className="mb-3 text-sm text-gray-600">{a.descripcion}</p>}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                    {a.fecha && <span className="flex items-center gap-1.5"><CalendarDays className="h-4 w-4 text-primary" /> {a.fecha}</span>}
+                    {a.hora && <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-primary" /> {a.hora}</span>}
+                    {a.lugar && <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4 text-primary" /> {a.lugar}</span>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </main>
       <Footer />
