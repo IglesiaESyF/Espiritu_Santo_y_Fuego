@@ -4,7 +4,7 @@ import * as admin from 'firebase-admin'
 admin.initializeApp()
 
 const LIVE_PATH = 'config/live'
-const SITE_URL = 'https://jalfredobaltomora-jpg.github.io/WebApp-para-la-Iglesia-Esp-ritu-Santo-Fuego/en-vivo/'
+const SITE_URL = 'https://IglesiaESyF.github.io/Espiritu_Santo_y_Fuego/en-vivo/'
 
 export const notifyWhatsAppOnLive = functions.firestore
   .document(LIVE_PATH)
