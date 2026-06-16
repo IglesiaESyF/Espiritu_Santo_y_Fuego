@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { CalendarDays, Clock } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -23,6 +23,27 @@ const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'do
 const DIAS_LABEL: Record<string, string> = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles',
   jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo',
+}
+
+function getWeekDates(): Date[] {
+  const today = new Date()
+  const day = today.getDay()
+  const diffToMonday = day === 0 ? -6 : 1 - day
+  const monday = new Date(today)
+  monday.setDate(today.getDate() + diffToMonday)
+  return DIAS.map((_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    return d
+  })
+}
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function formatDateShort(d: Date): string {
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
 function SlotCard({ slot }: { slot: SlotCulto }) {
@@ -71,6 +92,7 @@ function SlotCard({ slot }: { slot: SlotCulto }) {
 
 export default function CultosPage() {
   const [semana, setSemana] = useState<SemanaCultos>({})
+  const weekDates = useMemo(() => getWeekDates(), [])
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'config', 'cultos-semana'), (snap) => {
@@ -90,7 +112,9 @@ export default function CultosPage() {
           <h1 className="text-4xl font-bold tracking-tight text-dark">
             Cultos de la <span className="text-primary">Semana</span>
           </h1>
-          <p className="mt-2 text-base text-gray-500 tracking-wide">Horarios y programación semanal</p>
+          <p className="mt-2 text-base text-gray-500 tracking-wide">
+            {formatDate(weekDates[0])} — {formatDate(weekDates[6])}
+          </p>
         </div>
 
         {/* Mobile: swipe carousel */}
@@ -105,7 +129,7 @@ export default function CultosPage() {
                 }`}
                 style={{ animationDelay: `${idx * 0.06}s` }}
               >
-                <DayHeader dia={dia} hasSlots={!!slots.length} />
+                <DayHeader dia={dia} date={weekDates[idx]} hasSlots={!!slots.length} />
                 {slots.length ? <DaySlots slots={slots} /> : <DayEmpty />}
               </div>
             )
@@ -124,7 +148,7 @@ export default function CultosPage() {
                 }`}
                 style={{ animationDelay: `${idx * 0.06}s` }}
               >
-                <DayHeader dia={dia} hasSlots={!!slots.length} />
+                <DayHeader dia={dia} date={weekDates[idx]} hasSlots={!!slots.length} />
                 {slots.length ? <DaySlots slots={slots} /> : <DayEmpty />}
               </div>
             )
@@ -136,12 +160,13 @@ export default function CultosPage() {
   )
 }
 
-function DayHeader({ dia, hasSlots }: { dia: string; hasSlots: boolean }) {
+function DayHeader({ dia, date, hasSlots }: { dia: string; date: Date; hasSlots: boolean }) {
   return (
-    <div className={`mb-4 rounded-xl px-3 py-2 text-center text-sm font-bold tracking-wider uppercase ${
+    <div className={`mb-4 rounded-xl px-3 py-2 text-center transition ${
       hasSlots ? 'gold-accent text-white shadow-sm shadow-primary/10' : 'bg-gray-200/70 text-gray-400'
     }`}>
-      {DIAS_LABEL[dia]}
+      <div className="text-sm font-bold tracking-wider uppercase">{DIAS_LABEL[dia]}</div>
+      <div className="text-[10px] font-medium opacity-80 leading-tight">{formatDateShort(date)}</div>
     </div>
   )
 }
