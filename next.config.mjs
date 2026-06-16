@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const repo = 'WebApp-para-la-Iglesia-Esp-ritu-Santo-Fuego'
+const repo = 'Espiritu_Santo_y_Fuego'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
