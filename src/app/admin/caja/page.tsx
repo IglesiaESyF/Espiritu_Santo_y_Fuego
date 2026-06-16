@@ -7,20 +7,30 @@ import {
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CATEGORIAS_INGRESO, CATEGORIAS_EGRESO } from '@/types'
+import { CATEGORIAS_INGRESO, CATEGORIAS_EGRESO, MovimientoCaja } from '@/types'
 import { getMovimientos } from '@/lib/caja-storage'
 
 const labelCat = (val: string) => [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO].find((c) => c.value === val)?.label || val
 
 export default function CajaPage() {
   const [tab, setTab] = useState<'ingresos' | 'egresos'>('ingresos')
-  const [movimientos, setMovimientos] = useState(getMovimientos())
+  const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setMovimientos(getMovimientos())
-    setLoading(false)
+    loadMovimientos()
   }, [])
+
+  async function loadMovimientos() {
+    try {
+      const list = await Promise.race([
+        getMovimientos(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ])
+      setMovimientos(list)
+    } catch {}
+    setLoading(false)
+  }
 
   const filtrados = useMemo(() => {
     return movimientos.filter((m) => m.tipo === (tab === 'ingresos' ? 'ingreso' : 'egreso'))

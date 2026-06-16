@@ -25,6 +25,8 @@ export default function NuevoEgresoPage() {
   const [firmaSolicitante, setFirmaSolicitante] = useState('')
   const [firmaPastor, setFirmaPastor] = useState('')
   const [showFirmas, setShowFirmas] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const saved = localStorage.getItem('iesfuego-user')
@@ -53,11 +55,13 @@ export default function NuevoEgresoPage() {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSaving(true)
+    setError('')
     if (solicitadoPor) localStorage.setItem('iesfuego-user', solicitadoPor)
     const movimiento: MovimientoCaja = {
-      id: Date.now().toString(),
+      id: '',
       tipo: 'egreso',
       categoria,
       monto: parseFloat(monto),
@@ -71,8 +75,16 @@ export default function NuevoEgresoPage() {
       firmaPastor,
       creadoEn: Date.now(),
     }
-    saveMovimiento(movimiento)
-    router.push('/admin/caja')
+    try {
+      await Promise.race([
+        saveMovimiento(movimiento),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ])
+      router.push('/admin/caja')
+    } catch {
+      setError('Error al guardar en Firebase. Intenta de nuevo.')
+    }
+    setSaving(false)
   }
 
   return (
@@ -218,8 +230,9 @@ export default function NuevoEgresoPage() {
               </>
             )}
 
-            <Button type="submit" variant="primary" size="lg" className="w-full">
-              <Save className="mr-2 h-4 w-4" /> Registrar Egreso
+            {error && <p className="rounded bg-red-100 p-3 text-sm text-red-700">{error}</p>}
+            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={saving}>
+              <Save className="mr-2 h-4 w-4" /> {saving ? 'Guardando…' : 'Registrar Egreso'}
             </Button>
           </form>
         </CardContent>

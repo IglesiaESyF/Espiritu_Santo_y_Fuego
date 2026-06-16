@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CATEGORIAS_INGRESO, CATEGORIAS_EGRESO, MovimientoCaja } from '@/types'
-import { getMovimientos, seedDemoData } from '@/lib/caja-storage'
+import { getMovimientos } from '@/lib/caja-storage'
 
 const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
@@ -18,6 +18,7 @@ type FiltroTipo = 'todos' | 'ingreso' | 'egreso'
 export default function ReportesPage() {
   const router = useRouter()
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
+  const [loading, setLoading] = useState(true)
   const [fechaInicio, setFechaInicio] = useState('')
   const [fechaFin, setFechaFin] = useState('')
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>('todos')
@@ -25,13 +26,23 @@ export default function ReportesPage() {
   const [vistaImpresion, setVistaImpresion] = useState(false)
 
   useEffect(() => {
-    seedDemoData()
-    setMovimientos(getMovimientos())
+    loadMovimientos()
     const hoy = new Date()
     const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1)
     setFechaInicio(inicioMes.toISOString().split('T')[0])
     setFechaFin(hoy.toISOString().split('T')[0])
   }, [])
+
+  async function loadMovimientos() {
+    try {
+      const list = await Promise.race([
+        getMovimientos(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ])
+      setMovimientos(list)
+    } catch {}
+    setLoading(false)
+  }
 
   const movimientosFiltrados = useMemo(() => {
     return movimientos.filter((m) => {
