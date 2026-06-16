@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Cross, Tv, Calendar, Heart, ArrowRight, Flame } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import logoSrc from '@/../public/logo.png'
 
 export default function HomePage() {
   return (
@@ -13,18 +15,24 @@ export default function HomePage() {
           <div className="absolute inset-0 opacity-10">
             <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary blur-3xl" />
           </div>
-          <div className="relative mx-auto max-w-3xl px-4">
-            <Flame className="mx-auto mb-6 h-16 w-16 text-primary-light animate-pulse" />
-            <h1 className="mb-2 text-4xl font-bold leading-tight md:text-5xl">
-              Iglesia Espíritu Santo{' '}
-              <span className="text-primary-light">y Fuego</span>
-            </h1>
-            <p className="mb-2 text-sm text-gray-400">
-              Misión Cristiana Perfectos en Unidad
-            </p>
-            <p className="mb-8 text-lg text-gray-300">
-              Transformando vidas con el poder del Espíritu Santo
-            </p>
+          <div className="relative mx-auto max-w-4xl px-4">
+            <div className="flex flex-col items-center gap-6 md:flex-row md:justify-center">
+              <span className="logo-wrapper shrink-0">
+                <Image src={logoSrc} alt="IESFuego" width={96} height={96} className="logo-spin h-24 w-24 object-contain md:h-28 md:w-28" />
+              </span>
+              <div className="text-center md:text-left">
+                <h1 className="mb-2 text-4xl font-bold leading-tight md:text-5xl">
+                  Iglesia Espíritu Santo{' '}
+                  <span className="text-primary-light">y Fuego</span>
+                </h1>
+                <p className="mb-2 text-sm text-gray-400">
+                  Misión Cristiana Perfectos en Unidad
+                </p>
+                <p className="mb-8 text-lg text-gray-300">
+                  Transformando vidas con el poder del Espíritu Santo
+                </p>
+              </div>
+            </div>
             <div className="flex flex-wrap justify-center gap-4">
               <Link
                 href="/cultos"

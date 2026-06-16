@@ -8,6 +8,8 @@ const nextConfig = {
   basePath: '/' + repo,
   assetPrefix: '/' + repo,
   images: {
+    loader: 'custom',
+    loaderFile: './src/lib/image-loader.ts',
     unoptimized: true,
     remotePatterns: [
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },

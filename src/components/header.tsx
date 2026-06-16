@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Menu, X, Lock } from 'lucide-react'
+import logoSrc from '@/../public/logo.png'
 
 const links = [
   { href: '/', label: 'Inicio' },
@@ -23,7 +24,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-primary/20 bg-white/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <span className="logo-wrapper"><Image src="/logo.png" alt="IESFuego" width={32} height={32} className="logo-spin h-8 w-8 object-contain" /></span>
+          <span className="logo-wrapper"><Image src={logoSrc} alt="IESFuego" width={32} height={32} className="logo-spin h-8 w-8 object-contain" /></span>
           <span className="text-lg font-bold text-dark">
             IES<span className="text-primary">Fuego</span>
           </span>

@@ -1,15 +1,17 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
+const base = '/Espiritu_Santo_y_Fuego'
+
 export const metadata: Metadata = {
   title: 'Iglesia Espíritu Santo Fuego',
   description: 'Iglesia Espíritu Santo Fuego - Transformando vidas con el poder del Espíritu Santo',
-  manifest: '/manifest.json',
+  manifest: base + '/manifest.json',
   appleWebApp: { capable: true, title: 'IESFuego', statusBarStyle: 'black-translucent' },
   icons: {
     apple: [
-      { url: '/icon-192.png', sizes: '192x192' },
-      { url: '/icon-512.png', sizes: '512x512' },
+      { url: base + '/icon-192.png', sizes: '192x192' },
+      { url: base + '/icon-512.png', sizes: '512x512' },
     ],
   },
 }
