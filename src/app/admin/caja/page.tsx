@@ -3,9 +3,19 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import {
-  DollarSign, ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Plus,
+  ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Plus,
   FileText,
 } from 'lucide-react'
+
+function CordobaIcon({ className }: { className?: string }) {
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full font-black leading-none ${className || ''}`}
+      style={{ fontFamily: "'Times New Roman', serif" }}
+    >
+      C$
+    </span>
+  )
+}
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CATEGORIAS_INGRESO, CATEGORIAS_EGRESO, MovimientoCaja } from '@/types'
@@ -146,7 +156,7 @@ export default function CajaPage() {
               badgeColor="bg-red-100 text-red-700"
             />
             <SummaryCard
-              icon={<DollarSign className="h-6 w-6" />}
+              icon={<CordobaIcon className="h-6 w-6 text-2xl" />}
               label="Saldo Actual"
               value={saldo}
               gradient={saldo >= 0 ? 'from-blue-500 to-indigo-600' : 'from-red-500 to-rose-600'}
@@ -179,7 +189,7 @@ export default function CajaPage() {
             <Card className="card-glass">
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <div className="mb-4 rounded-full bg-gray-100 p-4">
-                  <DollarSign className="h-10 w-10 text-gray-300" />
+                  <CordobaIcon className="h-10 w-10 text-4xl text-gray-300" />
                 </div>
                 <p className="text-sm font-medium text-gray-500">
                   No hay {tab === 'ingresos' ? 'ingresos' : 'egresos'} registrados.

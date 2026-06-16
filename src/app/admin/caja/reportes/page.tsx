@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, Download, Printer, TrendingUp, TrendingDown,
-  DollarSign, FileText, Filter, Calendar,
+  FileText, Filter, Calendar,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -197,7 +197,7 @@ export default function ReportesPage() {
         <Card>
           <CardContent className="flex items-center gap-4 p-5">
             <div className="rounded-xl bg-blue-100 p-3">
-              <DollarSign className="h-6 w-6 text-blue-600" />
+              <span className="text-2xl font-black text-blue-600" style={{ fontFamily: "'Times New Roman', serif" }}>C$</span>
             </div>
             <div>
               <p className="text-xs text-gray-500">Saldo del Período</p>
