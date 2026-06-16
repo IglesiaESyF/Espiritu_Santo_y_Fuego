@@ -37,9 +37,20 @@ jobs:
         with:
           enablement: true
 
+      - name: Delete stale github-pages artifacts
+        run: |
+          ids=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?name=github-pages" \
+            | jq -r '.artifacts[] | select(.expired == false) | .id')
+          for id in $ids; do
+            curl -s -X DELETE -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$id"
+          done
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./out
+          retention-days: 1
 
       - id: deployment
         uses: actions/deploy-pages@v4
