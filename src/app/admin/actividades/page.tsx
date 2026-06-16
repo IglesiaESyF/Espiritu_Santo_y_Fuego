@@ -87,19 +87,16 @@ export default function AdminActividadesPage() {
         const ref = await addDoc(collection(db, FIRESTORE_COLLECTION), { ...data, createdAt: serverTimestamp() })
         data.id = ref.id
       }
-    } catch {}
-
-    if (editingId) {
-      setActividades((prev) => prev.map((a) => (a.id === editingId ? { ...data, id: editingId } : a)))
-    } else {
-      setActividades((prev) => [...prev, data])
+    } catch {
+      // Firestore no disponible — se guarda solo localmente
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(
-      editingId
-        ? actividades.map((a) => (a.id === editingId ? { ...data, id: editingId } : a))
-        : [...actividades, data],
-    ))
 
+    const updated = editingId
+      ? actividades.map((a) => (a.id === editingId ? { ...data, id: editingId } : a))
+      : [...actividades, data]
+
+    setActividades(updated)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
     resetForm()
     setShowForm(false)
     setSaving(false)
