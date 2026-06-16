@@ -1,29 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Flame, Eye, EyeOff } from 'lucide-react'
+import { Flame, Eye, EyeOff, User, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
-const ADMIN_PIN = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234'
+import { useAuth } from '@/lib/auth-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [pin, setPin] = useState('')
+  const { login, seedInitialAdmin } = useAuth()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [showPin, setShowPin] = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    seedInitialAdmin()
+  }, [seedInitialAdmin])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (pin === ADMIN_PIN) {
-      localStorage.setItem('iesfuego-admin', 'true')
-      router.push('/admin/dashboard')
-    } else {
-      setError('PIN incorrecto')
-      setPin('')
-    }
+    setLoading(true)
+    setError('')
+    const ok = await login(username, password)
+    if (ok) router.push('/admin/dashboard')
+    else setError('Usuario o contraseña incorrectos')
+    setLoading(false)
   }
 
   return (
@@ -32,27 +37,43 @@ export default function AdminLoginPage() {
         <div className="mb-8 text-center">
           <Flame className="mx-auto mb-4 h-12 w-12 text-primary-light animate-pulse" />
           <h1 className="text-2xl font-bold text-white">IESFuego Admin</h1>
-          <p className="mt-1 text-sm text-gray-400">Ingresa tu PIN para acceder</p>
+          <p className="mt-1 text-sm text-gray-400">Inicia sesión para acceder</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
-          <div className="relative">
-            <Input
-              label="PIN de acceso"
-              type={showPin ? 'text' : 'password'}
-              value={pin}
-              onChange={(e) => { setPin(e.target.value); setError('') }}
-              placeholder="Ingresa tu PIN"
-              maxLength={4}
-              className="bg-white/5 text-white placeholder:text-gray-500"
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+              <User className="mr-1 inline h-3.5 w-3.5" /> Usuario
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setError('') }}
+              placeholder="Ingresa tu usuario"
+              className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
               autoFocus
+              required
+            />
+          </div>
+
+          <div className="relative">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+              <Lock className="mr-1 inline h-3.5 w-3.5" /> Contraseña
+            </label>
+            <input
+              type={showPass ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setError('') }}
+              placeholder="Ingresa tu contraseña"
+              className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 pr-10 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
+              required
             />
             <button
               type="button"
-              onClick={() => setShowPin(!showPin)}
+              onClick={() => setShowPass(!showPass)}
               className="absolute right-3 top-9 text-gray-400 hover:text-white"
             >
-              {showPin ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
@@ -60,8 +81,8 @@ export default function AdminLoginPage() {
             <p className="text-center text-sm text-red-400">{error}</p>
           )}
 
-          <Button type="submit" variant="primary" size="lg" className="w-full">
-            Ingresar
+          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>
+            {loading ? 'Ingresando…' : 'Ingresar'}
           </Button>
 
           <Link href="/" className="block text-center text-xs text-gray-500 hover:text-primary-light">

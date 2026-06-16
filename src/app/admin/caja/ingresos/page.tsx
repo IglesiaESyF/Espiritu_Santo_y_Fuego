@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Camera, User, TrendingUp, FileText, Calendar } from 'lucide-react'
+import { ArrowLeft, Save, User, FileText, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CATEGORIAS_INGRESO, MovimientoCaja } from '@/types'
+import { useAuth } from '@/lib/auth-context'
 import { saveMovimiento } from '@/lib/caja-storage'
 
 const CAT_ICONS: Record<string, string> = {
@@ -16,25 +17,26 @@ const CAT_ICONS: Record<string, string> = {
 
 export default function NuevoIngresoPage() {
   const router = useRouter()
+  const { puede } = useAuth()
   const [categoria, setCategoria] = useState('')
   const [monto, setMonto] = useState('')
   const [concepto, setConcepto] = useState('')
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
   const [ingresadoPor, setIngresadoPor] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [fotoFactura, setFotoFactura] = useState('')
   const [firmaTesorera, setFirmaTesorera] = useState('')
   const [showFirma, setShowFirma] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!puede('caja', 'crear')) router.replace('/admin/caja')
     const saved = localStorage.getItem('iesfuego-user')
     if (saved) setIngresadoPor(saved)
   }, [])
 
   useEffect(() => {
     setShowFirma(categoria === 'actividades')
+    if (categoria !== 'actividades') setFirmaTesorera('')
   }, [categoria])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,8 +52,6 @@ export default function NuevoIngresoPage() {
       concepto,
       fecha,
       ingresadoPor,
-      descripcion,
-      fotoFactura,
       firmaTesorera,
       creadoEn: Date.now(),
     }
@@ -69,7 +69,6 @@ export default function NuevoIngresoPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      {/* Header */}
       <div className="mb-8 flex items-center gap-4">
         <button
           onClick={() => router.back()}
@@ -85,13 +84,11 @@ export default function NuevoIngresoPage() {
 
       <div className="card-glass rounded-2xl p-6 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Sección: Información principal */}
           <div>
             <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
               <FileText className="h-3.5 w-3.5" /> Información del Ingreso
             </div>
             <div className="space-y-4">
-              {/* Categoría */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Categoría
@@ -109,7 +106,6 @@ export default function NuevoIngresoPage() {
                 </select>
               </div>
 
-              {/* Monto */}
               <div className="relative">
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Monto
@@ -128,7 +124,6 @@ export default function NuevoIngresoPage() {
                 </div>
               </div>
 
-              {/* Concepto */}
               <Input
                 label="Concepto"
                 placeholder="Ej: Ofrenda dominical"
@@ -139,7 +134,6 @@ export default function NuevoIngresoPage() {
             </div>
           </div>
 
-          {/* Sección: Detalles */}
           <div className="border-t border-gray-100 pt-6">
             <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
               <Calendar className="h-3.5 w-3.5" /> Detalles
@@ -168,54 +162,21 @@ export default function NuevoIngresoPage() {
             </div>
           </div>
 
-          {/* Sección: Opcionales */}
-          <div className="border-t border-gray-100 pt-6">
-            <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Información Adicional <span className="font-normal lowercase text-gray-300">(opcional)</span>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  <Camera className="mr-1 inline h-3.5 w-3.5" /> Foto de Factura
-                </label>
-                <input
-                  type="text"
-                  value={fotoFactura}
-                  onChange={(e) => setFotoFactura(e.target.value)}
-                  placeholder="URL de la imagen"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
-                />
+          {showFirma && (
+            <div className="border-t border-gray-100 pt-6">
+              <div className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Firma de quien entrega el dinero
               </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Descripción</label>
-                <textarea
-                  value={descripcion}
-                  onChange={(e) => setDescripcion(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
-                  rows={3}
-                  placeholder="Notas adicionales sobre este ingreso..."
-                />
-              </div>
-
-              {showFirma && (
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Firma de quien entrega el dinero
-                  </label>
-                  <input
-                    type="text"
-                    value={firmaTesorera}
-                    onChange={(e) => setFirmaTesorera(e.target.value)}
-                    placeholder="Nombre completo"
-                    className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
-                    required
-                  />
-                </div>
-              )}
+              <input
+                type="text"
+                value={firmaTesorera}
+                onChange={(e) => setFirmaTesorera(e.target.value)}
+                placeholder="Nombre completo"
+                className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
+                required
+              />
             </div>
-          </div>
+          )}
 
           {error && (
             <div className="rounded-xl bg-red-50 border border-red-100 p-4">

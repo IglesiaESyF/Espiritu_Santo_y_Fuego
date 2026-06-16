@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Plus,
   FileText,
 } from 'lucide-react'
+import { useAuth } from '@/lib/auth-context'
 
 function CordobaIcon({ className }: { className?: string }) {
   return (
@@ -63,11 +65,14 @@ const CAT_COLORS: Record<string, string> = {
 }
 
 export default function CajaPage() {
+  const router = useRouter()
+  const { puede } = useAuth()
   const [tab, setTab] = useState<'ingresos' | 'egresos'>('ingresos')
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!puede('caja', 'ver')) router.replace('/admin/dashboard')
     const q = query(collection(db, 'caja-movimientos'), orderBy('fecha', 'desc'))
     const unsub = onSnapshot(q, (snap) => {
       const list: MovimientoCaja[] = []
@@ -125,11 +130,13 @@ export default function CajaPage() {
               <FileText className="mr-1.5 h-4 w-4" /> Reportes
             </Button>
           </Link>
-          <Link href={tab === 'ingresos' ? '/admin/caja/ingresos' : '/admin/caja/egresos'}>
-            <Button variant="primary" size="sm">
-              <Plus className="mr-1.5 h-4 w-4" /> Nuevo {tab === 'ingresos' ? 'Ingreso' : 'Egreso'}
-            </Button>
-          </Link>
+          {puede('caja', 'crear') && (
+            <Link href={tab === 'ingresos' ? '/admin/caja/ingresos' : '/admin/caja/egresos'}>
+              <Button variant="primary" size="sm">
+                <Plus className="mr-1.5 h-4 w-4" /> Nuevo {tab === 'ingresos' ? 'Ingreso' : 'Egreso'}
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Camera, User, TrendingDown, FileText, Calendar, X } fr
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CATEGORIAS_EGRESO, MovimientoCaja } from '@/types'
+import { useAuth } from '@/lib/auth-context'
 import { saveMovimiento } from '@/lib/caja-storage'
 
 const CAT_ICONS: Record<string, string> = {
@@ -20,6 +21,7 @@ const CAT_ICONS: Record<string, string> = {
 
 export default function NuevoEgresoPage() {
   const router = useRouter()
+  const { puede } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [categoria, setCategoria] = useState('')
   const [monto, setMonto] = useState('')
@@ -37,6 +39,7 @@ export default function NuevoEgresoPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!puede('caja', 'crear')) router.replace('/admin/caja')
     const saved = localStorage.getItem('iesfuego-user')
     if (saved) setSolicitadoPor(saved)
   }, [])

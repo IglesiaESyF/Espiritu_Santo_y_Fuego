@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { db } from '@/lib/firebase'
+import { useAuth } from '@/lib/auth-context'
 import { generarDescripcion } from '@/lib/descripcion-generator'
 import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
@@ -29,6 +30,7 @@ function timeout(ms: number) {
 
 export default function AdminActividadesPage() {
   const router = useRouter()
+  const { puede } = useAuth()
   const [actividades, setActividades] = useState<Actividad[]>([])
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -41,6 +43,7 @@ export default function AdminActividadesPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!puede('actividades', 'ver')) router.replace('/admin/dashboard')
     loadActividades()
   }, [])
 
@@ -134,9 +137,11 @@ export default function AdminActividadesPage() {
           </button>
           <h1 className="text-2xl font-bold text-dark">Actividades</h1>
         </div>
-        <Button variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(!showForm) }}>
-          <Plus className="mr-1 h-4 w-4" /> {showForm ? 'Cancelar' : 'Nueva Actividad'}
-        </Button>
+        {puede('actividades', 'crear') && (
+          <Button variant="primary" size="sm" onClick={() => { resetForm(); setShowForm(!showForm) }}>
+            <Plus className="mr-1 h-4 w-4" /> {showForm ? 'Cancelar' : 'Nueva Actividad'}
+          </Button>
+        )}
       </div>
 
       {error && <p className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">{error}</p>}
@@ -192,8 +197,12 @@ export default function AdminActividadesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 ml-4">
-                  <button onClick={() => openEdit(a)} className="text-primary hover:text-primary-dark"><Pencil className="h-4 w-4" /></button>
-                  <button onClick={() => { if (a.id) handleDelete(a.id) }} className="text-accent hover:text-accent-light"><Trash2 className="h-4 w-4" /></button>
+                  {puede('actividades', 'editar') && (
+                    <button onClick={() => openEdit(a)} className="text-primary hover:text-primary-dark"><Pencil className="h-4 w-4" /></button>
+                  )}
+                  {puede('actividades', 'eliminar') && (
+                    <button onClick={() => { if (a.id) handleDelete(a.id) }} className="text-accent hover:text-accent-light"><Trash2 className="h-4 w-4" /></button>
+                  )}
                 </div>
               </CardContent>
             </Card>

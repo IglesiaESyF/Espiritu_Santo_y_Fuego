@@ -1,33 +1,28 @@
-import type { Metadata } from 'next'
+'use client'
+
 import './globals.css'
+import { AuthProvider } from '@/lib/auth-context'
 
 const base = '/Espiritu_Santo_y_Fuego'
-
-export const metadata: Metadata = {
-  title: 'Iglesia Espíritu Santo Fuego',
-  description: 'Iglesia Espíritu Santo Fuego - Transformando vidas con el poder del Espíritu Santo',
-  manifest: base + '/manifest.json',
-  appleWebApp: { capable: true, title: 'IESFuego', statusBarStyle: 'black-translucent' },
-  icons: {
-    apple: [
-      { url: base + '/icon-192.png', sizes: '192x192' },
-      { url: base + '/icon-512.png', sizes: '512x512' },
-    ],
-  },
-}
-
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#b8860b',
-} satisfies import('next').Viewport
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body className="bg-warm text-gray-800 antialiased">{children}</body>
+      <head>
+        <title>Iglesia Espíritu Santo Fuego</title>
+        <meta name="description" content="Iglesia Espíritu Santo Fuego - Transformando vidas con el poder del Espíritu Santo" />
+        <link rel="manifest" href={base + '/manifest.json'} />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="IESFuego" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href={base + '/icon-192.png'} sizes="192x192" />
+        <link rel="apple-touch-icon" href={base + '/icon-512.png'} sizes="512x512" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#b8860b" />
+      </head>
+      <body className="bg-warm text-gray-800 antialiased">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   )
 }

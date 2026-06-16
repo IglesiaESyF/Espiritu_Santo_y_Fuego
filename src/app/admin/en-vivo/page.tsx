@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { db } from '@/lib/firebase'
+import { useAuth } from '@/lib/auth-context'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 const FIRESTORE_PATH = 'config/live'
@@ -17,6 +18,7 @@ function timeout(ms: number) {
 
 export default function AdminEnVivoPage() {
   const router = useRouter()
+  const { puede } = useAuth()
   const [paginaFacebook, setPaginaFacebook] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [activo, setActivo] = useState(false)
@@ -26,6 +28,7 @@ export default function AdminEnVivoPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!puede('envivo', 'ver')) router.replace('/admin/dashboard')
     loadData()
   }, [])
 
@@ -102,11 +105,12 @@ export default function AdminEnVivoPage() {
             />
 
             <div className="flex items-center gap-3">
-              <label className="relative inline-flex cursor-pointer items-center">
+              <label className={`relative inline-flex items-center ${puede('envivo', 'activar') ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
                 <input
                   type="checkbox"
                   checked={activo}
                   onChange={(e) => setActivo(e.target.checked)}
+                  disabled={!puede('envivo', 'activar')}
                   className="peer sr-only"
                 />
                 <div className="h-6 w-11 rounded-full bg-gray-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-green-500 peer-checked:after:translate-x-full" />
@@ -131,9 +135,11 @@ export default function AdminEnVivoPage() {
 
             {error && <p className="text-sm text-amber-600">{error}</p>}
 
-            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={saving}>
-              <Save className="mr-2 h-4 w-4" /> {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar Configuración'}
-            </Button>
+            {puede('envivo', 'activar') && (
+              <Button type="submit" variant="primary" size="lg" className="w-full" disabled={saving}>
+                <Save className="mr-2 h-4 w-4" /> {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar Configuración'}
+              </Button>
+            )}
           </form>
         </CardContent>
       </Card>

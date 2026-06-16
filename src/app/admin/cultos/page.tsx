@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { db } from '@/lib/firebase'
+import { useAuth } from '@/lib/auth-context'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 interface SlotCulto {
@@ -37,6 +38,7 @@ function timeout(ms: number) {
 
 export default function AdminCultosPage() {
   const router = useRouter()
+  const { puede } = useAuth()
   const [semana, setSemana] = useState<SemanaCultos>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -44,6 +46,7 @@ export default function AdminCultosPage() {
   const [expanded, setExpanded] = useState<string[]>(DIAS)
 
   useEffect(() => {
+    if (!puede('cultos', 'ver')) router.replace('/admin/dashboard')
     loadData()
   }, [])
 
@@ -124,9 +127,11 @@ export default function AdminCultosPage() {
             <p className="text-sm text-gray-500">{totalSlots} horario{totalSlots !== 1 ? 's' : ''} configurados</p>
           </div>
         </div>
-        <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
-          <Save className="mr-1 h-4 w-4" /> {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar Todo'}
-        </Button>
+        {puede('cultos', 'editar') && (
+          <Button variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+            <Save className="mr-1 h-4 w-4" /> {saved ? '✓ Guardado' : saving ? 'Guardando…' : 'Guardar Todo'}
+          </Button>
+        )}
       </div>
 
       {error && <p className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">{error}</p>}
@@ -154,26 +159,28 @@ export default function AdminCultosPage() {
                       <div key={i} className="space-y-3 rounded-lg border border-gray-200 p-3">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-gray-500">Horario {i + 1}</span>
-                          {slots.length > 1 && (
+                          {slots.length > 1 && puede('cultos', 'editar') && (
                             <button onClick={() => removeSlot(dia, i)} className="text-red-400 hover:text-red-600">
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           )}
                         </div>
-                        <Input label="Título" value={slot.titulo} onChange={(e) => updateSlot(dia, i, 'titulo', e.target.value)} />
-                        <Input label="Preside" value={slot.preside} onChange={(e) => updateSlot(dia, i, 'preside', e.target.value)} />
-                        <Input label="Lectura Bíblica" value={slot.lectura} onChange={(e) => updateSlot(dia, i, 'lectura', e.target.value)} />
-                        <Input label="Predicación" value={slot.predicacion} onChange={(e) => updateSlot(dia, i, 'predicacion', e.target.value)} />
-                        <Input label="Limpieza" value={slot.limpieza} onChange={(e) => updateSlot(dia, i, 'limpieza', e.target.value)} />
+                        <Input label="Título" value={slot.titulo} onChange={(e) => updateSlot(dia, i, 'titulo', e.target.value)} disabled={!puede('cultos', 'editar')} />
+                        <Input label="Preside" value={slot.preside} onChange={(e) => updateSlot(dia, i, 'preside', e.target.value)} disabled={!puede('cultos', 'editar')} />
+                        <Input label="Lectura Bíblica" value={slot.lectura} onChange={(e) => updateSlot(dia, i, 'lectura', e.target.value)} disabled={!puede('cultos', 'editar')} />
+                        <Input label="Predicación" value={slot.predicacion} onChange={(e) => updateSlot(dia, i, 'predicacion', e.target.value)} disabled={!puede('cultos', 'editar')} />
+                        <Input label="Limpieza" value={slot.limpieza} onChange={(e) => updateSlot(dia, i, 'limpieza', e.target.value)} disabled={!puede('cultos', 'editar')} />
                         <div className="grid grid-cols-2 gap-2">
-                          <Input label="Inicio" type="time" value={slot.hora_inicio} onChange={(e) => updateSlot(dia, i, 'hora_inicio', e.target.value)} />
-                          <Input label="Fin" type="time" value={slot.hora_fin} onChange={(e) => updateSlot(dia, i, 'hora_fin', e.target.value)} />
+                          <Input label="Inicio" type="time" value={slot.hora_inicio} onChange={(e) => updateSlot(dia, i, 'hora_inicio', e.target.value)} disabled={!puede('cultos', 'editar')} />
+                          <Input label="Fin" type="time" value={slot.hora_fin} onChange={(e) => updateSlot(dia, i, 'hora_fin', e.target.value)} disabled={!puede('cultos', 'editar')} />
                         </div>
                       </div>
                     ))}
-                    <Button variant="outline" size="sm" onClick={() => addSlot(dia)} className="w-full">
-                      <Plus className="mr-1 h-3.5 w-3.5" /> Agregar horario
-                    </Button>
+                    {puede('cultos', 'editar') && (
+                      <Button variant="outline" size="sm" onClick={() => addSlot(dia)} className="w-full">
+                        <Plus className="mr-1 h-3.5 w-3.5" /> Agregar horario
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
