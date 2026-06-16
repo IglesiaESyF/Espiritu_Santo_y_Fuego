@@ -32,6 +32,14 @@ jobs:
 
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyCzahdIXgzDbKMKH3S2OcsCg8S694TB1ZQ
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: iglesiaesyf-dd026.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: iglesiaesyf-dd026
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: iglesiaesyf-dd026.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "9732884998"
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:9732884998:web:ffa524fc6dd2b920b65187
+          NEXT_PUBLIC_ADMIN_PIN: "1234"
 
       - uses: actions/configure-pages@v5
         with:
