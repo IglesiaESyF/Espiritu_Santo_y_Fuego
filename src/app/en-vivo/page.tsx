@@ -8,7 +8,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { db } from '@/lib/firebase'
 import { doc, onSnapshot } from 'firebase/firestore'
 
-const STORAGE_KEY = 'iesfuego-live-settings'
 const FIRESTORE_PATH = 'config/live'
 
 interface LiveData {
@@ -31,19 +30,9 @@ export default function EnVivoPage() {
       doc(db, FIRESTORE_PATH),
       (snap) => {
         if (snap.exists()) {
-          const d = snap.data() as LiveData
-          setLiveData(d)
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(d))
+          setLiveData(snap.data() as LiveData)
         }
       },
-      () => {
-        const stored = localStorage.getItem(STORAGE_KEY)
-        if (stored) {
-          try {
-            setLiveData(JSON.parse(stored))
-          } catch {}
-        }
-      }
     )
     return () => unsub()
   }, [])

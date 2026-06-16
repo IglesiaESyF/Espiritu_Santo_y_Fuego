@@ -17,8 +17,6 @@ interface Actividad {
   lugar: string
 }
 
-const STORAGE_KEY = 'iesfuego-actividades'
-
 export default function ActividadesPage() {
   const [actividades, setActividades] = useState<Actividad[]>([])
 
@@ -29,18 +27,14 @@ export default function ActividadesPage() {
   async function loadActividades() {
     try {
       const q = query(collection(db, 'actividades'), orderBy('createdAt', 'desc'))
-      const snap = await getDocs(q)
-      if (!snap.empty) {
-        const list: Actividad[] = []
-        snap.forEach((d) => list.push({ id: d.id, ...d.data() as Actividad }))
-        setActividades(list)
-        return
-      }
+      const snap = await Promise.race([
+        getDocs(q),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
+      ])
+      const list: Actividad[] = []
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() as Actividad }))
+      setActividades(list)
     } catch {}
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try { setActividades(JSON.parse(stored)) } catch {}
-    }
   }
 
   return (

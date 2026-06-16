@@ -9,8 +9,11 @@ import { Input } from '@/components/ui/input'
 import { db } from '@/lib/firebase'
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 
-const STORAGE_KEY = 'iesfuego-live-settings'
 const FIRESTORE_PATH = 'config/live'
+
+function timeout(ms: number) {
+  return new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+}
 
 export default function AdminEnVivoPage() {
   const router = useRouter()
@@ -28,26 +31,19 @@ export default function AdminEnVivoPage() {
 
   async function loadData() {
     try {
-      const snap = await getDoc(doc(db, FIRESTORE_PATH))
+      const snap = await Promise.race([
+        getDoc(doc(db, FIRESTORE_PATH)),
+        timeout(8000),
+      ])
       if (snap.exists()) {
         const d = snap.data()
         setPaginaFacebook(d.paginaFacebook || '')
         setVideoUrl(d.videoUrl || '')
         setActivo(d.activo || false)
         setMensaje(d.mensaje || '')
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(d))
-        return
       }
-    } catch {}
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        setPaginaFacebook(data.paginaFacebook || '')
-        setVideoUrl(data.videoUrl || '')
-        setActivo(data.activo || false)
-        setMensaje(data.mensaje || '')
-      } catch {}
+    } catch {
+      setError('No se pudo cargar la configuración desde Firebase.')
     }
   }
 
@@ -56,18 +52,18 @@ export default function AdminEnVivoPage() {
     setSaving(true)
     setError('')
     const data = { paginaFacebook, videoUrl, activo, mensaje }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     try {
-      await setDoc(doc(db, FIRESTORE_PATH), {
-        ...data,
-        updatedAt: serverTimestamp(),
-      })
+      await Promise.race([
+        setDoc(doc(db, FIRESTORE_PATH), {
+          ...data,
+          updatedAt: serverTimestamp(),
+        }),
+        timeout(8000),
+      ])
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch (err) {
-      setError('No se pudo guardar en la nube. Se guardó localmente.')
-      setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setError('Error al guardar en Firebase. Verifica tu conexión e intenta de nuevo.')
     } finally {
       setSaving(false)
     }

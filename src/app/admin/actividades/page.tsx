@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, Save, ArrowLeft } from 'lucide-react'
+import { Plus, Pencil, Trash2, Save, ArrowLeft, Sparkles } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { db } from '@/lib/firebase'
+import { generarDescripcion } from '@/lib/descripcion-generator'
 import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp,
 } from 'firebase/firestore'
@@ -20,8 +21,11 @@ interface Actividad {
   lugar: string
 }
 
-const STORAGE_KEY = 'iesfuego-actividades'
 const FIRESTORE_COLLECTION = 'actividades'
+
+function timeout(ms: number) {
+  return new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))
+}
 
 export default function AdminActividadesPage() {
   const router = useRouter()
@@ -34,6 +38,7 @@ export default function AdminActividadesPage() {
   const [hora, setHora] = useState('')
   const [lugar, setLugar] = useState('')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     loadActividades()
@@ -41,18 +46,15 @@ export default function AdminActividadesPage() {
 
   async function loadActividades() {
     try {
-      const snap = await getDocs(collection(db, FIRESTORE_COLLECTION))
-      if (!snap.empty) {
-        const list: Actividad[] = []
-        snap.forEach((d) => list.push({ id: d.id, ...d.data() as Actividad }))
-        setActividades(list)
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
-        return
-      }
-    } catch {}
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try { setActividades(JSON.parse(stored)) } catch {}
+      const snap = await Promise.race([
+        getDocs(collection(db, FIRESTORE_COLLECTION)),
+        timeout(8000),
+      ])
+      const list: Actividad[] = []
+      snap.forEach((d) => list.push({ id: d.id, ...d.data() as Actividad }))
+      setActividades(list)
+    } catch {
+      setError('No se pudieron cargar las actividades desde Firestore.')
     }
   }
 
@@ -63,6 +65,14 @@ export default function AdminActividadesPage() {
     setHora('')
     setLugar('')
     setEditingId(null)
+  }
+
+  function autoDescripcion() {
+    if (!titulo.trim()) {
+      alert('Escribe un título primero')
+      return
+    }
+    setDescripcion(generarDescripcion(titulo))
   }
 
   function openEdit(a: Actividad) {
@@ -78,35 +88,41 @@ export default function AdminActividadesPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError('')
     const data: Actividad = { titulo, descripcion, fecha, hora, lugar }
 
     try {
       if (editingId) {
-        await updateDoc(doc(db, FIRESTORE_COLLECTION, editingId), { ...data, updatedAt: serverTimestamp() })
+        await Promise.race([
+          updateDoc(doc(db, FIRESTORE_COLLECTION, editingId), { ...data, updatedAt: serverTimestamp() }),
+          timeout(8000),
+        ])
       } else {
-        const ref = await addDoc(collection(db, FIRESTORE_COLLECTION), { ...data, createdAt: serverTimestamp() })
+        const ref = await Promise.race([
+          addDoc(collection(db, FIRESTORE_COLLECTION), { ...data, createdAt: serverTimestamp() }),
+          timeout(8000),
+        ])
         data.id = ref.id
       }
+      await loadActividades()
+      resetForm()
+      setShowForm(false)
     } catch {
-      // Firestore no disponible — se guarda solo localmente
+      setError('Error al guardar en Firebase. Verifica tu conexión e intenta de nuevo.')
     }
-
-    const updated = editingId
-      ? actividades.map((a) => (a.id === editingId ? { ...data, id: editingId } : a))
-      : [...actividades, data]
-
-    setActividades(updated)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-    resetForm()
-    setShowForm(false)
     setSaving(false)
   }
 
   async function handleDelete(id: string) {
-    try { await deleteDoc(doc(db, FIRESTORE_COLLECTION, id)) } catch {}
-    const updated = actividades.filter((a) => a.id !== id)
-    setActividades(updated)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+    try {
+      await Promise.race([
+        deleteDoc(doc(db, FIRESTORE_COLLECTION, id)),
+        timeout(8000),
+      ])
+      await loadActividades()
+    } catch {
+      setError('Error al eliminar en Firebase. Intenta de nuevo.')
+    }
   }
 
   return (
@@ -123,12 +139,21 @@ export default function AdminActividadesPage() {
         </Button>
       </div>
 
+      {error && <p className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">{error}</p>}
+
       {showForm && (
         <Card className="mb-6">
           <CardContent className="p-5">
             <form onSubmit={handleSubmit} className="space-y-4">
               <Input label="Título" placeholder="Nombre de la actividad" value={titulo} onChange={(e) => setTitulo(e.target.value)} required />
-              <Input label="Descripción" placeholder="Descripción breve" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Input label="Descripción" placeholder="Descripción breve" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={autoDescripcion} className="mb-0.5">
+                  <Sparkles className="h-4 w-4 mr-1" /> Generar
+                </Button>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <Input label="Fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
                 <Input label="Hora" type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
