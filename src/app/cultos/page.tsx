@@ -67,33 +67,37 @@ export default function CultosPage() {
           <p className="mt-2 text-gray-600">Horarios y programación semanal</p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {/* Mobile: swipe carousel */}
+        <div className="flex gap-4 overflow-x-auto px-1 pb-4 swipe-container md:hidden">
           {DIAS.map((dia) => {
             const slots = semana[dia] || []
             return (
               <div
                 key={dia}
-                className={`flex flex-col rounded-xl border p-4 shadow-sm ${
+                className={`swipe-slide flex w-[85vw] flex-col rounded-xl border p-4 shadow-sm tile-w8 ${
                   slots.length ? 'border-primary/20 bg-white' : 'border-gray-100 bg-gray-50'
                 }`}
               >
-                <div className={`mb-3 rounded-lg px-3 py-1.5 text-center text-sm font-bold ${
-                  slots.length ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'
-                }`}>
-                  {DIAS_LABEL[dia]}
-                </div>
+                <DayHeader dia={dia} hasSlots={!!slots.length} />
+                {slots.length ? <DaySlots slots={slots} /> : <DayEmpty />}
+              </div>
+            )
+          })}
+        </div>
 
-                {!slots.length ? (
-                  <p className="py-6 text-center text-xs text-gray-400">Sin actividad</p>
-                ) : (
-                  <div className="flex flex-1 flex-col gap-4 text-xs">
-                    {slots.map((slot, i) => (
-                      <div key={i} className={i > 0 ? 'border-t border-gray-200 pt-4' : ''}>
-                        <SlotCard slot={slot} />
-                      </div>
-                    ))}
-                  </div>
-                )}
+        {/* Desktop: 7-column grid */}
+        <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+          {DIAS.map((dia) => {
+            const slots = semana[dia] || []
+            return (
+              <div
+                key={dia}
+                className={`flex flex-col rounded-xl border p-4 shadow-sm tile-w8 ${
+                  slots.length ? 'border-primary/20 bg-white' : 'border-gray-100 bg-gray-50'
+                }`}
+              >
+                <DayHeader dia={dia} hasSlots={!!slots.length} />
+                {slots.length ? <DaySlots slots={slots} /> : <DayEmpty />}
               </div>
             )
           })}
@@ -101,5 +105,31 @@ export default function CultosPage() {
       </main>
       <Footer />
     </>
+  )
+}
+
+function DayHeader({ dia, hasSlots }: { dia: string; hasSlots: boolean }) {
+  return (
+    <div className={`mb-3 rounded-lg px-3 py-1.5 text-center text-sm font-bold ${
+      hasSlots ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'
+    }`}>
+      {DIAS_LABEL[dia]}
+    </div>
+  )
+}
+
+function DayEmpty() {
+  return <p className="py-6 text-center text-xs text-gray-400">Sin actividad</p>
+}
+
+function DaySlots({ slots }: { slots: SlotCulto[] }) {
+  return (
+    <div className="flex flex-1 flex-col gap-4 text-xs">
+      {slots.map((slot, i) => (
+        <div key={i} className={i > 0 ? 'border-t border-gray-200 pt-4' : ''}>
+          <SlotCard slot={slot} />
+        </div>
+      ))}
+    </div>
   )
 }
