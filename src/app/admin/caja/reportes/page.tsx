@@ -119,8 +119,17 @@ export default function ReportesPage() {
   const to = fechaFin ? new Date(fechaFin + 'T12:00:00') : null
 
   const handleImprimir = () => {
+    const s = document.createElement('style')
+    s.id = 'print-styles'
+    s.textContent = `@media print{@page{margin:0.5in}aside,header{display:none!important}body>div>div>main{padding:0!important}}`
+    document.head.appendChild(s)
     setVistaImpresion(true)
-    setTimeout(() => { window.print(); setVistaImpresion(false) }, 400)
+    setTimeout(() => {
+      window.print()
+      setVistaImpresion(false)
+      const el = document.getElementById('print-styles')
+      if (el) el.remove()
+    }, 400)
   }
 
   const aniosDisponibles = useMemo(() => {
@@ -340,7 +349,12 @@ export default function ReportesPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">{labelCategoria(m.categoria)}</td>
-                        <td className="px-4 py-3 text-sm text-gray-800 max-w-[200px] truncate">{m.concepto}</td>
+                        <td className="px-4 py-3 text-sm text-gray-800 max-w-[200px] truncate">
+                          <span className={`text-[10px] font-semibold uppercase tracking-wider mr-1 ${m.tipo === 'ingreso' ? 'text-green-500' : 'text-red-500'}`}>
+                            {m.tipo === 'ingreso' ? 'Motivo:' : 'Gasto en:'}
+                          </span>
+                          {m.concepto}
+                        </td>
                         <td className="px-4 py-3 text-sm text-gray-500">{m.ingresadoPor}</td>
                         <td className={`px-4 py-3 text-right text-sm font-bold tabular-nums ${
                           m.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'
@@ -1003,7 +1017,12 @@ export default function ReportesPage() {
                     </span>
                   </td>
                   <td className="border border-gray-200 px-3 py-1.5 text-gray-600">{labelCategoria(m.categoria)}</td>
-                  <td className="border border-gray-200 px-3 py-1.5 text-gray-800">{m.concepto}</td>
+                  <td className="border border-gray-200 px-3 py-1.5 text-gray-800">
+                    <span className={`text-[10px] font-semibold uppercase tracking-wider mr-1 ${m.tipo === 'ingreso' ? 'text-green-700' : 'text-red-700'}`}>
+                      {m.tipo === 'ingreso' ? 'Motivo:' : 'Gasto en:'}
+                    </span>
+                    {m.concepto}
+                  </td>
                   <td className="border border-gray-200 px-3 py-1.5 text-gray-500">{m.ingresadoPor}</td>
                   <td className={`border border-gray-200 px-3 py-1.5 text-right font-bold ${
                     m.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'

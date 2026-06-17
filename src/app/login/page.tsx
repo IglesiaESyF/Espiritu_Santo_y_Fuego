@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const { login, seedInitialAdmin } = useAuth()
+  const { user, login, seedInitialAdmin } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -21,14 +21,19 @@ export default function AdminLoginPage() {
     seedInitialAdmin()
   }, [seedInitialAdmin])
 
+  useEffect(() => {
+    if (user) router.replace('/admin/dashboard')
+  }, [user, router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     const ok = await login(username, password)
-    if (ok) router.push('/admin/dashboard')
-    else setError('Usuario o contraseña incorrectos')
-    setLoading(false)
+    if (!ok) {
+      setError('Usuario o contraseña incorrectos')
+      setLoading(false)
+    }
   }
 
   return (

@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>Iglesia Espíritu Santo Fuego</title>
         <meta name="description" content="Iglesia Espíritu Santo Fuego - Transformando vidas con el poder del Espíritu Santo" />
         <link rel="manifest" href={base + '/manifest.json'} />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="IESFuego" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href={base + '/icon-192.png'} sizes="192x192" />
