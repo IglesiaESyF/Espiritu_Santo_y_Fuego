@@ -123,6 +123,11 @@ body {
   transition-duration: 0.1s;
 }
 
+.card-glass-static:active {
+  transform: translateY(-8px) scale(1.02) !important;
+  transition-duration: 0.1s;
+}
+
 .card-glass-inactive {
   background: rgba(249, 250, 251, 0.5);
   backdrop-filter: blur(8px);

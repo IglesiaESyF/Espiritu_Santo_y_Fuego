@@ -239,7 +239,7 @@ export default function CajaPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-100/50 bg-white/75">
+            <div className="card-glass card-glass-static overflow-hidden rounded-2xl border border-gray-100/50">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
