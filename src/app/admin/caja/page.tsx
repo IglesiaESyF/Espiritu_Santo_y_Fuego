@@ -254,7 +254,7 @@ export default function CajaPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filtrados.map((m) => (
-                      <tr key={m.id} className="transition-colors hover:bg-gray-50/50">
+                      <tr key={m.id} onDoubleClick={() => irAEditar(m)} className="cursor-pointer transition-colors hover:bg-gray-50/50">
                         <td className="whitespace-nowrap px-5 py-3.5 text-xs font-medium text-gray-600">{m.fecha}</td>
                         <td className="px-5 py-3.5">
                           <span className={`inline-block rounded-md px-2.5 py-1 text-[11px] font-semibold ${CAT_COLORS[m.categoria] || 'bg-gray-100 text-gray-700'}`}>

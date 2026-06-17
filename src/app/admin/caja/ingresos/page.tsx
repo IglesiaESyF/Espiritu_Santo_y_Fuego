@@ -29,6 +29,7 @@ export default function NuevoIngresoPage() {
   const [ingresadoPor, setIngresadoPor] = useState('')
   const [firmaTesorera, setFirmaTesorera] = useState('')
   const [editId, setEditId] = useState<string | null>(null)
+  const [modoLectura, setModoLectura] = useState(true)
   const [cargandoDatos, setCargandoDatos] = useState(true)
   const [showFirma, setShowFirma] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -39,6 +40,7 @@ export default function NuevoIngresoPage() {
     const id = params.get('id')
     if (id) {
       setEditId(id)
+      setModoLectura(true)
       const fetchData = async () => {
         try {
           const snap = await getDoc(doc(db, COLLECTION, id))
@@ -117,6 +119,14 @@ export default function NuevoIngresoPage() {
           <h1 className="text-2xl font-bold tracking-tight text-dark">{editId ? 'Editar Ingreso' : 'Nuevo Ingreso'}</h1>
           <p className="mt-0.5 text-sm text-gray-400">{editId ? 'Actualiza los datos del ingreso' : 'Registra un nuevo ingreso a la iglesia'}</p>
         </div>
+        {editId && modoLectura && (
+          <button
+            onClick={() => setModoLectura(false)}
+            className="ml-auto rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary-dark"
+          >
+            Editar
+          </button>
+        )}
       </div>
 
       <div className="card-glass rounded-2xl p-6 sm:p-8">
@@ -133,7 +143,7 @@ export default function NuevoIngresoPage() {
                 <select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
-                  disabled={!puede('caja', 'editar') && !!editId} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition disabled:opacity-50 disabled:cursor-not-allowed focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
+                  disabled={modoLectura && !!editId} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition disabled:opacity-50 disabled:cursor-not-allowed focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
                   required
                 >
                   <option value="">Seleccionar categoría</option>
@@ -154,7 +164,7 @@ export default function NuevoIngresoPage() {
                     step="0.01"
                     placeholder="0.00"
                     value={monto}
-                    disabled={!puede('caja', 'editar') && !!editId} onChange={(e) => setMonto(e.target.value)}
+                    disabled={modoLectura && !!editId} onChange={(e) => setMonto(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-lg font-bold tabular-nums tracking-tight transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
                     required
                   />
@@ -167,6 +177,7 @@ export default function NuevoIngresoPage() {
                 value={concepto}
                 onChange={(e) => setConcepto(e.target.value)}
                 required
+                disabled={modoLectura && !!editId}
               />
             </div>
           </div>
@@ -182,6 +193,7 @@ export default function NuevoIngresoPage() {
                 value={fecha}
                 onChange={(e) => setFecha(e.target.value)}
                 required
+                disabled={modoLectura && !!editId}
               />
               <div>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -190,7 +202,7 @@ export default function NuevoIngresoPage() {
                 <input
                   type="text"
                   value={ingresadoPor}
-                  disabled={!puede('caja', 'editar') && !!editId} onChange={(e) => setIngresadoPor(e.target.value)}
+                  disabled={!!editId} onChange={(e) => setIngresadoPor(e.target.value)}
                   placeholder="Tu nombre"
                   className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   required
@@ -208,6 +220,7 @@ export default function NuevoIngresoPage() {
                 type="text"
                 value={firmaTesorera}
                 onChange={(e) => setFirmaTesorera(e.target.value)}
+                disabled={modoLectura && !!editId}
                 placeholder="Nombre completo"
                 className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
                 required
@@ -221,8 +234,8 @@ export default function NuevoIngresoPage() {
             </div>
           )}
 
-          <Button type="submit" variant="primary" size="lg" className="w-full h-12 text-base font-semibold" disabled={saving || (!puede('caja', 'editar') && !!editId)}>
-            <Save className="mr-2 h-5 w-5" /> {saving ? 'Guardando…' : (editId ? (!puede('caja', 'editar') ? 'Solo lectura' : 'Actualizar Ingreso') : 'Registrar Ingreso')}
+          <Button type="submit" variant="primary" size="lg" className="w-full h-12 text-base font-semibold" disabled={saving || (modoLectura && !!editId)}>
+            <Save className="mr-2 h-5 w-5" /> {saving ? 'Guardando…' : (editId ? (modoLectura ? 'Solo lectura' : 'Actualizar Ingreso') : 'Registrar Ingreso')}
           </Button>
         </form>
       </div>
