@@ -1,0 +1,13 @@
+*.apk
+*.idsig
+node_modules/
+app/build/
+.idea/
+*.iml
+.gradle/
+build/
+local.properties
+iesfuego.keystore
+bubblewrap.config.json
+input.txt
+app-release-aligned.apk
