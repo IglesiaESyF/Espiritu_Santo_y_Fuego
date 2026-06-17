@@ -5,9 +5,19 @@ export const CATEGORIAS_INGRESO = [
 ] as const
 
 export const CATEGORIAS_EGRESO = [
-  { value: 'luz', label: 'Electricidad' },
+  { value: 'vigilante', label: 'Vigilante' },
+  { value: 'energia-electrica', label: 'Energía Eléctrica' },
   { value: 'agua', label: 'Agua' },
   { value: 'telefono', label: 'Teléfono/Internet' },
+  { value: 'predicadores-invitados', label: 'Ofrenda para Predicadores Invitados' },
+  { value: 'reparacion-instrumentos', label: 'Reparación de Instrumentos' },
+  { value: 'equipo-aseo', label: 'Equipo de Aseo y Limpieza' },
+  { value: 'compras-electricas', label: 'Compras de Bombillo, Cepos y Encendedores' },
+  { value: 'alquiler-sillas', label: 'Alquiler de Sillas para Campañas' },
+  { value: 'gasolina', label: 'Gasolina para Acarreos' },
+  { value: 'ofrenda-pastores', label: 'Ofrenda para Reunión de Pastores' },
+  { value: 'mano-obra', label: 'Mano de Obra para Reparaciones' },
+  { value: 'agua-invitados', label: 'Compra de Agua para Invitados' },
   { value: 'mantenimiento', label: 'Mantenimiento' },
   { value: 'evento', label: 'Gasto de Evento' },
   { value: 'actividades', label: 'Actividades' },
