@@ -71,6 +71,7 @@ export default function CajaPage() {
   const [tab, setTab] = useState<'ingresos' | 'egresos'>('ingresos')
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
   const [loading, setLoading] = useState(true)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!puede('caja', 'ver')) router.replace('/admin/dashboard')
@@ -113,13 +114,18 @@ export default function CajaPage() {
   )
   const saldo = totalIngresos - totalEgresos
 
-  const handleDelete = async (m: MovimientoCaja) => {
-    if (!confirm(`¿Eliminar este ${m.tipo === 'ingreso' ? 'ingreso' : 'egreso'}? Esta acción no se puede deshacer.`)) return
+  const handleDelete = async (id: string) => {
     try {
-      await deleteMovimiento(m.id)
+      await deleteMovimiento(id)
     } catch {
-      alert('Error al eliminar. Intente de nuevo.')
+      console.error('Error al eliminar')
     }
+    setConfirmDeleteId(null)
+  }
+
+  const irAEditar = (m: MovimientoCaja) => {
+    const prefix = m.tipo === 'ingreso' ? 'ingresos' : 'egresos'
+    router.push(`/admin/caja/${prefix}?id=${m.id}`)
   }
 
   return (
@@ -232,7 +238,7 @@ export default function CajaPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filtrados.map((m) => (
-                      <tr key={m.id} className="transition-colors hover:bg-gray-50/50">
+                      <tr key={m.id} onDoubleClick={() => irAEditar(m)} className="cursor-pointer transition-colors hover:bg-gray-50/50">
                         <td className="whitespace-nowrap px-5 py-3.5 text-xs font-medium text-gray-600">{m.fecha}</td>
                         <td className="px-5 py-3.5">
                           <span className={`inline-block rounded-md px-2.5 py-1 text-[11px] font-semibold ${CAT_COLORS[m.categoria] || 'bg-gray-100 text-gray-700'}`}>
@@ -248,13 +254,30 @@ export default function CajaPage() {
                         </td>
                         {puede('caja', 'eliminar') && (
                           <td className="whitespace-nowrap px-2 py-3.5 text-center">
-                            <button
-                              onClick={() => handleDelete(m)}
-                              className="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
-                              title="Eliminar"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            {confirmDeleteId === m.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleDelete(m.id)}
+                                  className="rounded-lg bg-red-500 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-red-600"
+                                >
+                                  Sí
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="rounded-lg bg-gray-200 px-2 py-1 text-[10px] font-semibold text-gray-600 transition hover:bg-gray-300"
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(m.id) }}
+                                className="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </td>
                         )}
                       </tr>

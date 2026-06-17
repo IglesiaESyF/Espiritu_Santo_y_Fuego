@@ -1,13 +1,17 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Save, Camera, User, TrendingDown, FileText, Calendar, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { CATEGORIAS_EGRESO, MovimientoCaja } from '@/types'
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase'
 import { useAuth } from '@/lib/auth-context'
-import { saveMovimiento } from '@/lib/caja-storage'
+import { saveMovimiento, updateMovimiento } from '@/lib/caja-storage'
+
+const COLLECTION = 'caja-movimientos'
 
 const CAT_ICONS: Record<string, string> = {
   luz: '⚡',
@@ -34,11 +38,41 @@ export default function NuevoEgresoPage() {
   const [fotoPreview, setFotoPreview] = useState('')
   const [firmaSolicitante, setFirmaSolicitante] = useState('')
   const [firmaPastor, setFirmaPastor] = useState('')
+  const [editId, setEditId] = useState<string | null>(null)
+  const [cargandoDatos, setCargandoDatos] = useState(true)
   const [showFirmas, setShowFirmas] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const id = params.get('id')
+    if (id) {
+      setEditId(id)
+      const fetchData = async () => {
+        try {
+          const snap = await getDoc(doc(db, COLLECTION, id))
+          if (snap.exists()) {
+            const data = snap.data()
+            setCategoria(data.categoria || '')
+            setMonto(String(data.monto || ''))
+            setConcepto(data.concepto || '')
+            setFecha(data.fecha || new Date().toISOString().split('T')[0])
+            setSolicitadoPor(data.ingresadoPor || '')
+            setAprobadoPor(data.aprobadoPor || '')
+            setDescripcion(data.descripcion || '')
+            setFirmaSolicitante(data.firmaSolicitante || '')
+            setFirmaPastor(data.firmaPastor || '')
+          }
+        } catch (e) {
+          console.error('Error fetching record:', e)
+        }
+        setCargandoDatos(false)
+      }
+      fetchData()
+    } else {
+      setCargandoDatos(false)
+    }
     if (!puede('caja', 'crear')) router.replace('/admin/caja')
     const saved = localStorage.getItem('iesfuego-user')
     if (saved) setSolicitadoPor(saved)
@@ -72,7 +106,7 @@ export default function NuevoEgresoPage() {
     setError('')
     if (solicitadoPor) localStorage.setItem('iesfuego-user', solicitadoPor)
     const movimiento: MovimientoCaja = {
-      id: '',
+      id: editId || '',
       tipo: 'egreso',
       categoria,
       monto: parseFloat(monto),
@@ -88,7 +122,7 @@ export default function NuevoEgresoPage() {
     }
     try {
       await Promise.race([
-        saveMovimiento(movimiento),
+        editId ? updateMovimiento(movimiento) : saveMovimiento(movimiento),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000)),
       ])
       router.push('/admin/caja')
@@ -100,7 +134,12 @@ export default function NuevoEgresoPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      {/* Header */}
+      {cargandoDatos ? (
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-[3px] border-primary border-t-transparent" />
+        </div>
+      ) : (
+      <>
       <div className="mb-8 flex items-center gap-4">
         <button
           onClick={() => router.back()}
@@ -109,8 +148,8 @@ export default function NuevoEgresoPage() {
           <ArrowLeft className="h-5 w-5 text-gray-500" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-dark">Nuevo Egreso</h1>
-          <p className="mt-0.5 text-sm text-gray-400">Registra un nuevo egreso de la iglesia</p>
+          <h1 className="text-2xl font-bold tracking-tight text-dark">{editId ? 'Editar Egreso' : 'Nuevo Egreso'}</h1>
+          <p className="mt-0.5 text-sm text-gray-400">{editId ? 'Actualiza los datos del egreso' : 'Registra un nuevo egreso de la iglesia'}</p>
         </div>
       </div>
 
@@ -130,7 +169,7 @@ export default function NuevoEgresoPage() {
                 <select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none"
+                  disabled={!puede('caja', 'editar') && !!editId} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition disabled:opacity-50 disabled:cursor-not-allowed focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none"
                   required
                 >
                   <option value="">Seleccionar categoría</option>
@@ -152,7 +191,7 @@ export default function NuevoEgresoPage() {
                     step="0.01"
                     placeholder="0.00"
                     value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
+                    disabled={!puede('caja', 'editar') && !!editId} onChange={(e) => setMonto(e.target.value)}
                     className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-lg font-bold tabular-nums tracking-tight transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none"
                     required
                   />
@@ -192,9 +231,9 @@ export default function NuevoEgresoPage() {
                 <input
                   type="text"
                   value={solicitadoPor}
-                  onChange={(e) => setSolicitadoPor(e.target.value)}
+                  disabled={!puede('caja', 'editar') && !!editId} onChange={(e) => setSolicitadoPor(e.target.value)}
                   placeholder="Nombre de quien solicita"
-                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -205,9 +244,9 @@ export default function NuevoEgresoPage() {
                 <input
                   type="text"
                   value={aprobadoPor}
-                  onChange={(e) => setAprobadoPor(e.target.value)}
+                  disabled={!puede('caja', 'editar') && !!editId} onChange={(e) => setAprobadoPor(e.target.value)}
                   placeholder="Nombre de quien aprueba"
-                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   required
                 />
               </div>
@@ -247,7 +286,7 @@ export default function NuevoEgresoPage() {
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Descripción</label>
                 <textarea
                   value={descripcion}
-                  onChange={(e) => setDescripcion(e.target.value)}
+                  disabled={!puede('caja', 'editar') && !!editId} onChange={(e) => setDescripcion(e.target.value)}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-accent/40 focus:ring-2 focus:ring-accent/10 focus:outline-none"
                   rows={3}
                   placeholder="Notas adicionales sobre este egreso..."
@@ -293,11 +332,13 @@ export default function NuevoEgresoPage() {
             </div>
           )}
 
-          <Button type="submit" variant="primary" size="lg" className="w-full h-12 text-base font-semibold" disabled={saving}>
-            <Save className="mr-2 h-5 w-5" /> {saving ? 'Guardando…' : 'Registrar Egreso'}
+          <Button type="submit" variant="primary" size="lg" className="w-full h-12 text-base font-semibold" disabled={saving || (!puede('caja', 'editar') && !!editId)}>
+            <Save className="mr-2 h-5 w-5" /> {saving ? 'Guardando…' : (editId ? (!puede('caja', 'editar') ? 'Solo lectura' : 'Actualizar Egreso') : 'Registrar Egreso')}
           </Button>
         </form>
       </div>
+      </>
+      )}
     </div>
   )
 }
