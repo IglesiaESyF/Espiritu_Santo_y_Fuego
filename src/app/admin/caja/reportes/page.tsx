@@ -132,6 +132,163 @@ export default function ReportesPage() {
     }, 400)
   }
 
+  const handleExportExcel = () => {
+    const { title, sub } = getReportTitle()
+    const rows = movimientosFiltrados.map((m, i) => `
+      <tr${i % 2 === 0 ? '' : ' style="background:#f8f9fa"'}>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:center;color:#6c757d;font-size:11px">${i + 1}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#495057;font-size:11px">${(m.fecha.split('-').reverse().join('/'))}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;font-size:11px;font-weight:600;color:${m.tipo === 'ingreso' ? '#16a34a' : '#dc2626'}">${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${labelCategoria(m.categoria)}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#212529;font-size:11px"><span style="color:${m.tipo === 'ingreso' ? '#16a34a' : '#dc2626'};font-weight:600;font-size:10px">${m.tipo === 'ingreso' ? 'Motivo:' : 'Gasto en:'}</span> ${m.concepto}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${m.ingresadoPor}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:right;font-weight:700;font-size:12px;color:${m.tipo === 'ingreso' ? '#16a34a' : '#dc2626'}">C$ ${m.monto.toFixed(2)}</td>
+      </tr>
+    `).join('')
+
+    const catIngRows = Object.entries(ingresosPorCategoria).map(([cat, total]) => `
+      <tr>
+        <td style="border:1px solid #bbf7d0;padding:5px 10px;color:#374151;font-size:11px">${labelCategoria(cat)}</td>
+        <td style="border:1px solid #bbf7d0;padding:5px 10px;text-align:right;font-weight:600;color:#16a34a;font-size:11px">C$ ${total.toFixed(2)}</td>
+      </tr>
+    `).join('')
+    const catEgrRows = Object.entries(egresosPorCategoria).map(([cat, total]) => `
+      <tr>
+        <td style="border:1px solid #fecaca;padding:5px 10px;color:#374151;font-size:11px">${labelCategoria(cat)}</td>
+        <td style="border:1px solid #fecaca;padding:5px 10px;text-align:right;font-weight:600;color:#dc2626;font-size:11px">C$ ${total.toFixed(2)}</td>
+      </tr>
+    `).join('')
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>${title}</title></head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff">
+  <!-- Header -->
+  <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h1 style="margin:0;font-size:22px;color:#1a1a2e">Iglesia Espíritu Santo y Fuego</h1>
+        <p style="margin:2px 0;font-size:12px;color:#6b7280">Misión Cristiana Perfectos en Unidad</p>
+        <p style="margin:2px 0;font-size:10px;color:#9ca3af">Gasolinera Uno Tipitapa. 10c 1/2 al Oeste. / Tipitapa, Nicaragua</p>
+        <p style="margin:2px 0;font-size:10px;color:#9ca3af">Tel: 8438-6180 | Email: iglesiamadreesf@gmail.com</p>
+      </div>
+      <div style="background:#b8860b15;border:1px solid #b8860b33;border-radius:12px;padding:8px 20px;text-align:center">
+        <span style="font-size:24px;font-weight:900;color:#b8860b;font-family:'Times New Roman',serif">ESF</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <div style="text-align:center;margin-bottom:20px">
+    <h2 style="margin:0;font-size:18px;color:#1a1a2e;text-transform:uppercase;letter-spacing:1px">${title}</h2>
+    <p style="margin:4px 0;font-size:12px;color:#6b7280">${sub}</p>
+    <p style="margin:2px 0;font-size:10px;color:#9ca3af">Generado: ${new Date().toLocaleString('es-ES')}</p>
+  </div>
+
+  <!-- KPI Cards -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+    <tr>
+      <td style="padding:8px">
+        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #bbf7d0;border-radius:12px;padding:15px;text-align:center">
+          <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#15803d">Total Ingresos</p>
+          <p style="margin:4px 0;font-size:22px;font-weight:700;color:#16a34a;font-variant-numeric:tabular-nums">C$ ${totalIngresos.toFixed(2)}</p>
+        </div>
+      </td>
+      <td style="padding:8px">
+        <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid #fecaca;border-radius:12px;padding:15px;text-align:center">
+          <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b91c1c">Total Egresos</p>
+          <p style="margin:4px 0;font-size:22px;font-weight:700;color:#dc2626;font-variant-numeric:tabular-nums">C$ ${totalEgresos.toFixed(2)}</p>
+        </div>
+      </td>
+      <td style="padding:8px">
+        <div style="background:${saldo >= 0 ? 'linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe' : 'linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid #fecaca'};border-radius:12px;padding:15px;text-align:center">
+          <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${saldo >= 0 ? '#1d4ed8' : '#b91c1c'}">Saldo</p>
+          <p style="margin:4px 0;font-size:22px;font-weight:700;color:${saldo >= 0 ? '#2563eb' : '#dc2626'};font-variant-numeric:tabular-nums">C$ ${saldo.toFixed(2)}</p>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Category Breakdown -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+    <tr>
+      <td style="width:50%;padding:8px;vertical-align:top">
+        <h3 style="margin:0 0 8px 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d;border-bottom:2px solid #bbf7d0;padding-bottom:6px">Ingresos por Categoría</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          ${catIngRows || '<tr><td style="padding:8px;color:#9ca3af;font-size:12px">Sin ingresos</td></tr>'}
+          <tr style="font-weight:700"><td style="border-top:2px solid #16a34a;padding:5px 10px;color:#374151">Total Ingresos</td><td style="border-top:2px solid #16a34a;padding:5px 10px;text-align:right;color:#16a34a">C$ ${totalIngresos.toFixed(2)}</td></tr>
+        </table>
+      </td>
+      <td style="width:50%;padding:8px;vertical-align:top">
+        <h3 style="margin:0 0 8px 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c;border-bottom:2px solid #fecaca;padding-bottom:6px">Egresos por Categoría</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          ${catEgrRows || '<tr><td style="padding:8px;color:#9ca3af;font-size:12px">Sin egresos</td></tr>'}
+          <tr style="font-weight:700"><td style="border-top:2px solid #dc2626;padding:5px 10px;color:#374151">Total Egresos</td><td style="border-top:2px solid #dc2626;padding:5px 10px;text-align:right;color:#dc2626">C$ ${totalEgresos.toFixed(2)}</td></tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Detail Table -->
+  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#374151;border-bottom:2px solid #d1d5db;padding-bottom:6px">Detalle de Movimientos</h3>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+    <thead>
+      <tr style="background:#f3f4f6">
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">No.</th>
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Fecha</th>
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Tipo</th>
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Categoría</th>
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Detalle</th>
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Responsable</th>
+        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+    </tbody>
+    <tfoot>
+      <tr style="background:#f3f4f6;font-weight:700">
+        <td colspan="6" style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#374151">Total Ingresos:</td>
+        <td style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#16a34a">C$ ${totalIngresos.toFixed(2)}</td>
+      </tr>
+      <tr style="background:#f3f4f6;font-weight:700">
+        <td colspan="6" style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#374151">Total Egresos:</td>
+        <td style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#dc2626">C$ ${totalEgresos.toFixed(2)}</td>
+      </tr>
+      <tr style="background:#f3f4f6;font-weight:700">
+        <td colspan="6" style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#374151">Saldo Neto:</td>
+        <td style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:${saldo >= 0 ? '#2563eb' : '#dc2626'}">C$ ${saldo.toFixed(2)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Signatures -->
+  <table style="width:100%;border-collapse:collapse;margin-top:40px">
+    <tr>
+      <td style="width:50%;text-align:center;padding:0 20px"><div style="border-bottom:2px solid #9ca3af;margin-bottom:6px">&nbsp;</div><p style="margin:4px 0;font-size:12px;font-weight:600;color:#374151">Pastor(a)</p><p style="margin:2px 0;font-size:10px;color:#9ca3af">Nombre y firma</p></td>
+      <td style="width:50%;text-align:center;padding:0 20px"><div style="border-bottom:2px solid #9ca3af;margin-bottom:6px">&nbsp;</div><p style="margin:4px 0;font-size:12px;font-weight:600;color:#374151">Cajera</p><p style="margin:2px 0;font-size:10px;color:#9ca3af">Nombre y firma</p></td>
+    </tr>
+  </table>
+
+  <!-- Footer -->
+  <div style="margin-top:30px;padding-top:15px;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af">
+    <p style="margin:2px 0">Documento generado el ${new Date().toLocaleString('es-ES')} — Iglesia Espíritu Santo y Fuego</p>
+    <p style="margin:2px 0">Este documento es un extracto oficial de ingresos y egresos.</p>
+  </div>
+</body>
+</html>`
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Reporte_${reportType}_${new Date().toISOString().split('T')[0]}.xls`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   const aniosDisponibles = useMemo(() => {
     const set = new Set<number>()
     movimientos.forEach((m) => {
@@ -164,6 +321,9 @@ export default function ReportesPage() {
           <h1 className="text-2xl font-bold text-dark">Reportes</h1>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" size="sm" onClick={handleExportExcel}>
+            <Download className="mr-1.5 h-4 w-4" /> Excel
+          </Button>
           <Button variant="primary" size="sm" onClick={handleImprimir}>
             <Printer className="mr-1.5 h-4 w-4" /> {reportType === 'detallado' ? 'Reporte Profesional' : 'Imprimir'}
           </Button>
