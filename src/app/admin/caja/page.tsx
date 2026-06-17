@@ -249,12 +249,12 @@ export default function CajaPage() {
                       <Th>Concepto</Th>
                       <Th>Responsable</Th>
                       <Th className="text-right">Monto</Th>
-                      {(puede('caja', 'editar') || puede('caja', 'eliminar')) && <Th className="w-10 text-center">Acción</Th>}
+                      {puede('caja', 'ver') && <Th className="w-10 text-center">Acción</Th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filtrados.map((m) => (
-                      <tr key={m.id} onDoubleClick={() => irAEditar(m)} className="cursor-pointer transition-colors hover:bg-gray-50/50">
+                      <tr key={m.id} className="transition-colors hover:bg-gray-50/50">
                         <td className="whitespace-nowrap px-5 py-3.5 text-xs font-medium text-gray-600">{m.fecha}</td>
                         <td className="px-5 py-3.5">
                           <span className={`inline-block rounded-md px-2.5 py-1 text-[11px] font-semibold ${CAT_COLORS[m.categoria] || 'bg-gray-100 text-gray-700'}`}>
@@ -268,18 +268,18 @@ export default function CajaPage() {
                         }`}>
                           {m.tipo === 'ingreso' ? '+' : '–'} C$ {m.monto.toLocaleString('es', { minimumFractionDigits: 2 })}
                         </td>
-                        {(puede('caja', 'editar') || puede('caja', 'eliminar')) && (
+                        {puede('caja', 'ver') && (
                           <td className="whitespace-nowrap px-2 py-3.5 text-center">
                             {confirmDeleteId === m.id ? (
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => handleDelete(m.id)}
+                                  onClick={(e) => { e.stopPropagation(); handleDelete(m.id) }}
                                   className="rounded-lg bg-red-500 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-red-600"
                                 >
                                   Sí
                                 </button>
                                 <button
-                                  onClick={() => setConfirmDeleteId(null)}
+                                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null) }}
                                   className="rounded-lg bg-gray-200 px-2 py-1 text-[10px] font-semibold text-gray-600 transition hover:bg-gray-300"
                                 >
                                   No
