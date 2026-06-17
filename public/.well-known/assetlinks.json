@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.iglesiaesyf.app",
+    "sha256_cert_fingerprints": ["67:55:0A:FD:A2:80:07:B0:77:6F:C4:2D:F5:66:BB:D6:7E:C2:36:B5:0B:D0:5C:2A:C5:51:88:AA:42:94:13:52"]
+  }
+}]
