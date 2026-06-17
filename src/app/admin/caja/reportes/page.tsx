@@ -338,7 +338,7 @@ export default function ReportesPage() {
           <h1 className="text-2xl font-bold text-dark">Iglesia Espíritu Santo y Fuego</h1>
           <p className="text-sm text-gray-500">Misión Cristiana Perfectos en Unidad</p>
           <p className="text-xs text-gray-400">Gasolinera Uno Tipitapa. 10c 1/2 al Oeste. / Tipitapa, Nicaragua</p>
-          <p className="text-xs text-gray-400">Tel: 8438-6180 / 8321-2177 | Email: iglesiamadreesf@gmail.com</p>
+          <p className="text-xs text-gray-400">Tel: 8438-6180 | Email: iglesiamadreesf@gmail.com</p>
         </div>
 
         <div className="mb-6 text-center">
