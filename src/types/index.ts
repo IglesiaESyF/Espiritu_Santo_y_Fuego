@@ -53,6 +53,7 @@ export interface User {
   username: string
   passwordHash: string
   nombre: string
+  cargo: string
   role: UserRole
   permisos: Permisos
   activo: boolean

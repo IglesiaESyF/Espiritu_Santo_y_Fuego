@@ -12,10 +12,22 @@ import { hashPassword } from '@/lib/hash'
 import type { User, UserRole, Permisos, PermisosSeccion } from '@/types'
 import { ROLES_PRESET } from '@/types'
 
+const CARGOS_IGLESIA = [
+  'Pastor', 'Copastor',
+  'Secretaria(o) General de la Iglesia',
+  'Presidente de Damas', 'Vice Presidente de Damas',
+  'Presidente de Caballeros', 'Vice Presidente de Caballeros',
+  'Presidente de Jóvenes', 'Vice Presidente de Jóvenes',
+  'Tesorero General', 'Diácono',
+  'Representante de la Congregación',
+  'Profesor(a) de Escuela Dominical para Niños',
+]
+
 interface UserForm {
   username: string
   password: string
   nombre: string
+  cargo: string
   role: UserRole
   permisos: Permisos
 }
@@ -52,7 +64,7 @@ export default function AdminUsuariosPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<UserForm>({
-    username: '', password: '', nombre: '', role: 'visual', permisos: permisosVacios(),
+    username: '', password: '', nombre: '', cargo: '', role: 'visual', permisos: permisosVacios(),
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -71,13 +83,13 @@ export default function AdminUsuariosPage() {
 
   function startCreate() {
     setEditingId(null)
-    setForm({ username: '', password: '', nombre: '', role: 'visual', permisos: permisosVacios() })
+    setForm({ username: '', password: '', nombre: '', cargo: '', role: 'visual', permisos: permisosVacios() })
     setShowForm(true)
   }
 
   function startEdit(u: User) {
     setEditingId(u.id)
-    setForm({ username: u.username, password: '', nombre: u.nombre, role: u.role, permisos: u.permisos })
+    setForm({ username: u.username, password: '', nombre: u.nombre, cargo: u.cargo || '', role: u.role, permisos: u.permisos })
     setShowForm(true)
   }
 
@@ -105,6 +117,7 @@ export default function AdminUsuariosPage() {
       const data: Record<string, unknown> = {
         username: form.username,
         nombre: form.nombre,
+        cargo: form.cargo,
         role: form.role,
         permisos: form.permisos,
         activo: true,
@@ -162,6 +175,21 @@ export default function AdminUsuariosPage() {
             <Input label="Usuario" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required />
             <Input label={editingId ? 'Nueva Contraseña (dejar vacío para mantener)' : 'Contraseña'} type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required={!editingId} />
             <Input label="Nombre Completo" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
+          </div>
+
+          <div className="mb-6">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Cargo en la Iglesia</label>
+            <select
+              value={form.cargo}
+              onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none"
+              required
+            >
+              <option value="">Seleccionar cargo</option>
+              {CARGOS_IGLESIA.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
 
           <div className="mb-6">
@@ -228,6 +256,7 @@ export default function AdminUsuariosPage() {
             <tr className="border-b border-gray-200 bg-gray-50/80 text-left">
               <th className="px-4 py-3 font-semibold text-gray-500">Usuario</th>
               <th className="px-4 py-3 font-semibold text-gray-500">Nombre</th>
+              <th className="px-4 py-3 font-semibold text-gray-500">Cargo</th>
               <th className="px-4 py-3 font-semibold text-gray-500">Rol</th>
               <th className="px-4 py-3 font-semibold text-gray-500">Activo</th>
               <th className="px-4 py-3 font-semibold text-gray-500">Acciones</th>
@@ -238,6 +267,15 @@ export default function AdminUsuariosPage() {
               <tr key={u.id} className="border-b border-gray-100 transition hover:bg-gray-50/50">
                 <td className="px-4 py-3 font-medium text-dark">{u.username}</td>
                 <td className="px-4 py-3 text-gray-600">{u.nombre}</td>
+                <td className="px-4 py-3">
+                  {u.cargo ? (
+                    <span className="inline-block rounded-md bg-gray-100 px-2.5 py-1 text-[11px] font-medium text-gray-600">
+                      {u.cargo}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-300">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                     {u.role}
