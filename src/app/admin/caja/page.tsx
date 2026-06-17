@@ -72,6 +72,7 @@ export default function CajaPage() {
   const [movimientos, setMovimientos] = useState<MovimientoCaja[]>([])
   const [loading, setLoading] = useState(true)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     if (!puede('caja', 'ver')) router.replace('/admin/dashboard')
@@ -114,11 +115,20 @@ export default function CajaPage() {
   )
   const saldo = totalIngresos - totalEgresos
 
+  useEffect(() => {
+    if (deleteError) {
+      const t = setTimeout(() => setDeleteError(''), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [deleteError])
+
   const handleDelete = async (id: string) => {
     try {
       await deleteMovimiento(id)
-    } catch {
-      console.error('Error al eliminar')
+      setDeleteError('')
+    } catch (e) {
+      setDeleteError('Error al eliminar. Verifica tu conexión e intenta de nuevo.')
+      console.error('Error al eliminar:', e)
     }
     setConfirmDeleteId(null)
   }
@@ -206,6 +216,12 @@ export default function CajaPage() {
               inactiveColor="text-gray-500 border-gray-200"
             />
           </div>
+
+          {deleteError && (
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+              {deleteError}
+            </div>
+          )}
 
           {/* Table */}
           {filtrados.length === 0 ? (
