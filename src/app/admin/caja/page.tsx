@@ -249,7 +249,7 @@ export default function CajaPage() {
                       <Th>Concepto</Th>
                       <Th>Responsable</Th>
                       <Th className="text-right">Monto</Th>
-                      {puede('caja', 'eliminar') && <Th className="w-10 text-center">Acción</Th>}
+                      {(puede('caja', 'editar') || puede('caja', 'eliminar')) && <Th className="w-10 text-center">Acción</Th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -268,7 +268,7 @@ export default function CajaPage() {
                         }`}>
                           {m.tipo === 'ingreso' ? '+' : '–'} C$ {m.monto.toLocaleString('es', { minimumFractionDigits: 2 })}
                         </td>
-                        {puede('caja', 'eliminar') && (
+                        {(puede('caja', 'editar') || puede('caja', 'eliminar')) && (
                           <td className="whitespace-nowrap px-2 py-3.5 text-center">
                             {confirmDeleteId === m.id ? (
                               <div className="flex items-center gap-1">
