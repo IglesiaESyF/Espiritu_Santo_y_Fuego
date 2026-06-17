@@ -1,44 +1,37 @@
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { DollarSign, Tv, CalendarDays, TrendingUp } from 'lucide-react'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 
 export default function AdminDashboard() {
+  const router = useRouter()
+  const { puede } = useAuth()
+
+  useEffect(() => {
+    const sections: { key: Parameters<typeof puede>[0]; href: string }[] = [
+      { key: 'caja', href: '/admin/caja' },
+      { key: 'actividades', href: '/admin/actividades' },
+      { key: 'cultos', href: '/admin/cultos' },
+      { key: 'envivo', href: '/admin/en-vivo' },
+      { key: 'usuarios', href: '/admin/usuarios' },
+    ]
+    for (const s of sections) {
+      if (puede(s.key, 'ver')) {
+        router.replace(s.href)
+        return
+      }
+    }
+  }, [router, puede])
+
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold text-dark">Dashboard</h1>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[
-          { icon: DollarSign, label: 'Caja', value: 'C$ 0.00', color: 'text-green-600', bg: 'bg-green-100' },
-          { icon: TrendingUp, label: 'Ingresos del Mes', value: 'C$ 0.00', color: 'text-blue-600', bg: 'bg-blue-100' },
-          { icon: CalendarDays, label: 'Actividades', value: '0', color: 'text-amber-600', bg: 'bg-amber-100' },
-          { icon: Tv, label: 'Cultos', value: '0', color: 'text-purple-600', bg: 'bg-purple-100' },
-        ].map((item) => (
-          <Card key={item.label}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className={`rounded-xl p-3 ${item.bg}`}>
-                <item.icon className={`h-6 w-6 ${item.color}`} />
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">{item.label}</p>
-                <p className="text-xl font-bold text-dark">{item.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <h2 className="font-semibold text-dark">Bienvenido al Panel de Administración</h2>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">
-              Desde aquí puedes gestionar las actividades, cultos y la caja de la iglesia.
-              Usa el menú lateral para navegar entre las secciones.
-            </p>
-          </CardContent>
-        </Card>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl gold-accent shadow-lg shadow-primary/20">
+          <span className="text-3xl font-black text-white" style={{ fontFamily: "'Times New Roman', serif" }}>ESF</span>
+        </div>
+        <h1 className="text-xl font-bold text-dark">Bienvenido</h1>
+        <p className="mt-1 text-sm text-gray-500">No tienes acceso a ninguna sección.</p>
       </div>
     </div>
   )

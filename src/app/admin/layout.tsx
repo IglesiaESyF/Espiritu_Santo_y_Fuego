@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  LayoutDashboard, CalendarDays, Tv, DollarSign, LogOut,
+  CalendarDays, Tv, DollarSign, LogOut,
   Church, Menu, X, Wifi, Shield,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
@@ -14,6 +14,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const { user, loading, logout, puede } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const homeHref = useMemo(() => {
+    const sections: { key: Parameters<typeof puede>[0]; href: string }[] = [
+      { key: 'caja', href: '/admin/caja' },
+      { key: 'actividades', href: '/admin/actividades' },
+      { key: 'cultos', href: '/admin/cultos' },
+      { key: 'envivo', href: '/admin/en-vivo' },
+      { key: 'usuarios', href: '/admin/usuarios' },
+    ]
+    for (const s of sections) {
+      if (puede(s.key, 'ver')) return s.href
+    }
+    return '/admin/dashboard'
+  }, [puede])
 
   if (pathname === '/login') return <>{children}</>
 
@@ -27,7 +41,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, permiso: null },
     { href: '/admin/actividades', label: 'Actividades', icon: CalendarDays, permiso: 'actividades' as const },
     { href: '/admin/cultos', label: 'Cultos', icon: Tv, permiso: 'cultos' as const },
     { href: '/admin/en-vivo', label: 'En Vivo', icon: Wifi, permiso: 'envivo' as const },
@@ -42,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-gray-50">
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-dark text-white transition-transform md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex items-center justify-between border-b border-gray-700 px-5 py-4">
-          <Link href="/admin/dashboard" className="flex items-center gap-2">
+          <Link href={homeHref} className="flex items-center gap-2">
             <Church className="h-6 w-6 text-primary-light" />
             <span className="font-bold">IESFuego Admin</span>
           </Link>
