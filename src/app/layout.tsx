@@ -1,9 +1,19 @@
 'use client'
 
 import './globals.css'
+import { useEffect } from 'react'
 import { AuthProvider } from '@/lib/auth-context'
 
 const base = '/Espiritu_Santo_y_Fuego'
+
+function ServiceWorkerRegister() {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register(base + '/sw.js', { scope: base + '/' })
+    }
+  }, [])
+  return null
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-warm text-gray-800 antialiased">
         <AuthProvider>{children}</AuthProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   )
