@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUpCircle, ArrowDownCircle, TrendingUp, TrendingDown, Plus,
-  FileText,
+  FileText, Trash2,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { CATEGORIAS_INGRESO, CATEGORIAS_EGRESO, MovimientoCaja } from '@/types'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { deleteMovimiento } from '@/lib/caja-storage'
 
 const labelCat = (val: string) =>
   [...CATEGORIAS_INGRESO, ...CATEGORIAS_EGRESO].find((c) => c.value === val)?.label || val
@@ -111,6 +112,15 @@ export default function CajaPage() {
     [movimientos],
   )
   const saldo = totalIngresos - totalEgresos
+
+  const handleDelete = async (m: MovimientoCaja) => {
+    if (!confirm(`¿Eliminar este ${m.tipo === 'ingreso' ? 'ingreso' : 'egreso'}? Esta acción no se puede deshacer.`)) return
+    try {
+      await deleteMovimiento(m.id)
+    } catch {
+      alert('Error al eliminar. Intente de nuevo.')
+    }
+  }
 
   return (
     <div>
@@ -217,6 +227,7 @@ export default function CajaPage() {
                       <Th>Concepto</Th>
                       <Th>Responsable</Th>
                       <Th className="text-right">Monto</Th>
+                      {puede('caja', 'eliminar') && <Th className="w-10 text-center">Acción</Th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
@@ -235,6 +246,17 @@ export default function CajaPage() {
                         }`}>
                           {m.tipo === 'ingreso' ? '+' : '–'} C$ {m.monto.toLocaleString('es', { minimumFractionDigits: 2 })}
                         </td>
+                        {puede('caja', 'eliminar') && (
+                          <td className="whitespace-nowrap px-2 py-3.5 text-center">
+                            <button
+                              onClick={() => handleDelete(m)}
+                              className="rounded-lg p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

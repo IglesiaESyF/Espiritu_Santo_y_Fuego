@@ -1,6 +1,6 @@
 import { MovimientoCaja } from '@/types'
 import { db } from './firebase'
-import { collection, getDocs, addDoc, query, orderBy, serverTimestamp } from 'firebase/firestore'
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from 'firebase/firestore'
 
 const COLLECTION = 'caja-movimientos'
 
@@ -33,4 +33,8 @@ export async function getMovimientos(): Promise<MovimientoCaja[]> {
 export async function saveMovimiento(m: MovimientoCaja) {
   const { id, ...data } = m
   await addDoc(collection(db, COLLECTION), { ...data, creadoEn: serverTimestamp() })
+}
+
+export async function deleteMovimiento(id: string) {
+  await deleteDoc(doc(db, COLLECTION, id))
 }
