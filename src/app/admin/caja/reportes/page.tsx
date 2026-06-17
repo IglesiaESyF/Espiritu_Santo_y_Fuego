@@ -1052,8 +1052,8 @@ export default function ReportesPage() {
         </div>
 
         {/* Signatures */}
-        <div className="mt-12 grid grid-cols-3 gap-8 text-center text-sm">
-          {['Tesorero(a)', 'Pastor(a)', 'Contador(a)'].map((role) => (
+        <div className="mt-12 grid grid-cols-2 gap-12 text-center text-sm">
+          {['Pastor(a)', 'Cajera'].map((role) => (
             <div key={role}>
               <div className="mb-12 border-b-2 border-gray-400" />
               <p className="font-medium text-gray-700">{role}</p>
