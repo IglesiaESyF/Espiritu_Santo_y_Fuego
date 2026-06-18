@@ -135,15 +135,24 @@ export default function ReportesPage() {
   const handleExportExcel = () => {
     const { title, sub } = getReportTitle()
     const base = '/Espiritu_Santo_y_Fuego'
-    const rows = movimientosFiltrados.map((m, i) => `
+    const ingresoRows = movimientosFiltrados.filter(m => m.tipo === 'ingreso').map((m, i) => `
       <tr${i % 2 === 0 ? '' : ' style="background:#f8f9fa"'}>
         <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:center;color:#6c757d;font-size:11px">${i + 1}</td>
         <td style="border:1px solid #dee2e6;padding:6px 10px;color:#495057;font-size:11px">${(m.fecha.split('-').reverse().join('/'))}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;font-size:11px;font-weight:600;color:${m.tipo === 'ingreso' ? '#16a34a' : '#dc2626'}">${m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}</td>
         <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${labelCategoria(m.categoria)}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#212529;font-size:11px"><span style="color:${m.tipo === 'ingreso' ? '#16a34a' : '#dc2626'};font-weight:600;font-size:10px">${m.tipo === 'ingreso' ? 'Motivo:' : 'Gasto en:'}</span> ${m.concepto}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#212529;font-size:11px"><span style="color:#16a34a;font-weight:600;font-size:10px">Motivo:</span> ${m.concepto}</td>
         <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${m.ingresadoPor}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:right;font-weight:700;font-size:12px;color:${m.tipo === 'ingreso' ? '#16a34a' : '#dc2626'}">C$ ${m.monto.toFixed(2)}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:right;font-weight:700;font-size:12px;color:#16a34a">C$ ${m.monto.toFixed(2)}</td>
+      </tr>
+    `).join('')
+    const egresoRows = movimientosFiltrados.filter(m => m.tipo === 'egreso').map((m, i) => `
+      <tr${i % 2 === 0 ? '' : ' style="background:#f8f9fa"'}>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:center;color:#6c757d;font-size:11px">${i + 1}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#495057;font-size:11px">${(m.fecha.split('-').reverse().join('/'))}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${labelCategoria(m.categoria)}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#212529;font-size:11px"><span style="color:#dc2626;font-weight:600;font-size:10px">Gasto en:</span> ${m.concepto}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${m.ingresadoPor}</td>
+        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:right;font-weight:700;font-size:12px;color:#dc2626">C$ ${m.monto.toFixed(2)}</td>
       </tr>
     `).join('')
 
@@ -223,38 +232,55 @@ export default function ReportesPage() {
     </tr>
   </table>
 
-  <!-- Detail Table -->
-  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#374151;border-bottom:2px solid #d1d5db;padding-bottom:6px">Detalle de Movimientos</h3>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
+  <!-- Detail Ingresos -->
+  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#16a34a;border-bottom:2px solid #bbf7d0;padding-bottom:6px">Detalle de Ingresos</h3>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:30px">
     <thead>
-      <tr style="background:#f3f4f6">
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">No.</th>
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Fecha</th>
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Tipo</th>
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Categoría</th>
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Detalle</th>
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Responsable</th>
-        <th style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#6b7280">Monto</th>
+      <tr style="background:#f0fdf4">
+        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">No.</th>
+        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Fecha</th>
+        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Categoría</th>
+        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Detalle</th>
+        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Responsable</th>
+        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Monto</th>
       </tr>
     </thead>
     <tbody>
-      ${rows}
+      ${ingresoRows || '<tr><td colspan="6" style="padding:10px;text-align:center;color:#9ca3af;font-size:12px">Sin ingresos</td></tr>'}
     </tbody>
     <tfoot>
-      <tr style="background:#f3f4f6;font-weight:700">
-        <td colspan="6" style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#374151">Total Ingresos:</td>
-        <td style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#16a34a">C$ ${totalIngresos.toFixed(2)}</td>
-      </tr>
-      <tr style="background:#f3f4f6;font-weight:700">
-        <td colspan="6" style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#374151">Total Egresos:</td>
-        <td style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#dc2626">C$ ${totalEgresos.toFixed(2)}</td>
-      </tr>
-      <tr style="background:#f3f4f6;font-weight:700">
-        <td colspan="6" style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:#374151">Saldo Neto:</td>
-        <td style="border:1px solid #d1d5db;padding:8px 10px;text-align:right;font-size:12px;color:${saldo >= 0 ? '#2563eb' : '#dc2626'}">C$ ${saldo.toFixed(2)}</td>
+      <tr style="background:#f0fdf4;font-weight:700">
+        <td colspan="5" style="border:1px solid #bbf7d0;padding:8px 10px;text-align:right;font-size:12px;color:#15803d">Total Ingresos:</td>
+        <td style="border:1px solid #bbf7d0;padding:8px 10px;text-align:right;font-size:12px;color:#16a34a">C$ ${totalIngresos.toFixed(2)}</td>
       </tr>
     </tfoot>
   </table>
+
+  <!-- Detail Egresos -->
+  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#dc2626;border-bottom:2px solid #fecaca;padding-bottom:6px">Detalle de Egresos</h3>
+  <table style="width:100%;border-collapse:collapse;margin-bottom:30px">
+    <thead>
+      <tr style="background:#fef2f2">
+        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">No.</th>
+        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Fecha</th>
+        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Categoría</th>
+        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Detalle</th>
+        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Responsable</th>
+        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${egresoRows || '<tr><td colspan="6" style="padding:10px;text-align:center;color:#9ca3af;font-size:12px">Sin egresos</td></tr>'}
+    </tbody>
+    <tfoot>
+      <tr style="background:#fef2f2;font-weight:700">
+        <td colspan="5" style="border:1px solid #fecaca;padding:8px 10px;text-align:right;font-size:12px;color:#b91c1c">Total Egresos:</td>
+        <td style="border:1px solid #fecaca;padding:8px 10px;text-align:right;font-size:12px;color:#dc2626">C$ ${totalEgresos.toFixed(2)}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#374151;padding-bottom:6px">Saldo Neto: C$ ${saldo.toFixed(2)}</h3>
 
   <!-- Signatures -->
   <table style="width:100%;border-collapse:collapse;margin-top:100px">
