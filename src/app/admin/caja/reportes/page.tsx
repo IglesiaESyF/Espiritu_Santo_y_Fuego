@@ -121,7 +121,8 @@ export default function ReportesPage() {
   const handleImprimir = () => {
     const s = document.createElement('style')
     s.id = 'print-styles'
-    s.textContent = `@media print{@page{margin:0.5in}aside,header{display:none!important}body>div>div>main{padding:0!important}}`
+    const base = '/Espiritu_Santo_y_Fuego'
+    s.textContent = `@media print{@page{margin:0.5in}aside,header{display:none!important}body>div>div>main{padding:0!important}body::before{content:'';position:fixed;top:50%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%);background:url('${base}/logo.png') no-repeat center;background-size:contain;opacity:0.08;pointer-events:none;z-index:9999}}`
     document.head.appendChild(s)
     setVistaImpresion(true)
     setTimeout(() => {
@@ -164,18 +165,9 @@ export default function ReportesPage() {
 <head><meta charset="UTF-8"><title>${title}</title></head>
 <body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff">
   <!-- Header -->
-  <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <h1 style="margin:0;font-size:22px;color:#1a1a2e">Iglesia Espíritu Santo y Fuego</h1>
-        <p style="margin:2px 0;font-size:12px;color:#6b7280">Misión Cristiana Perfectos en Unidad</p>
-        <p style="margin:2px 0;font-size:10px;color:#9ca3af">Gasolinera Uno Tipitapa. 10c 1/2 al Oeste. / Tipitapa, Nicaragua</p>
-        <p style="margin:2px 0;font-size:10px;color:#9ca3af">Tel: 8438-6180 | Email: iglesiamadreesf@gmail.com</p>
-      </div>
-      <div style="background:#b8860b15;border:1px solid #b8860b33;border-radius:12px;padding:8px 20px;text-align:center">
-        <span style="font-size:24px;font-weight:900;color:#b8860b;font-family:'Times New Roman',serif">ESF</span>
-      </div>
-    </div>
+  <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px;text-align:center">
+    <h1 style="margin:0;font-size:22px;color:#1a1a2e">Iglesia Espíritu Santo y Fuego</h1>
+    <p style="margin:2px 0;font-size:12px;color:#6b7280">Misión Cristiana Perfectos en Unidad</p>
   </div>
 
   <!-- Title -->
@@ -1061,20 +1053,9 @@ export default function ReportesPage() {
     return (
       <div className="mx-auto max-w-5xl bg-white p-10 print:p-6">
         {/* Header */}
-        <div className="mb-8 border-b-2 border-primary pb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Iglesia Espíritu Santo y Fuego</h1>
-              <p className="text-sm text-gray-500">Misión Cristiana Perfectos en Unidad</p>
-              <p className="text-xs text-gray-400">Gasolinera Uno Tipitapa. 10c 1/2 al Oeste. / Tipitapa, Nicaragua</p>
-              <p className="text-xs text-gray-400">Tel: 8438-6180 | Email: iglesiamadreesf@gmail.com</p>
-            </div>
-            <div className="text-right">
-              <div className="rounded-xl bg-primary/10 px-4 py-2 border border-primary/20">
-                <p className="text-lg font-black text-primary" style={{ fontFamily: "'Times New Roman', serif" }}>ESF</p>
-              </div>
-            </div>
-          </div>
+        <div className="mb-8 border-b-2 border-primary pb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Iglesia Espíritu Santo y Fuego</h1>
+          <p className="text-sm text-gray-500">Misión Cristiana Perfectos en Unidad</p>
         </div>
 
         <div className="mb-8 text-center">
