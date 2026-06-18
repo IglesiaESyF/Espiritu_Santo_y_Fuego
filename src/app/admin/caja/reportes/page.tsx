@@ -121,8 +121,7 @@ export default function ReportesPage() {
   const handleImprimir = () => {
     const s = document.createElement('style')
     s.id = 'print-styles'
-    const base = '/Espiritu_Santo_y_Fuego'
-    s.textContent = `@media print{@page{margin:0.5in}aside,header{display:none!important}body>div>div>main{padding:0!important}body::before{content:'';position:fixed;top:50%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%);background:url('${base}/logo.png') no-repeat center;background-size:contain;opacity:0.08;pointer-events:none;z-index:9999}}`
+    s.textContent = `@media print{@page{margin:0.5in}aside,header{display:none!important}body>div>div>main{padding:0!important}.watermark-logo{display:block!important}}`
     document.head.appendChild(s)
     setVistaImpresion(true)
     setTimeout(() => {
@@ -164,11 +163,9 @@ export default function ReportesPage() {
     const html = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>${title}</title>
-<style>
-body::before{content:'';position:fixed;top:50%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%);background:url('${base}/logo.png') no-repeat center;background-size:contain;opacity:0.08;pointer-events:none;z-index:0}
-</style>
 </head>
 <body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff;position:relative">
+<img src="${base}/logo.png" alt="" style="position:fixed;top:50%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%);opacity:0.08;pointer-events:none;z-index:0">
 <div style="position:relative;z-index:1">
   <!-- Header -->
   <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px;text-align:center">
@@ -1058,7 +1055,13 @@ body::before{content:'';position:fixed;top:50%;left:50%;width:300px;height:300px
   function PrintView() {
     const { title, sub } = getReportTitle()
     return (
-      <div className="mx-auto max-w-5xl bg-white p-10 print:p-6">
+      <div className="mx-auto max-w-5xl bg-white p-10 print:p-6 relative">
+        <img
+          src="/Espiritu_Santo_y_Fuego/logo.png"
+          alt=""
+          className="watermark-logo hidden fixed top-1/2 left-1/2 w-[300px] h-[300px] -translate-x-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none z-50"
+          style={{ display: 'none' }}
+        />
         {/* Header */}
         <div className="mb-8 border-b-2 border-primary pb-6 text-center">
           <h1 className="text-2xl font-bold text-gray-900">Iglesia Espíritu Santo y Fuego</h1>
