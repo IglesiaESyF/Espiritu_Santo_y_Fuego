@@ -173,9 +173,7 @@ export default function ReportesPage() {
 <html>
 <head><meta charset="UTF-8"><title>${title}</title>
 </head>
-<body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff;position:relative">
-<img src="${base}/logo.png" alt="" style="position:fixed;top:50%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%);opacity:0.08;pointer-events:none;z-index:0">
-<div style="position:relative;z-index:1">
+<body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff">
   <!-- Header -->
   <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px;text-align:center">
     <h1 style="margin:0;font-size:22px;color:#1a1a2e">Iglesia Espíritu Santo y Fuego</h1>
@@ -283,16 +281,16 @@ export default function ReportesPage() {
   <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#374151;padding-bottom:6px">Saldo Neto: C$ ${saldo.toFixed(2)}</h3>
 
   <!-- Signatures -->
-  <table style="width:100%;border-collapse:collapse;margin-top:100px">
+  <table style="width:100%;border-collapse:collapse;margin-top:60px">
     <tr>
       <td style="width:50%;vertical-align:bottom;text-align:center;padding:0 30px">
-        <div style="border-bottom:2px solid #9ca3af;margin-top:60px;margin-bottom:4px">&nbsp;</div>
-        <p style="margin:2px 0;font-size:11px;color:#9ca3af">Nombre y firma</p>
+        <p style="margin:0 0 4px;font-size:28px;color:#9ca3af;border-bottom:3px solid #555;line-height:1.5">&nbsp;</p>
+        <p style="margin:2px 0;font-size:11px;color:#666">Nombre y firma</p>
         <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151">Pastor(a)</p>
       </td>
       <td style="width:50%;vertical-align:bottom;text-align:center;padding:0 30px">
-        <div style="border-bottom:2px solid #9ca3af;margin-top:60px;margin-bottom:4px">&nbsp;</div>
-        <p style="margin:2px 0;font-size:11px;color:#9ca3af">Nombre y firma</p>
+        <p style="margin:0 0 4px;font-size:28px;color:#9ca3af;border-bottom:3px solid #555;line-height:1.5">&nbsp;</p>
+        <p style="margin:2px 0;font-size:11px;color:#666">Nombre y firma</p>
         <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151">Cajera</p>
       </td>
     </tr>
@@ -302,7 +300,6 @@ export default function ReportesPage() {
   <div style="margin-top:30px;padding-top:15px;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af">
     <p style="margin:2px 0">Documento generado el ${new Date().toLocaleString('es-ES')} — Iglesia Espíritu Santo y Fuego</p>
     <p style="margin:2px 0">Este documento es un extracto oficial de ingresos y egresos.</p>
-  </div>
 </div>
 </body>
 </html>`
@@ -1173,82 +1170,102 @@ export default function ReportesPage() {
           </div>
         </div>
 
-        {/* Detail table */}
-        <div className="mb-8">
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-700 border-b border-gray-300 pb-1.5">
-            Detalle de Movimientos
+        {/* Ingresos table */}
+        <div className="mb-6 print:page-break-before:always">
+          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-green-700 border-b border-green-300 pb-1.5">
+            Detalle de Ingresos
           </h3>
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-600">No.</th>
-                <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-600">Fecha</th>
-                <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-600">Tipo</th>
-                <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-600">Categoría</th>
-                <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-600">Concepto</th>
-                <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-600">Responsable</th>
-                <th className="border border-gray-300 px-3 py-2 text-right font-semibold text-gray-600">Monto</th>
+              <tr className="bg-green-50">
+                <th className="border border-green-200 px-3 py-2 text-left font-semibold text-green-800">No.</th>
+                <th className="border border-green-200 px-3 py-2 text-left font-semibold text-green-800">Fecha</th>
+                <th className="border border-green-200 px-3 py-2 text-left font-semibold text-green-800">Categoría</th>
+                <th className="border border-green-200 px-3 py-2 text-left font-semibold text-green-800">Concepto</th>
+                <th className="border border-green-200 px-3 py-2 text-left font-semibold text-green-800">Responsable</th>
+                <th className="border border-green-200 px-3 py-2 text-right font-semibold text-green-800">Monto</th>
               </tr>
             </thead>
             <tbody>
-              {movimientosFiltrados.map((m, i) => (
-                <tr key={m.id || i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}>
-                  <td className="border border-gray-200 px-3 py-1.5 text-center text-gray-400">{i + 1}</td>
-                  <td className="border border-gray-200 px-3 py-1.5 text-gray-700">{formatDate(m.fecha)}</td>
-                  <td className="border border-gray-200 px-3 py-1.5">
-                    <span className={`font-semibold ${m.tipo === 'ingreso' ? 'text-green-700' : 'text-red-700'}`}>
-                      {m.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
-                    </span>
-                  </td>
-                  <td className="border border-gray-200 px-3 py-1.5 text-gray-600">{labelCategoria(m.categoria)}</td>
-                  <td className="border border-gray-200 px-3 py-1.5 text-gray-800">
-                    <span className={`text-[10px] font-semibold uppercase tracking-wider mr-1 ${m.tipo === 'ingreso' ? 'text-green-700' : 'text-red-700'}`}>
-                      {m.tipo === 'ingreso' ? 'Motivo:' : 'Gasto en:'}
-                    </span>
+              {movimientosFiltrados.filter(m => m.tipo === 'ingreso').map((m, i) => (
+                <tr key={m.id || i} className={i % 2 === 0 ? 'bg-white' : 'bg-green-50/30'}>
+                  <td className="border border-green-100 px-3 py-1.5 text-center text-gray-400">{i + 1}</td>
+                  <td className="border border-green-100 px-3 py-1.5 text-gray-700">{formatDate(m.fecha)}</td>
+                  <td className="border border-green-100 px-3 py-1.5 text-gray-600">{labelCategoria(m.categoria)}</td>
+                  <td className="border border-green-100 px-3 py-1.5 text-gray-800">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider mr-1 text-green-700">Motivo:</span>
                     {m.concepto}
                   </td>
-                  <td className="border border-gray-200 px-3 py-1.5 text-gray-500">{m.ingresadoPor}</td>
-                  <td className={`border border-gray-200 px-3 py-1.5 text-right font-bold ${
-                    m.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {m.tipo === 'ingreso' ? '' : '–'}C$ {m.monto.toFixed(2)}
-                  </td>
+                  <td className="border border-green-100 px-3 py-1.5 text-gray-500">{m.ingresadoPor}</td>
+                  <td className="border border-green-100 px-3 py-1.5 text-right font-bold text-green-600">C$ {m.monto.toFixed(2)}</td>
                 </tr>
               ))}
+              {movimientosFiltrados.filter(m => m.tipo === 'ingreso').length === 0 && (
+                <tr><td colSpan={6} className="py-3 text-center text-gray-400">Sin ingresos</td></tr>
+              )}
             </tbody>
-            <tfoot className="bg-gray-50 font-semibold">
-              <tr>
-                <td colSpan={6} className="border border-gray-300 px-3 py-2 text-right text-gray-700">Total Ingresos:</td>
-                <td className="border border-gray-300 px-3 py-2 text-right text-green-600">C$ {totalIngresos.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colSpan={6} className="border border-gray-300 px-3 py-2 text-right text-gray-700">Total Egresos:</td>
-                <td className="border border-gray-300 px-3 py-2 text-right text-red-600">C$ {totalEgresos.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colSpan={6} className="border border-gray-300 px-3 py-2 text-right text-gray-700">Saldo Neto:</td>
-                <td className={`border border-gray-300 px-3 py-2 text-right ${saldo >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                  C$ {saldo.toFixed(2)}
-                </td>
+            <tfoot>
+              <tr className="bg-green-50 font-semibold">
+                <td colSpan={5} className="border border-green-200 px-3 py-2 text-right text-green-800">Total Ingresos:</td>
+                <td className="border border-green-200 px-3 py-2 text-right text-green-600">C$ {totalIngresos.toFixed(2)}</td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        {/* Signatures */}
-        <div className="mt-12 grid grid-cols-2 gap-12 text-center text-sm">
-          {['Pastor(a)', 'Cajera'].map((role) => (
-            <div key={role}>
-              <div className="mb-12 border-b-2 border-gray-400" />
-              <p className="font-medium text-gray-700">{role}</p>
-              <p className="text-xs text-gray-400">Nombre y firma</p>
-            </div>
-          ))}
+        {/* Egresos table */}
+        <div className="mb-8">
+          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-red-700 border-b border-red-300 pb-1.5">
+            Detalle de Egresos
+          </h3>
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr className="bg-red-50">
+                <th className="border border-red-200 px-3 py-2 text-left font-semibold text-red-800">No.</th>
+                <th className="border border-red-200 px-3 py-2 text-left font-semibold text-red-800">Fecha</th>
+                <th className="border border-red-200 px-3 py-2 text-left font-semibold text-red-800">Categoría</th>
+                <th className="border border-red-200 px-3 py-2 text-left font-semibold text-red-800">Concepto</th>
+                <th className="border border-red-200 px-3 py-2 text-left font-semibold text-red-800">Responsable</th>
+                <th className="border border-red-200 px-3 py-2 text-right font-semibold text-red-800">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {movimientosFiltrados.filter(m => m.tipo === 'egreso').map((m, i) => (
+                <tr key={m.id || i} className={i % 2 === 0 ? 'bg-white' : 'bg-red-50/30'}>
+                  <td className="border border-red-100 px-3 py-1.5 text-center text-gray-400">{i + 1}</td>
+                  <td className="border border-red-100 px-3 py-1.5 text-gray-700">{formatDate(m.fecha)}</td>
+                  <td className="border border-red-100 px-3 py-1.5 text-gray-600">{labelCategoria(m.categoria)}</td>
+                  <td className="border border-red-100 px-3 py-1.5 text-gray-800">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider mr-1 text-red-700">Gasto en:</span>
+                    {m.concepto}
+                  </td>
+                  <td className="border border-red-100 px-3 py-1.5 text-gray-500">{m.ingresadoPor}</td>
+                  <td className="border border-red-100 px-3 py-1.5 text-right font-bold text-red-600">C$ {m.monto.toFixed(2)}</td>
+                </tr>
+              ))}
+              {movimientosFiltrados.filter(m => m.tipo === 'egreso').length === 0 && (
+                <tr><td colSpan={6} className="py-3 text-center text-gray-400">Sin egresos</td></tr>
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="bg-red-50 font-semibold">
+                <td colSpan={5} className="border border-red-200 px-3 py-2 text-right text-red-800">Total Egresos:</td>
+                <td className="border border-red-200 px-3 py-2 text-right text-red-600">C$ {totalEgresos.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+          <p className="mt-2 text-right text-sm font-bold text-gray-700">Saldo Neto: C$ {saldo.toFixed(2)}</p>
         </div>
 
-        <div className="mt-8 text-center text-xs text-gray-400 border-t border-gray-200 pt-4">
-          <p>Documento generado el {new Date().toLocaleString('es-ES')} — Iglesia Espíritu Santo y Fuego</p>
-          <p>Este documento es un extracto oficial de ingresos y egresos.</p>
+        {/* Signatures */}
+        <div className="mt-16 grid grid-cols-2 gap-16 text-center">
+          {['Pastor(a)', 'Cajera'].map((role) => (
+            <div key={role} className="flex flex-col justify-end">
+              <div className="border-b-2 border-gray-400 mt-16 mb-1" />
+              <p className="text-xs text-gray-400">Nombre y firma</p>
+              <p className="mt-2 text-sm font-bold text-gray-700">{role}</p>
+            </div>
+          ))}
         </div>
       </div>
     )
