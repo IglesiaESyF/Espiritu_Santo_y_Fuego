@@ -177,7 +177,6 @@ export default function ReportesPage() {
   <div style="text-align:center;margin-bottom:20px">
     <h2 style="margin:0;font-size:18px;color:#1a1a2e;text-transform:uppercase;letter-spacing:1px">${title}</h2>
     <p style="margin:4px 0;font-size:12px;color:#6b7280">${sub}</p>
-    <p style="margin:2px 0;font-size:10px;color:#9ca3af">Generado: ${new Date().toLocaleString('es-ES')}</p>
   </div>
 
   <!-- KPI Cards -->
@@ -258,10 +257,18 @@ export default function ReportesPage() {
   </table>
 
   <!-- Signatures -->
-  <table style="width:100%;border-collapse:collapse;margin-top:40px">
+  <table style="width:100%;border-collapse:collapse;margin-top:100px">
     <tr>
-      <td style="width:50%;text-align:center;padding:0 20px"><div style="border-bottom:2px solid #9ca3af;margin-bottom:6px">&nbsp;</div><p style="margin:4px 0;font-size:12px;font-weight:600;color:#374151">Pastor(a)</p><p style="margin:2px 0;font-size:10px;color:#9ca3af">Nombre y firma</p></td>
-      <td style="width:50%;text-align:center;padding:0 20px"><div style="border-bottom:2px solid #9ca3af;margin-bottom:6px">&nbsp;</div><p style="margin:4px 0;font-size:12px;font-weight:600;color:#374151">Cajera</p><p style="margin:2px 0;font-size:10px;color:#9ca3af">Nombre y firma</p></td>
+      <td style="width:50%;vertical-align:bottom;text-align:center;padding:0 30px">
+        <div style="border-bottom:2px solid #9ca3af;margin-top:60px;margin-bottom:4px">&nbsp;</div>
+        <p style="margin:2px 0;font-size:11px;color:#9ca3af">Nombre y firma</p>
+        <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151">Pastor(a)</p>
+      </td>
+      <td style="width:50%;vertical-align:bottom;text-align:center;padding:0 30px">
+        <div style="border-bottom:2px solid #9ca3af;margin-top:60px;margin-bottom:4px">&nbsp;</div>
+        <p style="margin:2px 0;font-size:11px;color:#9ca3af">Nombre y firma</p>
+        <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151">Cajera</p>
+      </td>
     </tr>
   </table>
 
