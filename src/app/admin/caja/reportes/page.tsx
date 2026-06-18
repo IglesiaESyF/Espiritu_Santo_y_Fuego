@@ -162,8 +162,13 @@ export default function ReportesPage() {
 
     const html = `<!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>${title}</title></head>
-<body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff">
+<head><meta charset="UTF-8"><title>${title}</title>
+<style>
+body::before{content:'';position:fixed;top:50%;left:50%;width:300px;height:300px;transform:translate(-50%,-50%);background:url('${base}/logo.png') no-repeat center;background-size:contain;opacity:0.08;pointer-events:none;z-index:0}
+</style>
+</head>
+<body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff;position:relative">
+<div style="position:relative;z-index:1">
   <!-- Header -->
   <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px;text-align:center">
     <h1 style="margin:0;font-size:22px;color:#1a1a2e">Iglesia Espíritu Santo y Fuego</h1>
@@ -267,6 +272,7 @@ export default function ReportesPage() {
     <p style="margin:2px 0">Documento generado el ${new Date().toLocaleString('es-ES')} — Iglesia Espíritu Santo y Fuego</p>
     <p style="margin:2px 0">Este documento es un extracto oficial de ingresos y egresos.</p>
   </div>
+</div>
 </body>
 </html>`
 
