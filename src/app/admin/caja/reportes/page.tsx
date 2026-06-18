@@ -135,6 +135,7 @@ export default function ReportesPage() {
 
   const handleExportExcel = () => {
     const { title, sub } = getReportTitle()
+    const base = '/Espiritu_Santo_y_Fuego'
     const rows = movimientosFiltrados.map((m, i) => `
       <tr${i % 2 === 0 ? '' : ' style="background:#f8f9fa"'}>
         <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:center;color:#6c757d;font-size:11px">${i + 1}</td>
