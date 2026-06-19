@@ -274,7 +274,7 @@ export default function ReportesPage() {
         r++
       } else {
         rows.forEach((m, i) => {
-          const bgRow = i % 2 === 0 ? hdrBg : 'FFFFFFFF'
+          const bgRow = i % 2 === 0 ? bg : 'FFFFFFFF'
           ws.getCell(r, 1).value = i + 1
           ws.getCell(r, 1).font = F(10, false, 'FF6C757D')
           ws.getCell(r, 1).alignment = AC
@@ -348,13 +348,19 @@ export default function ReportesPage() {
 
     // ── Watermark ──
     try {
-      const resp = await fetch('/Espiritu_Santo_y_Fuego/logo.png')
-      const blobImg = await resp.blob()
-      const b64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve((reader.result as string).split(',')[1])
-        reader.readAsDataURL(blobImg)
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = reject
+        img.src = '/Espiritu_Santo_y_Fuego/logo.png'
       })
+      const c = document.createElement('canvas')
+      c.width = img.width; c.height = img.height
+      const ctx = c.getContext('2d')!
+      ctx.globalAlpha = 0.12
+      ctx.drawImage(img, 0, 0)
+      const b64 = c.toDataURL('image/png').split(',')[1]
       const imgId = wb.addImage({ base64: b64, extension: 'png' })
       ws.addImage(imgId, {
         tl: { col: 0, row: 0, nativeCol: 0, nativeRow: 0, nativeColOff: 0, nativeRowOff: 0 },
