@@ -208,19 +208,19 @@ export default function ReportesPage() {
     ingCat.forEach(([cat, total]) => {
       ws.getCell(r, 1).value = labelCategoria(cat)
       ws.getCell(r, 1).font = F(10, false, 'FF374151')
-      ws.mergeCells(r, 1, r, 5)
-      ws.getCell(r, 6).value = 'C$ ' + total.toFixed(2)
-      ws.getCell(r, 6).font = F(10, true, 'FF16A34A')
-      ws.getCell(r, 6).alignment = AR; r++
+      ws.mergeCells(r, 1, r, 3)
+      ws.getCell(r, 4).value = 'C$ ' + total.toFixed(2)
+      ws.getCell(r, 4).font = F(10, true, 'FF16A34A')
+      ws.getCell(r, 4).alignment = AR; r++
     })
-    ws.mergeCells(r, 1, r, 5)
+    ws.mergeCells(r, 1, r, 3)
     ws.getCell(r, 1).value = 'Total Ingresos'
     ws.getCell(r, 1).font = F(10, true, 'FF16A34A')
     ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }
-    ws.getCell(r, 6).value = 'C$ ' + totalIngresos.toFixed(2)
-    ws.getCell(r, 6).font = F(10, true, 'FF16A34A')
-    ws.getCell(r, 6).alignment = AR
-    ws.getCell(r, 6).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }; r++
+    ws.getCell(r, 4).value = 'C$ ' + totalIngresos.toFixed(2)
+    ws.getCell(r, 4).font = F(10, true, 'FF16A34A')
+    ws.getCell(r, 4).alignment = AR
+    ws.getCell(r, 4).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }; r++
 
     r++ // spacer
 
@@ -231,19 +231,19 @@ export default function ReportesPage() {
     egrCat.forEach(([cat, total]) => {
       ws.getCell(r, 1).value = labelCategoria(cat)
       ws.getCell(r, 1).font = F(10, false, 'FF374151')
-      ws.mergeCells(r, 1, r, 5)
-      ws.getCell(r, 6).value = 'C$ ' + total.toFixed(2)
-      ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
-      ws.getCell(r, 6).alignment = AR; r++
+      ws.mergeCells(r, 1, r, 3)
+      ws.getCell(r, 4).value = 'C$ ' + total.toFixed(2)
+      ws.getCell(r, 4).font = F(10, true, 'FFDC2626')
+      ws.getCell(r, 4).alignment = AR; r++
     })
-    ws.mergeCells(r, 1, r, 5)
+    ws.mergeCells(r, 1, r, 3)
     ws.getCell(r, 1).value = 'Total Egresos'
     ws.getCell(r, 1).font = F(10, true, 'FFDC2626')
     ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }
-    ws.getCell(r, 6).value = 'C$ ' + totalEgresos.toFixed(2)
-    ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
-    ws.getCell(r, 6).alignment = AR
-    ws.getCell(r, 6).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }; r++
+    ws.getCell(r, 4).value = 'C$ ' + totalEgresos.toFixed(2)
+    ws.getCell(r, 4).font = F(10, true, 'FFDC2626')
+    ws.getCell(r, 4).alignment = AR
+    ws.getCell(r, 4).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }; r++
 
     r += 2 // spacer
 
@@ -326,7 +326,7 @@ export default function ReportesPage() {
     r += 3
 
     // ── Signatures (side by side with gap) ──
-    ws.mergeCells(r, 1, r, 2)
+    ws.mergeCells(r, 1, r, 3)
     ws.getCell(r, 1).border = { bottom: { style: 'medium', color: { argb: 'FF555555' } } }
     ws.getCell(r, 1).value = ''
     ws.mergeCells(r, 5, r, 6)
@@ -334,13 +334,13 @@ export default function ReportesPage() {
     ws.getCell(r, 5).value = ''
     ws.getRow(r).height = 30; r++
 
-    M(r, 1, 2, 'Nombre y firma', F(10, false, 'FF666666'), AC)
+    M(r, 1, 3, 'Nombre y firma', F(10, false, 'FF666666'), AC)
     M(r, 5, 6, 'Nombre y firma', F(10, false, 'FF666666'), AC); r++
 
-    M(r, 1, 2, 'Pastor(a)', F(12, true, 'FF374151'), AC)
+    M(r, 1, 3, 'Pastor(a)', F(12, true, 'FF374151'), AC)
     M(r, 5, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
 
-    // ── Watermark ──
+    // ── Watermark (logo centered in a 16.86×16.29 cm area) ──
     try {
       const img = new Image()
       img.crossOrigin = 'anonymous'
@@ -349,19 +349,25 @@ export default function ReportesPage() {
         img.onerror = reject
         img.src = '/Espiritu_Santo_y_Fuego/logo.png'
       })
+      const cmToPx = (cm: number) => Math.round(cm * 37.795)
+      const W = cmToPx(16.86)
+      const H = cmToPx(16.29)
       const c = document.createElement('canvas')
-      c.width = img.width; c.height = img.height
+      c.width = W; c.height = H
       const ctx = c.getContext('2d')!
+      const scale = Math.min(W / img.width, H / img.height) * 0.7
+      const x = (W - img.width * scale) / 2
+      const y = (H - img.height * scale) / 2
       ctx.globalAlpha = 0.12
-      ctx.drawImage(img, 0, 0)
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale)
       const b64 = c.toDataURL('image/png').split(',')[1]
       const imgId = wb.addImage({ base64: b64, extension: 'png' })
       ws.addImage(imgId, {
-        tl: { col: 0, row: 0, nativeCol: 0, nativeRow: 0, nativeColOff: 0, nativeRowOff: 0 },
-        br: { col: 6, row: Math.max(r, 40), nativeCol: 6, nativeRow: Math.max(r, 40), nativeColOff: 0, nativeRowOff: 0 },
+        tl: { col: 0, row: 0 },
+        br: { col: 6, row: Math.max(r, 40) },
         editAs: 'absolute',
       } as any)
-    } catch { /* watermark is optional */ }
+    } catch { /* optional */ }
 
     // ── Generate file ──
     const buf = await wb.xlsx.writeBuffer()
