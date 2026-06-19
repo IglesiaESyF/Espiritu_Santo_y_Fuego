@@ -340,35 +340,6 @@ export default function ReportesPage() {
     M(r, 1, 3, 'Pastor(a)', F(12, true, 'FF374151'), AC)
     M(r, 5, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
 
-    // ── Watermark (logo centered in a 16.86×16.29 cm area) ──
-    try {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = reject
-        img.src = '/Espiritu_Santo_y_Fuego/logo.png'
-      })
-      const cmToPx = (cm: number) => Math.round(cm * 37.795)
-      const W = cmToPx(16.86)
-      const H = cmToPx(16.29)
-      const c = document.createElement('canvas')
-      c.width = W; c.height = H
-      const ctx = c.getContext('2d')!
-      const scale = Math.min(W / img.width, H / img.height) * 0.7
-      const x = (W - img.width * scale) / 2
-      const y = (H - img.height * scale) / 2
-      ctx.globalAlpha = 0.12
-      ctx.drawImage(img, x, y, img.width * scale, img.height * scale)
-      const b64 = c.toDataURL('image/png').split(',')[1]
-      const imgId = wb.addImage({ base64: b64, extension: 'png' })
-      ws.addImage(imgId, {
-        tl: { col: 0, row: 0 },
-        br: { col: 6, row: Math.max(r, 40) },
-        editAs: 'absolute',
-      } as any)
-    } catch { /* optional */ }
-
     // ── Generate file ──
     const buf = await wb.xlsx.writeBuffer()
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
