@@ -201,57 +201,51 @@ export default function ReportesPage() {
     kpiCell(r, 5, 6, 'Saldo', saldo, saldo >= 0 ? 'FFEFF6FF' : 'FFFEF2F2', saldo >= 0 ? 'FFBFDBFE' : 'FFFECACA', saldo >= 0 ? 'FF2563EB' : 'FFDC2626')
     ws.getRow(r).height = 28; ws.getRow(r + 1).height = 22; r += 3
 
-    // ── Category Breakdown ──
+    // ── Ingresos por Categoría ──
     const ingCat = Object.entries(ingresosPorCategoria)
-    const egrCat = Object.entries(egresosPorCategoria)
-    const mx = Math.max(ingCat.length, egrCat.length)
-
-    M(r, 1, 3, 'Ingresos por Categoría', F(11, true, 'FF15803D'), AL)
-    M(r, 4, 6, 'Egresos por Categoría', F(11, true, 'FFB91C1C'), AL)
+    M(r, 1, 6, 'Ingresos por Categoría', F(11, true, 'FF15803D'), AL)
     ws.getRow(r).height = 22; r++
-
-    for (let i = 0; i < mx; i++) {
-      if (i < ingCat.length) {
-        const [cat, total] = ingCat[i]
-        ws.getCell(r, 1).value = labelCategoria(cat)
-        ws.getCell(r, 1).font = F(10, false, 'FF374151')
-        ws.getCell(r, 1).alignment = AL
-        ws.mergeCells(r, 1, r, 2)
-        ws.getCell(r, 3).value = 'C$ ' + total.toFixed(2)
-        ws.getCell(r, 3).font = F(10, true, 'FF16A34A')
-        ws.getCell(r, 3).alignment = AR
-      }
-      if (i < egrCat.length) {
-        const [cat, total] = egrCat[i]
-        ws.getCell(r, 4).value = labelCategoria(cat)
-        ws.getCell(r, 4).font = F(10, false, 'FF374151')
-        ws.getCell(r, 4).alignment = AL
-        ws.mergeCells(r, 4, r, 5)
-        ws.getCell(r, 6).value = 'C$ ' + total.toFixed(2)
-        ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
-        ws.getCell(r, 6).alignment = AR
-      }
-      r++
-    }
-
-    // Category totals
-    ws.mergeCells(r, 1, r, 2)
+    ingCat.forEach(([cat, total]) => {
+      ws.getCell(r, 1).value = labelCategoria(cat)
+      ws.getCell(r, 1).font = F(10, false, 'FF374151')
+      ws.mergeCells(r, 1, r, 5)
+      ws.getCell(r, 6).value = 'C$ ' + total.toFixed(2)
+      ws.getCell(r, 6).font = F(10, true, 'FF16A34A')
+      ws.getCell(r, 6).alignment = AR; r++
+    })
+    ws.mergeCells(r, 1, r, 5)
     ws.getCell(r, 1).value = 'Total Ingresos'
     ws.getCell(r, 1).font = F(10, true, 'FF16A34A')
     ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }
-    ws.getCell(r, 3).value = 'C$ ' + totalIngresos.toFixed(2)
-    ws.getCell(r, 3).font = F(10, true, 'FF16A34A')
-    ws.getCell(r, 3).alignment = AR
-    ws.getCell(r, 3).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }
+    ws.getCell(r, 6).value = 'C$ ' + totalIngresos.toFixed(2)
+    ws.getCell(r, 6).font = F(10, true, 'FF16A34A')
+    ws.getCell(r, 6).alignment = AR
+    ws.getCell(r, 6).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }; r++
 
-    ws.getCell(r, 4).value = 'Total Egresos'
-    ws.getCell(r, 4).font = F(10, true, 'FFDC2626')
-    ws.getCell(r, 4).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }
+    r++ // spacer
+
+    // ── Egresos por Categoría ──
+    const egrCat = Object.entries(egresosPorCategoria)
+    M(r, 1, 6, 'Egresos por Categoría', F(11, true, 'FFB91C1C'), AL)
+    ws.getRow(r).height = 22; r++
+    egrCat.forEach(([cat, total]) => {
+      ws.getCell(r, 1).value = labelCategoria(cat)
+      ws.getCell(r, 1).font = F(10, false, 'FF374151')
+      ws.mergeCells(r, 1, r, 5)
+      ws.getCell(r, 6).value = 'C$ ' + total.toFixed(2)
+      ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
+      ws.getCell(r, 6).alignment = AR; r++
+    })
+    ws.mergeCells(r, 1, r, 5)
+    ws.getCell(r, 1).value = 'Total Egresos'
+    ws.getCell(r, 1).font = F(10, true, 'FFDC2626')
+    ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }
     ws.getCell(r, 6).value = 'C$ ' + totalEgresos.toFixed(2)
     ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
     ws.getCell(r, 6).alignment = AR
-    ws.getCell(r, 6).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }
-    r += 2
+    ws.getCell(r, 6).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }; r++
+
+    r += 2 // spacer
 
     // ── Helper: detail table ──
     const writeTable = (rows: MovimientoCaja[], label: string, color: string, prefix: string, bg: string, hdrBg: string) => {
@@ -274,21 +268,21 @@ export default function ReportesPage() {
         r++
       } else {
         rows.forEach((m, i) => {
-          const bgRow = i % 2 === 0 ? bg : 'FFFFFFFF'
+          const bgRow = i % 2 === 0 ? 'FFF8F9FA' : 'FFFFFFFF'
           ws.getCell(r, 1).value = i + 1
-          ws.getCell(r, 1).font = F(10, false, 'FF6C757D')
+          ws.getCell(r, 1).font = F(10, false, 'FF212529')
           ws.getCell(r, 1).alignment = AC
           ws.getCell(r, 2).value = m.fecha.split('-').reverse().join('/')
-          ws.getCell(r, 2).font = F(10, false, 'FF495057')
+          ws.getCell(r, 2).font = F(10, false, 'FF212529')
           ws.getCell(r, 3).value = labelCategoria(m.categoria)
-          ws.getCell(r, 3).font = F(10, false, 'FF6C757D')
+          ws.getCell(r, 3).font = F(10, false, 'FF212529')
           const det = ws.getCell(r, 4)
           det.value = { richText: [
-            { text: prefix, font: { name: 'Segoe UI', size: 9, bold: true, color: { argb: color } } },
+            { text: prefix, font: { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF212529' } } },
             { text: m.concepto, font: { name: 'Segoe UI', size: 10, color: { argb: 'FF212529' } } }
           ]}
           ws.getCell(r, 5).value = m.ingresadoPor
-          ws.getCell(r, 5).font = F(10, false, 'FF6C757D')
+          ws.getCell(r, 5).font = F(10, false, 'FF212529')
           ws.getCell(r, 6).value = 'C$ ' + m.monto.toFixed(2)
           ws.getCell(r, 6).font = F(10, true, color)
           ws.getCell(r, 6).alignment = AR
@@ -331,20 +325,20 @@ export default function ReportesPage() {
     ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FF374151' } } }
     r += 3
 
-    // ── Signatures (side by side) ──
-    ws.mergeCells(r, 1, r, 3)
+    // ── Signatures (side by side with gap) ──
+    ws.mergeCells(r, 1, r, 2)
     ws.getCell(r, 1).border = { bottom: { style: 'medium', color: { argb: 'FF555555' } } }
     ws.getCell(r, 1).value = ''
-    ws.mergeCells(r, 4, r, 6)
-    ws.getCell(r, 4).border = { bottom: { style: 'medium', color: { argb: 'FF555555' } } }
-    ws.getCell(r, 4).value = ''
+    ws.mergeCells(r, 5, r, 6)
+    ws.getCell(r, 5).border = { bottom: { style: 'medium', color: { argb: 'FF555555' } } }
+    ws.getCell(r, 5).value = ''
     ws.getRow(r).height = 30; r++
 
-    M(r, 1, 3, 'Nombre y firma', F(10, false, 'FF666666'), AC)
-    M(r, 4, 6, 'Nombre y firma', F(10, false, 'FF666666'), AC); r++
+    M(r, 1, 2, 'Nombre y firma', F(10, false, 'FF666666'), AC)
+    M(r, 5, 6, 'Nombre y firma', F(10, false, 'FF666666'), AC); r++
 
-    M(r, 1, 3, 'Pastor(a)', F(12, true, 'FF374151'), AC)
-    M(r, 4, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
+    M(r, 1, 2, 'Pastor(a)', F(12, true, 'FF374151'), AC)
+    M(r, 5, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
 
     // ── Watermark ──
     try {
