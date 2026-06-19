@@ -132,183 +132,244 @@ export default function ReportesPage() {
     }, 400)
   }
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const ExcelJS = (await import('exceljs')).default
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Reporte')
+
+    ws.pageSetup.orientation = 'landscape'
+    ws.pageSetup.fitToPage = true
+    ws.pageSetup.fitToWidth = 1
+    ws.pageSetup.paperSize = 9
+
+    const colW = [5, 14, 22, 45, 18, 16]
+    for (let i = 0; i < 6; i++) ws.getColumn(i + 1).width = colW[i]
+
     const { title, sub } = getReportTitle()
-    const base = '/Espiritu_Santo_y_Fuego'
-    const ingresoRows = movimientosFiltrados.filter(m => m.tipo === 'ingreso').map((m, i) => `
-      <tr${i % 2 === 0 ? '' : ' style="background:#f8f9fa"'}>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:center;color:#6c757d;font-size:11px">${i + 1}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#495057;font-size:11px">${(m.fecha.split('-').reverse().join('/'))}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${labelCategoria(m.categoria)}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#212529;font-size:11px"><span style="color:#16a34a;font-weight:600;font-size:10px">Motivo:</span> ${m.concepto}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${m.ingresadoPor}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:right;font-weight:700;font-size:12px;color:#16a34a">C$ ${m.monto.toFixed(2)}</td>
-      </tr>
-    `).join('')
-    const egresoRows = movimientosFiltrados.filter(m => m.tipo === 'egreso').map((m, i) => `
-      <tr${i % 2 === 0 ? '' : ' style="background:#f8f9fa"'}>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:center;color:#6c757d;font-size:11px">${i + 1}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#495057;font-size:11px">${(m.fecha.split('-').reverse().join('/'))}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${labelCategoria(m.categoria)}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#212529;font-size:11px"><span style="color:#dc2626;font-weight:600;font-size:10px">Gasto en:</span> ${m.concepto}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;color:#6c757d;font-size:11px">${m.ingresadoPor}</td>
-        <td style="border:1px solid #dee2e6;padding:6px 10px;text-align:right;font-weight:700;font-size:12px;color:#dc2626">C$ ${m.monto.toFixed(2)}</td>
-      </tr>
-    `).join('')
 
-    const catIngRows = Object.entries(ingresosPorCategoria).map(([cat, total]) => `
-      <tr>
-        <td style="border:1px solid #bbf7d0;padding:5px 10px;color:#374151;font-size:11px">${labelCategoria(cat)}</td>
-        <td style="border:1px solid #bbf7d0;padding:5px 10px;text-align:right;font-weight:600;color:#16a34a;font-size:11px">C$ ${total.toFixed(2)}</td>
-      </tr>
-    `).join('')
-    const catEgrRows = Object.entries(egresosPorCategoria).map(([cat, total]) => `
-      <tr>
-        <td style="border:1px solid #fecaca;padding:5px 10px;color:#374151;font-size:11px">${labelCategoria(cat)}</td>
-        <td style="border:1px solid #fecaca;padding:5px 10px;text-align:right;font-weight:600;color:#dc2626;font-size:11px">C$ ${total.toFixed(2)}</td>
-      </tr>
-    `).join('')
+    const AC = { horizontal: 'center' as const, vertical: 'middle' as const }
+    const AR = { horizontal: 'right' as const, vertical: 'middle' as const }
+    const AL = { horizontal: 'left' as const, vertical: 'middle' as const }
 
-    const html = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>${title}</title>
-</head>
-<body style="font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:20px;background:#fff">
-  <!-- Header -->
-  <div style="border-bottom:3px solid #b8860b;padding-bottom:15px;margin-bottom:20px;text-align:center">
-    <h1 style="margin:0;font-size:22px;color:#1a1a2e">Iglesia Espíritu Santo y Fuego</h1>
-    <p style="margin:2px 0;font-size:12px;color:#6b7280">Misión Cristiana Perfectos en Unidad</p>
-  </div>
+    const F = (sz: number, b?: boolean, c?: string) => ({
+      name: 'Segoe UI', size: sz, bold: !!b, color: c ? { argb: c } : undefined
+    })
 
-  <!-- Title -->
-  <div style="text-align:center;margin-bottom:20px">
-    <h2 style="margin:0;font-size:18px;color:#1a1a2e;text-transform:uppercase;letter-spacing:1px">${title}</h2>
-    <p style="margin:4px 0;font-size:12px;color:#6b7280">${sub}</p>
-  </div>
+    const borderAll = (c: string) => ({
+      top: { style: 'thin' as const, color: { argb: c } },
+      bottom: { style: 'thin' as const, color: { argb: c } },
+      left: { style: 'thin' as const, color: { argb: c } },
+      right: { style: 'thin' as const, color: { argb: c } },
+    })
 
-  <!-- KPI Cards -->
-  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-    <tr>
-      <td style="padding:8px">
-        <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #bbf7d0;border-radius:12px;padding:15px;text-align:center">
-          <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#15803d">Total Ingresos</p>
-          <p style="margin:4px 0;font-size:22px;font-weight:700;color:#16a34a;font-variant-numeric:tabular-nums">C$ ${totalIngresos.toFixed(2)}</p>
-        </div>
-      </td>
-      <td style="padding:8px">
-        <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid #fecaca;border-radius:12px;padding:15px;text-align:center">
-          <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#b91c1c">Total Egresos</p>
-          <p style="margin:4px 0;font-size:22px;font-weight:700;color:#dc2626;font-variant-numeric:tabular-nums">C$ ${totalEgresos.toFixed(2)}</p>
-        </div>
-      </td>
-      <td style="padding:8px">
-        <div style="background:${saldo >= 0 ? 'linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #bfdbfe' : 'linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid #fecaca'};border-radius:12px;padding:15px;text-align:center">
-          <p style="margin:0;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${saldo >= 0 ? '#1d4ed8' : '#b91c1c'}">Saldo</p>
-          <p style="margin:4px 0;font-size:22px;font-weight:700;color:${saldo >= 0 ? '#2563eb' : '#dc2626'};font-variant-numeric:tabular-nums">C$ ${saldo.toFixed(2)}</p>
-        </div>
-      </td>
-    </tr>
-  </table>
+    const M = (r: number, c1: number, c2: number, v: any, f: any, a: any, fl?: any, b?: any) => {
+      ws.mergeCells(r, c1, r, c2)
+      const cell = ws.getCell(r, c1)
+      cell.value = v; cell.font = f; cell.alignment = a
+      if (fl) cell.fill = fl
+      if (b) cell.border = b
+      return cell
+    }
 
-  <!-- Category Breakdown -->
-  <table style="width:100%;border-collapse:collapse;margin-bottom:20px">
-    <tr>
-      <td style="width:50%;padding:8px;vertical-align:top">
-        <h3 style="margin:0 0 8px 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d;border-bottom:2px solid #bbf7d0;padding-bottom:6px">Ingresos por Categoría</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:11px">
-          ${catIngRows || '<tr><td style="padding:8px;color:#9ca3af;font-size:12px">Sin ingresos</td></tr>'}
-          <tr style="font-weight:700"><td style="border-top:2px solid #16a34a;padding:5px 10px;color:#374151">Total Ingresos</td><td style="border-top:2px solid #16a34a;padding:5px 10px;text-align:right;color:#16a34a">C$ ${totalIngresos.toFixed(2)}</td></tr>
-        </table>
-      </td>
-      <td style="width:50%;padding:8px;vertical-align:top">
-        <h3 style="margin:0 0 8px 0;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c;border-bottom:2px solid #fecaca;padding-bottom:6px">Egresos por Categoría</h3>
-        <table style="width:100%;border-collapse:collapse;font-size:11px">
-          ${catEgrRows || '<tr><td style="padding:8px;color:#9ca3af;font-size:12px">Sin egresos</td></tr>'}
-          <tr style="font-weight:700"><td style="border-top:2px solid #dc2626;padding:5px 10px;color:#374151">Total Egresos</td><td style="border-top:2px solid #dc2626;padding:5px 10px;text-align:right;color:#dc2626">C$ ${totalEgresos.toFixed(2)}</td></tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+    let r = 1
 
-  <!-- Detail Ingresos -->
-  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#16a34a;border-bottom:2px solid #bbf7d0;padding-bottom:6px">Detalle de Ingresos</h3>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:30px">
-    <thead>
-      <tr style="background:#f0fdf4">
-        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">No.</th>
-        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Fecha</th>
-        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Categoría</th>
-        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Detalle</th>
-        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Responsable</th>
-        <th style="border:1px solid #bbf7d0;padding:8px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#15803d">Monto</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${ingresoRows || '<tr><td colspan="6" style="padding:10px;text-align:center;color:#9ca3af;font-size:12px">Sin ingresos</td></tr>'}
-    </tbody>
-    <tfoot>
-      <tr style="background:#f0fdf4;font-weight:700">
-        <td colspan="5" style="border:1px solid #bbf7d0;padding:8px 10px;text-align:right;font-size:12px;color:#15803d">Total Ingresos:</td>
-        <td style="border:1px solid #bbf7d0;padding:8px 10px;text-align:right;font-size:12px;color:#16a34a">C$ ${totalIngresos.toFixed(2)}</td>
-      </tr>
-    </tfoot>
-  </table>
+    // ── Header ──
+    M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 35; r++
+    M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC); r++; r++
+    M(r, 1, 6, title.toUpperCase(), F(16, true, 'FF1A1A2E'), AC); r++
+    M(r, 1, 6, sub, F(11, false, 'FF6B7280'), AC); r++; r++
 
-  <!-- Detail Egresos -->
-  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#dc2626;border-bottom:2px solid #fecaca;padding-bottom:6px">Detalle de Egresos</h3>
-  <table style="width:100%;border-collapse:collapse;margin-bottom:30px">
-    <thead>
-      <tr style="background:#fef2f2">
-        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">No.</th>
-        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Fecha</th>
-        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Categoría</th>
-        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Detalle</th>
-        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Responsable</th>
-        <th style="border:1px solid #fecaca;padding:8px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#b91c1c">Monto</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${egresoRows || '<tr><td colspan="6" style="padding:10px;text-align:center;color:#9ca3af;font-size:12px">Sin egresos</td></tr>'}
-    </tbody>
-    <tfoot>
-      <tr style="background:#fef2f2;font-weight:700">
-        <td colspan="5" style="border:1px solid #fecaca;padding:8px 10px;text-align:right;font-size:12px;color:#b91c1c">Total Egresos:</td>
-        <td style="border:1px solid #fecaca;padding:8px 10px;text-align:right;font-size:12px;color:#dc2626">C$ ${totalEgresos.toFixed(2)}</td>
-      </tr>
-    </tfoot>
-  </table>
+    // ── KPI Cards ──
+    const kpiCell = (row: number, c1: number, c2: number, lb: string, val: number, bg: string, bc: string, vc: string) => {
+      ws.mergeCells(row, c1, row + 1, c2)
+      const cell = ws.getCell(row, c1)
+      cell.value = { richText: [
+        { text: lb + '\n', font: F(10, true, vc) },
+        { text: 'C$ ' + val.toFixed(2), font: F(18, true, vc) }
+      ]}
+      cell.alignment = { ...AC, wrapText: true }
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } }
+      cell.border = {
+        top: { style: 'medium', color: { argb: bc } },
+        bottom: { style: 'medium', color: { argb: bc } },
+        left: { style: 'medium', color: { argb: bc } },
+        right: { style: 'medium', color: { argb: bc } },
+      }
+    }
+    kpiCell(r, 1, 2, 'Total Ingresos', totalIngresos, 'FFF0FDF4', 'FFBBF7D0', 'FF16A34A')
+    kpiCell(r, 3, 4, 'Total Egresos', totalEgresos, 'FFFEF2F2', 'FFFECACA', 'FFDC2626')
+    kpiCell(r, 5, 6, 'Saldo', saldo, saldo >= 0 ? 'FFEFF6FF' : 'FFFEF2F2', saldo >= 0 ? 'FFBFDBFE' : 'FFFECACA', saldo >= 0 ? 'FF2563EB' : 'FFDC2626')
+    ws.getRow(r).height = 28; ws.getRow(r + 1).height = 22; r += 3
 
-  <h3 style="margin:0 0 10px 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#374151;padding-bottom:6px">Saldo Neto: C$ ${saldo.toFixed(2)}</h3>
+    // ── Category Breakdown ──
+    const ingCat = Object.entries(ingresosPorCategoria)
+    const egrCat = Object.entries(egresosPorCategoria)
+    const mx = Math.max(ingCat.length, egrCat.length)
 
-  <!-- Signatures -->
-  <table style="width:100%;border-collapse:collapse;margin-top:60px">
-    <tr>
-      <td style="width:50%;vertical-align:bottom;text-align:center;padding:0 30px">
-        <p style="margin:0 0 4px;font-size:28px;color:#9ca3af;border-bottom:3px solid #555;line-height:1.5">&nbsp;</p>
-        <p style="margin:2px 0;font-size:11px;color:#666">Nombre y firma</p>
-        <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151">Pastor(a)</p>
-      </td>
-      <td style="width:50%;vertical-align:bottom;text-align:center;padding:0 30px">
-        <p style="margin:0 0 4px;font-size:28px;color:#9ca3af;border-bottom:3px solid #555;line-height:1.5">&nbsp;</p>
-        <p style="margin:2px 0;font-size:11px;color:#666">Nombre y firma</p>
-        <p style="margin:6px 0 0;font-size:13px;font-weight:700;color:#374151">Cajera</p>
-      </td>
-    </tr>
-  </table>
+    M(r, 1, 3, 'Ingresos por Categoría', F(11, true, 'FF15803D'), AL)
+    M(r, 4, 6, 'Egresos por Categoría', F(11, true, 'FFB91C1C'), AL)
+    ws.getRow(r).height = 22; r++
 
-  <!-- Footer -->
-  <div style="margin-top:30px;padding-top:15px;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af">
-    <p style="margin:2px 0">Documento generado el ${new Date().toLocaleString('es-ES')} — Iglesia Espíritu Santo y Fuego</p>
-    <p style="margin:2px 0">Este documento es un extracto oficial de ingresos y egresos.</p>
-</div>
-</body>
-</html>`
+    for (let i = 0; i < mx; i++) {
+      if (i < ingCat.length) {
+        const [cat, total] = ingCat[i]
+        ws.getCell(r, 1).value = labelCategoria(cat)
+        ws.getCell(r, 1).font = F(10, false, 'FF374151')
+        ws.getCell(r, 1).alignment = AL
+        ws.mergeCells(r, 1, r, 2)
+        ws.getCell(r, 3).value = 'C$ ' + total.toFixed(2)
+        ws.getCell(r, 3).font = F(10, true, 'FF16A34A')
+        ws.getCell(r, 3).alignment = AR
+      }
+      if (i < egrCat.length) {
+        const [cat, total] = egrCat[i]
+        ws.getCell(r, 4).value = labelCategoria(cat)
+        ws.getCell(r, 4).font = F(10, false, 'FF374151')
+        ws.getCell(r, 4).alignment = AL
+        ws.mergeCells(r, 4, r, 5)
+        ws.getCell(r, 6).value = 'C$ ' + total.toFixed(2)
+        ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
+        ws.getCell(r, 6).alignment = AR
+      }
+      r++
+    }
 
-    const blob = new Blob([html], { type: 'application/vnd.ms-excel' })
+    // Category totals
+    ws.mergeCells(r, 1, r, 2)
+    ws.getCell(r, 1).value = 'Total Ingresos'
+    ws.getCell(r, 1).font = F(10, true, 'FF16A34A')
+    ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }
+    ws.getCell(r, 3).value = 'C$ ' + totalIngresos.toFixed(2)
+    ws.getCell(r, 3).font = F(10, true, 'FF16A34A')
+    ws.getCell(r, 3).alignment = AR
+    ws.getCell(r, 3).border = { top: { style: 'medium', color: { argb: 'FF16A34A' } } }
+
+    ws.getCell(r, 4).value = 'Total Egresos'
+    ws.getCell(r, 4).font = F(10, true, 'FFDC2626')
+    ws.getCell(r, 4).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }
+    ws.getCell(r, 6).value = 'C$ ' + totalEgresos.toFixed(2)
+    ws.getCell(r, 6).font = F(10, true, 'FFDC2626')
+    ws.getCell(r, 6).alignment = AR
+    ws.getCell(r, 6).border = { top: { style: 'medium', color: { argb: 'FFDC2626' } } }
+    r += 2
+
+    // ── Helper: detail table ──
+    const writeTable = (rows: MovimientoCaja[], label: string, color: string, prefix: string, bg: string, hdrBg: string) => {
+      M(r, 1, 6, label, F(12, true, color), AL); ws.getRow(r).height = 22; r++
+
+      const hc = color === 'FF16A34A' ? 'FF15803D' : 'FFB91C1C'
+      const heads = ['No.', 'Fecha', 'Categoría', 'Detalle', 'Responsable', 'Monto']
+      const hAlign = ['center', 'left', 'left', 'left', 'left', 'right']
+      heads.forEach((h, i) => {
+        const cell = ws.getCell(r, i + 1)
+        cell.value = h; cell.font = F(9, true, 'FFFFFFFF')
+        cell.alignment = { horizontal: hAlign[i] as any, vertical: 'middle' }
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: hdrBg } }
+        cell.border = borderAll(color)
+      })
+      ws.getRow(r).height = 20; r++
+
+      if (rows.length === 0) {
+        M(r, 1, 6, 'Sin ' + label.toLowerCase(), F(11, false, 'FF9CA3AF'), AC)
+        r++
+      } else {
+        rows.forEach((m, i) => {
+          const bgRow = i % 2 === 0 ? hdrBg : 'FFFFFFFF'
+          ws.getCell(r, 1).value = i + 1
+          ws.getCell(r, 1).font = F(10, false, 'FF6C757D')
+          ws.getCell(r, 1).alignment = AC
+          ws.getCell(r, 2).value = m.fecha.split('-').reverse().join('/')
+          ws.getCell(r, 2).font = F(10, false, 'FF495057')
+          ws.getCell(r, 3).value = labelCategoria(m.categoria)
+          ws.getCell(r, 3).font = F(10, false, 'FF6C757D')
+          const det = ws.getCell(r, 4)
+          det.value = { richText: [
+            { text: prefix, font: { name: 'Segoe UI', size: 9, bold: true, color: { argb: color } } },
+            { text: m.concepto, font: { name: 'Segoe UI', size: 10, color: { argb: 'FF212529' } } }
+          ]}
+          ws.getCell(r, 5).value = m.ingresadoPor
+          ws.getCell(r, 5).font = F(10, false, 'FF6C757D')
+          ws.getCell(r, 6).value = 'C$ ' + m.monto.toFixed(2)
+          ws.getCell(r, 6).font = F(10, true, color)
+          ws.getCell(r, 6).alignment = AR
+          for (let c = 1; c <= 6; c++) {
+            ws.getCell(r, c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgRow } }
+            ws.getCell(r, c).border = borderAll('FFDEE2E6')
+          }
+          r++
+        })
+      }
+
+      // Total row
+      const totalVal = color === 'FF16A34A' ? totalIngresos : totalEgresos
+      M(r, 1, 5, 'Total ' + label + ':', F(11, true, hc), AR, { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } })
+      ws.getCell(r, 6).value = 'C$ ' + totalVal.toFixed(2)
+      ws.getCell(r, 6).font = F(12, true, color)
+      ws.getCell(r, 6).alignment = AR
+      ws.getCell(r, 6).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } }
+      for (let c = 1; c <= 6; c++) {
+        ws.getCell(r, c).border = borderAll(color)
+      }
+      r += 2
+    }
+
+    // ── Detail Ingresos ──
+    writeTable(
+      movimientosFiltrados.filter(m => m.tipo === 'ingreso'),
+      'Detalle de Ingresos', 'FF16A34A', 'Motivo: ', 'FFF0FDF4', 'FF16A34A'
+    )
+
+    // ── Detail Egresos ──
+    writeTable(
+      movimientosFiltrados.filter(m => m.tipo === 'egreso'),
+      'Detalle de Egresos', 'FFDC2626', 'Gasto en: ', 'FFFEF2F2', 'FFDC2626'
+    )
+
+    // ── Saldo Neto ──
+    const saldoColor = saldo >= 0 ? 'FF16A34A' : 'FFDC2626'
+    M(r, 1, 6, 'Saldo Neto: C$ ' + saldo.toFixed(2), F(13, true, saldoColor), AC)
+    ws.getCell(r, 1).border = { top: { style: 'medium', color: { argb: 'FF374151' } } }
+    r += 3
+
+    // ── Signatures (side by side) ──
+    ws.mergeCells(r, 1, r, 3)
+    ws.getCell(r, 1).border = { bottom: { style: 'medium', color: { argb: 'FF555555' } } }
+    ws.getCell(r, 1).value = ''
+    ws.mergeCells(r, 4, r, 6)
+    ws.getCell(r, 4).border = { bottom: { style: 'medium', color: { argb: 'FF555555' } } }
+    ws.getCell(r, 4).value = ''
+    ws.getRow(r).height = 30; r++
+
+    M(r, 1, 3, 'Nombre y firma', F(10, false, 'FF666666'), AC)
+    M(r, 4, 6, 'Nombre y firma', F(10, false, 'FF666666'), AC); r++
+
+    M(r, 1, 3, 'Pastor(a)', F(12, true, 'FF374151'), AC)
+    M(r, 4, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
+
+    // ── Watermark ──
+    try {
+      const resp = await fetch('/Espiritu_Santo_y_Fuego/logo.png')
+      const blobImg = await resp.blob()
+      const b64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve((reader.result as string).split(',')[1])
+        reader.readAsDataURL(blobImg)
+      })
+      const imgId = wb.addImage({ base64: b64, extension: 'png' })
+      ws.addImage(imgId, {
+        tl: { col: 0, row: 0, nativeCol: 0, nativeRow: 0, nativeColOff: 0, nativeRowOff: 0 },
+        br: { col: 6, row: Math.max(r, 40), nativeCol: 6, nativeRow: Math.max(r, 40), nativeColOff: 0, nativeRowOff: 0 },
+        editAs: 'absolute',
+      } as any)
+    } catch { /* watermark is optional */ }
+
+    // ── Generate file ──
+    const buf = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `Reporte_${reportType}_${new Date().toISOString().split('T')[0]}.xls`
+    a.download = `Reporte_${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
