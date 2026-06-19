@@ -173,6 +173,31 @@ export default function ReportesPage() {
 
     let r = 1
 
+    // ── Logo ──
+    try {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = reject
+        img.src = '/Espiritu_Santo_y_Fuego/logo.png'
+      })
+      const targetH = 65
+      const scale = targetH / img.height
+      const W = Math.round(img.width * scale)
+      const H = Math.round(img.height * scale)
+      const c = document.createElement('canvas')
+      c.width = W; c.height = H
+      c.getContext('2d')!.drawImage(img, 0, 0, W, H)
+      const b64 = c.toDataURL('image/png').split(',')[1]
+      const imgId = wb.addImage({ base64: b64, extension: 'png' })
+      ws.addImage(imgId, {
+        tl: { col: 0, row: 0, nativeColOff: 0, nativeRowOff: 0 },
+        editAs: 'oneCell',
+      } as any)
+    } catch { /* optional */ }
+    ws.getRow(1).height = 80; r++
+
     // ── Header ──
     M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 35; r++
     M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC); r++; r++
