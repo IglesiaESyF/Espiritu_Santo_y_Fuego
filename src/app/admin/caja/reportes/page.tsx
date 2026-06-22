@@ -192,7 +192,8 @@ export default function ReportesPage() {
       const b64 = c.toDataURL('image/png').split(',')[1]
       const imgId = wb.addImage({ base64: b64, extension: 'png' })
       ws.addImage(imgId, {
-        tl: { col: 0, row: 0, nativeColOff: 0, nativeRowOff: 0 },
+        tl: { col: 0, row: 0 },
+        ext: { width: W, height: H },
         editAs: 'oneCell',
       } as any)
     } catch { /* optional */ }
