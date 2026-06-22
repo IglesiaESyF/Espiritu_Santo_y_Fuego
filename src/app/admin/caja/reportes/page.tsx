@@ -173,49 +173,13 @@ export default function ReportesPage() {
 
     let r = 1
 
-    // ── Header with logo on left, text on right ──
-    const logoAnchorRow = r // keep track of first row for logo anchoring
-
-    M(r, 2, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC)
-    ws.getRow(r).height = 28; r++
-
-    M(r, 2, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC)
-    for (let c = 2; c <= 6; c++) ws.getCell(r, c).border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
-    ws.getRow(r).height = 20; r++
-
-    // ── Logo (left side, vertically centered) ──
-    let logoEmuOffset = 0
-    try {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = reject
-        img.src = '/Espiritu_Santo_y_Fuego/logo.png'
-      })
-      const targetH = 100
-      const scale = targetH / img.height
-      const W = Math.round(img.width * scale)
-      const H = Math.round(img.height * scale)
-      const totalPt = 28 + 20 + 24 + 18 // rows 1-4 sum
-      const logoPt = H * 72 / 96
-      logoEmuOffset = Math.round(((totalPt - logoPt) / 2) * 12700)
-      const c = document.createElement('canvas')
-      c.width = W; c.height = H
-      c.getContext('2d')!.drawImage(img, 0, 0, W, H)
-      const b64 = c.toDataURL('image/png').split(',')[1]
-      const imgId = wb.addImage({ base64: b64, extension: 'png' })
-      ws.addImage(imgId, {
-        tl: { col: 0, row: logoAnchorRow - 1, nativeRowOff: Math.max(0, logoEmuOffset) },
-        ext: { width: W, height: H },
-        editAs: 'oneCell',
-      } as any)
-    } catch { /* optional */ }
-
-    M(r, 2, 6, title.toUpperCase(), F(16, true, 'FF1A1A2E'), AL)
-    ws.getRow(r).height = 24; r++
-    M(r, 2, 6, sub, F(11, false, 'FF6B7280'), AL)
-    ws.getRow(r).height = 18; r++
+    // ── Header ──
+    M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 30; r++
+    M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC)
+    for (let c = 1; c <= 6; c++) ws.getCell(r, c).border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
+    ws.getRow(r).height = 22; r++
+    M(r, 1, 6, title.toUpperCase(), F(16, true, 'FF1A1A2E'), AC); r++
+    M(r, 1, 6, sub, F(11, false, 'FF6B7280'), AC); r++; r++
 
     // ── KPI Cards ──
     const kpiCell = (row: number, c1: number, c2: number, lb: string, val: number, bg: string, bc: string, vc: string) => {
@@ -377,6 +341,34 @@ export default function ReportesPage() {
 
     M(r, 1, 3, 'Pastor(a)', F(12, true, 'FF374151'), AC)
     M(r, 5, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
+
+    // ── Watermark (behind content) ──
+    try {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve()
+        img.onerror = reject
+        img.src = '/Espiritu_Santo_y_Fuego/logo.png'
+      })
+      const targetH = 180
+      const scale = targetH / img.height
+      const W = Math.round(img.width * scale)
+      const H = Math.round(img.height * scale)
+      const c = document.createElement('canvas')
+      c.width = W; c.height = H
+      const ctx = c.getContext('2d')!
+      ctx.globalAlpha = 0.10
+      ctx.drawImage(img, 0, 0, W, H)
+      const b64 = c.toDataURL('image/png').split(',')[1]
+      const imgId = wb.addImage({ base64: b64, extension: 'png' })
+      ws.addImage(imgId, {
+        tl: { col: 0, row: 0 },
+        br: { col: 6, row: r + 5 },
+        editAs: 'absolute',
+        behindDoc: true,
+      } as any)
+    } catch { /* optional */ }
 
     // ── Generate file ──
     const buf = await wb.xlsx.writeBuffer()
