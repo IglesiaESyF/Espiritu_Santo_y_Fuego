@@ -173,7 +173,12 @@ export default function ReportesPage() {
 
     let r = 1
 
-    // ── Logo ──
+    // ── Header text ──
+    M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 35; r++
+    M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC); r++
+
+    // ── Logo (high res, between header and report title) ──
+    let logoH = 0
     try {
       const img = new Image()
       img.crossOrigin = 'anonymous'
@@ -182,26 +187,26 @@ export default function ReportesPage() {
         img.onerror = reject
         img.src = '/Espiritu_Santo_y_Fuego/logo.png'
       })
-      const targetH = 65
+      const targetH = 160
       const scale = targetH / img.height
       const W = Math.round(img.width * scale)
       const H = Math.round(img.height * scale)
+      logoH = H
       const c = document.createElement('canvas')
       c.width = W; c.height = H
       c.getContext('2d')!.drawImage(img, 0, 0, W, H)
       const b64 = c.toDataURL('image/png').split(',')[1]
       const imgId = wb.addImage({ base64: b64, extension: 'png' })
       ws.addImage(imgId, {
-        tl: { col: 0, row: 0 },
+        tl: { col: 0, row: r - 1 },
         ext: { width: W, height: H },
         editAs: 'oneCell',
       } as any)
     } catch { /* optional */ }
-    ws.getRow(1).height = 80; r++
+    if (logoH > 0) ws.getRow(r).height = logoH * 0.75; r++
+    r++ // spacer
 
-    // ── Header ──
-    M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 35; r++
-    M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC); r++; r++
+    // ── Report title ──
     M(r, 1, 6, title.toUpperCase(), F(16, true, 'FF1A1A2E'), AC); r++
     M(r, 1, 6, sub, F(11, false, 'FF6B7280'), AC); r++; r++
 
