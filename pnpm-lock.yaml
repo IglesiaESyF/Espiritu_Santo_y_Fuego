@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  exceljs@4.4.0: ce61445f3f537a670b6ab111106317fce4bb74f3c7df33f305fc961d6b628740
-
 importers:
 
   .:
@@ -1993,7 +1990,7 @@ snapshots:
 
   escalade@3.2.0: {}
 
-  exceljs@4.4.0(patch_hash=ce61445f3f537a670b6ab111106317fce4bb74f3c7df33f305fc961d6b628740):
+  exceljs@4.4.0:
     dependencies:
       archiver: 5.3.2
       dayjs: 1.11.21

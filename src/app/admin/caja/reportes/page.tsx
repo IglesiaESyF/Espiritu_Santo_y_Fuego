@@ -342,34 +342,6 @@ export default function ReportesPage() {
     M(r, 1, 3, 'Pastor(a)', F(12, true, 'FF374151'), AC)
     M(r, 5, 6, 'Cajera', F(12, true, 'FF374151'), AC); r++
 
-    // ── Watermark (behind content) ──
-    try {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      await new Promise<void>((resolve, reject) => {
-        img.onload = () => resolve()
-        img.onerror = reject
-        img.src = '/Espiritu_Santo_y_Fuego/logo.png'
-      })
-      const targetH = 180
-      const scale = targetH / img.height
-      const W = Math.round(img.width * scale)
-      const H = Math.round(img.height * scale)
-      const c = document.createElement('canvas')
-      c.width = W; c.height = H
-      const ctx = c.getContext('2d')!
-      ctx.globalAlpha = 0.10
-      ctx.drawImage(img, 0, 0, W, H)
-      const b64 = c.toDataURL('image/png').split(',')[1]
-      const imgId = wb.addImage({ base64: b64, extension: 'png' })
-      ws.addImage(imgId, {
-        tl: { col: 0, row: 0 },
-        br: { col: 6, row: r + 5 },
-        editAs: 'absolute',
-        behindDoc: true,
-      } as any)
-    } catch { /* optional */ }
-
     // ── Generate file ──
     const buf = await wb.xlsx.writeBuffer()
     const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
