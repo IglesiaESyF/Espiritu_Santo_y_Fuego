@@ -173,11 +173,13 @@ export default function ReportesPage() {
 
     let r = 1
 
-    // ── Header text ──
-    M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 35; r++
-    M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC); r++
+    // ── Header ──
+    M(r, 1, 6, 'Iglesia Espíritu Santo y Fuego', F(22, true, 'FF1A1A2E'), AC); ws.getRow(r).height = 30; r++
+    M(r, 1, 6, 'Misión Cristiana Perfectos en Unidad', F(12, false, 'FF6B7280'), AC)
+    for (let c = 1; c <= 6; c++) ws.getCell(r, c).border = { bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } } }
+    ws.getRow(r).height = 22; r++
 
-    // ── Logo (high res, between header and report title) ──
+    // ── Logo (left) + Report title ──
     let logoH = 0
     try {
       const img = new Image()
@@ -187,7 +189,7 @@ export default function ReportesPage() {
         img.onerror = reject
         img.src = '/Espiritu_Santo_y_Fuego/logo.png'
       })
-      const targetH = 160
+      const targetH = 95
       const scale = targetH / img.height
       const W = Math.round(img.width * scale)
       const H = Math.round(img.height * scale)
@@ -203,12 +205,11 @@ export default function ReportesPage() {
         editAs: 'oneCell',
       } as any)
     } catch { /* optional */ }
-    if (logoH > 0) ws.getRow(r).height = logoH * 0.75; r++
-    r++ // spacer
 
-    // ── Report title ──
-    M(r, 1, 6, title.toUpperCase(), F(16, true, 'FF1A1A2E'), AC); r++
-    M(r, 1, 6, sub, F(11, false, 'FF6B7280'), AC); r++; r++
+    M(r, 3, 6, title.toUpperCase(), F(16, true, 'FF1A1A2E'), AL)
+    ws.getRow(r).height = 36; r++
+    M(r, 3, 6, sub, F(11, false, 'FF6B7280'), AL)
+    ws.getRow(r).height = 26; r++
 
     // ── KPI Cards ──
     const kpiCell = (row: number, c1: number, c2: number, lb: string, val: number, bg: string, bc: string, vc: string) => {
