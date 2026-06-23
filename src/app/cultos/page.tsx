@@ -26,15 +26,28 @@ const METRO_COLORS: Record<string,string> = {
   jueves:'#018574', viernes:'#E3008C', sabado:'#C239B3', domingo:'#F7630C',
 }
 
-const REL_OFFSETS = [
-  { tx: -180, s: 0,    r: 0,  o: 0,    y: 0,  z: 0  },
-  { tx: -90,  s: 0.55, r: -5, o: 0.35, y: 20, z: 1  },
-  { tx: -40,  s: 0.72, r: -2, o: 0.7,  y: 8,  z: 3  },
-  { tx: 0,    s: 1,    r: 0,  o: 1,    y: 0,  z: 7  },
-  { tx: 65,   s: 0.8,  r: 3,  o: 0.6,  y: 0,  z: 4  },
-  { tx: 130,  s: 0.55, r: 6,  o: 0.2,  y: 0,  z: 2  },
-  { tx: 200,  s: 0,    r: 0,  o: 0,    y: 0,  z: 0  },
-]
+function cardStyle(rel: number) {
+  if (rel === 0) return { tx: 0, s: 1, r: 0, o: 1, y: 0, z: 20 }
+  if (rel < 0) {
+    const p = Math.abs(rel)
+    return {
+      tx: -40 - (p - 1) * 50,
+      s: Math.max(0.78 - (p - 1) * 0.14, 0),
+      r: -2 * p,
+      o: Math.max(0.7 - (p - 1) * 0.18, 0),
+      y: 5 * p,
+      z: Math.max(15 - p, 1),
+    }
+  }
+  return {
+    tx: 5 * rel,
+    s: Math.max(1 - rel * 0.025, 0.8),
+    r: 0,
+    o: Math.max(1 - rel * 0.08, 0.35),
+    y: 2 * rel,
+    z: Math.max(19 - rel, 1),
+  }
+}
 
 function getWeekDates(): Date[] {
   const today = new Date()
@@ -120,7 +133,7 @@ export default function CultosPage() {
           {DIAS.map((diaKey, idx) => {
             const slots = semana[diaKey] || []
             const cardDate = weekDates[idx]
-            const o = REL_OFFSETS[Math.min(Math.max(idx - currentIndex + 3, 0), 6)] || REL_OFFSETS[3]
+            const o = cardStyle(idx - currentIndex)
 
             return (
               <div
