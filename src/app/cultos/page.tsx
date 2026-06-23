@@ -258,12 +258,6 @@ export default function CultosPage() {
                 onTouchMove={isCurrent ? onTouchMove : undefined}
                 onTouchEnd={isCurrent ? onTouchEnd : undefined}
               >
-                {/* watermark logo animado */}
-                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center" style={{ opacity: slots.length > 0 ? 0.5 : 0.12 }}>
-                  <span className="logo-wrapper">
-                    <Image src={logoSrc} alt="" width={slots.length > 0 ? 200 : 140} height={slots.length > 0 ? 200 : 140} className="logo-spin h-28 w-28 object-contain md:h-32 md:w-32" style={{ scale: slots.length > 0 ? 1.4 : 1 }} />
-                  </span>
-                </div>
                 <div className="relative z-10">
 
                 {/* day header */}
@@ -332,6 +326,12 @@ export default function CultosPage() {
                   </div>
                 )}
               </div>
+                {/* watermark logo encima del contenido */}
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ opacity: slots.length > 0 ? 0.55 : 0.1 }}>
+                  <span className="logo-wrapper" style={{ scale: slots.length > 0 ? 1.6 : 1 }}>
+                    <Image src={logoSrc} alt="" width={slots.length > 0 ? 240 : 140} height={slots.length > 0 ? 240 : 140} className="logo-spin h-32 w-32 object-contain md:h-40 md:w-40" />
+                  </span>
+                </div>
               </div>
             )
           })}
