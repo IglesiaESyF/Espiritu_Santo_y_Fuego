@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react'
+import Image from 'next/image'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
@@ -251,12 +252,13 @@ export default function CultosPage() {
                 onTouchEnd={isCurrent ? onTouchEnd : undefined}
               >
                 {/* watermark logo */}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-25">
-                  <img src="/logo.png" alt="" className="max-h-40 max-w-40 brightness-0 invert" />
+                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-20">
+                  <Image src="/logo.png" alt="" width="160" height="160" className="h-auto max-h-40 w-auto max-w-40" style={{ filter: 'brightness(0) invert(1)', objectFit: 'contain' }} />
                 </div>
+                <div className="relative z-10">
 
                 {/* day header */}
-                <div className="relative mb-4 flex items-center justify-between border-b border-white/20 pb-3">
+                <div className="mb-4 flex items-center justify-between border-b border-white/20 pb-3">
                   <div>
                     <div className="text-3xl font-bold tracking-tight">{DIAS_LABEL[diaKey]}</div>
                     <div className="mt-0.5 text-sm opacity-75">{formatDateShort(cardDate)}</div>
@@ -320,6 +322,7 @@ export default function CultosPage() {
                     ))}
                   </div>
                 )}
+              </div>
               </div>
             )
           })}
