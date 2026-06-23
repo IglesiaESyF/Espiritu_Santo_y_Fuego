@@ -78,6 +78,12 @@ export const CATEGORIAS_EDAD = [
   { value: 'adulto_mayor', label: 'Adulto Mayor (40+)', min: 40, max: 200 },
 ] as const
 
+export interface Familiar {
+  parentesco: string
+  nombre: string
+  miembroId?: string
+}
+
 export interface Miembro {
   id: string
   nombre: string
@@ -93,19 +99,9 @@ export interface Miembro {
   correo: string
   estado: 'bautizado' | 'no_bautizado'
   categoria: string
-  familia_id: string | null
+  familiares: Familiar[]
   notas: string
   activo: boolean
-  creadoEn: number
-}
-
-export interface Familia {
-  id: string
-  apellido: string
-  nombre_padre: string
-  nombre_madre: string
-  telefono: string
-  direccion: string
   creadoEn: number
 }
 
