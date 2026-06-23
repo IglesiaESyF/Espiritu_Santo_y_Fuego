@@ -23,10 +23,11 @@ interface SlotCulto {
 
 type SemanaCultos = Record<string, SlotCulto[]>
 
-interface Participante {
-  slotIdx: number
-  miembroId: string
-  nombreCompleto: string
+interface SlotData {
+  preside: { miembroId: string; nombreCompleto: string }[]
+  predicacion: { miembroId: string; nombreCompleto: string }[]
+  lectura: { miembroId: string; nombreCompleto: string }[]
+  limpieza: { miembroId: string; nombreCompleto: string }[]
 }
 
 const DIAS = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo']
@@ -84,7 +85,6 @@ export default function AdminCultosPage(){
   const hoy=new Date()
   const [mes,setMes]=useState(new Date(hoy.getFullYear(),hoy.getMonth()))
   const [semana,setSemana]=useState<SemanaCultos>({})
-  const [participacion,setParticipacion]=useState<Record<string,Participante[]>>({})
   const [miembros,setMiembros]=useState<Miembro[]>([])
   const [selectedDate,setSelectedDate]=useState<string|null>(null)
   const [showConfirm,setShowConfirm]=useState(false)
@@ -93,21 +93,23 @@ export default function AdminCultosPage(){
   const [saved,setSaved]=useState(false)
   const [error,setError]=useState('')
   const [showTemplate,setShowTemplate]=useState(false)
-  const [participantesLocal,setParticipantesLocal]=useState<Participante[]>([])
+  const [slotsData,setSlotsData]=useState<SlotData[]>([])
+  const [autoSi,setAutoSi]=useState<number>(0)
+  const [autoField,setAutoField]=useState<string>('')
   const [autoText,setAutoText]=useState('')
-  const [autoSlot,setAutoSlot]=useState<number>(0)
   const [showAuto,setShowAuto]=useState(false)
-  const autoRef=useRef<HTMLDivElement>(null)
+  const autoRefs=useRef<Record<string,HTMLDivElement|null>>({})
 
   useEffect(()=>{
     if(!puede('cultos','ver'))router.replace('/admin/dashboard')
     loadAll()
   },[])
 
-  useEffect(()=>{document.addEventListener('mousedown',onClickOutside);return()=>document.removeEventListener('mousedown',onClickOutside)})
+  useEffect(()=>{document.addEventListener('mousedown',onClickOutside);return()=>document.removeEventListener('mousedown',onClickOutside)},[])
 
   function onClickOutside(e:MouseEvent){
-    if(autoRef.current&&!autoRef.current.contains(e.target as Node))setShowAuto(false)
+    const anyOpen=Object.values(autoRefs.current).some(ref=>ref&&ref.contains(e.target as Node))
+    if(!anyOpen)setShowAuto(false)
   }
 
   async function loadAll(){
@@ -136,9 +138,9 @@ export default function AdminCultosPage(){
   async function loadParticipacion(fecha:string){
     try{
       const snap=await Promise.race([getDoc(doc(db,'participacion-cultos',fecha)),timeout(8000)])
-      if(snap.exists())setParticipantesLocal(snap.data().participantes||[])
-      else setParticipantesLocal([])
-    }catch{setParticipantesLocal([])}
+      if(snap.exists())setSlotsData(snap.data().slots||[])
+      else setSlotsData([])
+    }catch{setSlotsData([])}
   }
 
   const weeks=getMonthWeeks(mes.getFullYear(),mes.getMonth())
@@ -166,7 +168,7 @@ export default function AdminCultosPage(){
   function handleDayClick(d:Date){
     if(d.getMonth()!==mes.getMonth())return
     const f=fmt(d)
-    setParticipantesLocal([])
+    setSlotsData([])
     const wState=getWeekState(getMonthWeeks(mes.getFullYear(),mes.getMonth()).find(week=>week.some(day=>sameDay(day,d)))||[d])
     if(wState==='future'){
       setPendingDate(f)
@@ -186,21 +188,25 @@ export default function AdminCultosPage(){
     setPendingDate(null)
   }
 
-  function toggleParticipante(slotIdx:number,miembroId:string,nombreCompleto:string){
-    setParticipantesLocal(prev=>{
-      const idx=prev.findIndex(p=>p.slotIdx===slotIdx&&p.miembroId===miembroId)
-      if(idx>=0)return prev.filter((_,i)=>i!==idx)
-      return[...prev,{slotIdx,miembroId,nombreCompleto}]
+  function toggleRoleMember(si:number,role:'preside'|'predicacion'|'lectura'|'limpieza',miembroId:string,nombreCompleto:string){
+    setSlotsData(prev=>{
+      const slots=[...prev]
+      if(!slots[si])slots[si]={preside:[],predicacion:[],lectura:[],limpieza:[]}
+      const arr=slots[si][role]
+      const idx=arr.findIndex(x=>x.miembroId===miembroId)
+      slots[si]={...slots[si],[role]:idx>=0?arr.filter((_,i)=>i!==idx):[...arr,{miembroId,nombreCompleto}]}
+      return slots
     })
   }
 
-  function addParticipante(slotIdx:number,miembroId:string,nombreCompleto:string){
-    setParticipantesLocal(prev=>{
-      if(prev.some(p=>p.slotIdx===slotIdx&&p.miembroId===miembroId))return prev
-      return[...prev,{slotIdx,miembroId,nombreCompleto}]
-    })
+  function selectMiembro(si:number,role:string,mid:string,nombre:string){
+    toggleRoleMember(si,role as 'preside'|'predicacion'|'lectura'|'limpieza',mid,nombre)
     setAutoText('')
     setShowAuto(false)
+  }
+
+  function countParticipants(sd:SlotData):number{
+    return sd.preside.length+sd.predicacion.length+sd.lectura.length+sd.limpieza.length
   }
 
   async function guardarParticipacion(){
@@ -209,7 +215,7 @@ export default function AdminCultosPage(){
     setError('')
     try{
       await Promise.race([
-        setDoc(doc(db,'participacion-cultos',selectedDate),{fecha:selectedDate,participantes:participantesLocal,updatedAt:serverTimestamp()}),
+        setDoc(doc(db,'participacion-cultos',selectedDate),{fecha:selectedDate,slots:slotsData,updatedAt:serverTimestamp()}),
         timeout(8000),
       ])
       setSaved(true);setTimeout(()=>setSaved(false),2000)
@@ -312,7 +318,7 @@ export default function AdminCultosPage(){
               {week.map((d,di)=>{
                 const f=fmt(d)
                 const inMonth=d.getMonth()===mes.getMonth()
-                const partCount=(participacion[f]||[]).length
+                const partCount=0 /* loaded on demand in modal */
                 const hoyBool=sameDay(d,hoy)
                 return(
                   <button
@@ -375,7 +381,7 @@ export default function AdminCultosPage(){
       {selectedDate&&diaActual&&(
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 pt-10 pb-10" onClick={()=>setSelectedDate(null)}>
           <div
-            className="relative w-full max-w-2xl transform rounded-xl bg-white p-6 shadow-2xl transition-all duration-300 scale-100 opacity-100"
+            className="relative w-full max-w-3xl transform rounded-xl bg-white p-6 shadow-2xl transition-all duration-300 scale-100 opacity-100"
             onClick={e=>e.stopPropagation()}
           >
             <button onClick={()=>setSelectedDate(null)} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600">
@@ -396,73 +402,78 @@ export default function AdminCultosPage(){
             ):(
               <div className="space-y-6">
                 {slotsHoy.map((slot,si)=>{
-                  const partSlot=participantesLocal.filter(p=>p.slotIdx===si)
+                  const sd=slotsData[si]||{preside:[],predicacion:[],lectura:[],limpieza:[]}
+                  const rc=countParticipants(sd)
+                  const campos:{label:string;role:'preside'|'predicacion'|'lectura'|'limpieza'}[]=[
+                    {label:'Preside',role:'preside'},
+                    {label:'Lectura Bíblica',role:'lectura'},
+                    {label:'Predicación',role:'predicacion'},
+                    {label:'Limpieza',role:'limpieza'},
+                  ]
                   return(
                     <div key={si} className="rounded-lg border border-gray-200 p-4">
-                      <div className="mb-3 flex items-center justify-between">
+                      <div className="mb-4 flex items-center justify-between">
                         <div>
                           <h3 className="font-bold text-dark">{slot.titulo||'Sin título'}</h3>
                           {slot.hora_inicio&&<span className="text-xs text-gray-400">{slot.hora_inicio} - {slot.hora_fin||'...'}</span>}
                         </div>
-                        <span className="text-xs font-medium text-gray-400">{partSlot.length} participante{partSlot.length!==1?'s':''}</span>
+                        <span className="text-xs font-medium text-gray-400">{rc} participante{rc!==1?'s':''}</span>
                       </div>
 
-                      {slot.preside&&<p className="mb-2 text-xs text-gray-500"><span className="font-medium">Preside:</span> {slot.preside}</p>}
-                      {slot.predicacion&&<p className="mb-2 text-xs text-gray-500"><span className="font-medium">Predicación:</span> {slot.predicacion}</p>}
-                      {slot.lectura&&<p className="mb-2 text-xs text-gray-500"><span className="font-medium">Lectura:</span> {slot.lectura}</p>}
-                      {slot.limpieza&&<p className="mb-2 text-xs text-gray-500"><span className="font-medium">Limpieza:</span> {slot.limpieza}</p>}
-
-                      <div className="mt-3 space-y-1">
-                        {partSlot.map((p,pi)=>(
-                          <div key={pi} className="flex items-center justify-between rounded bg-gray-50 px-3 py-1.5 text-sm">
-                            <span>{p.nombreCompleto}</span>
-                            <button
-                              onClick={()=>toggleParticipante(si,p.miembroId,p.nombreCompleto)}
-                              className="text-red-400 hover:text-red-600"
-                            >
-                              <X className="h-3.5 w-3.5"/>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      {user?.role!=='visual'&&(
-                        <div className="relative mt-2">
-                          <div className="flex gap-2">
-                            <input
-                              value={autoSlot===si?autoText:''}
-                              onChange={e=>{setAutoSlot(si);setAutoText(e.target.value);setShowAuto(true)}}
-                              onFocus={()=>{setAutoSlot(si);setShowAuto(true)}}
-                              placeholder="Buscar miembro..."
-                              className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                            />
-                            <Button variant="primary" size="sm" onClick={()=>{setAutoSlot(si);setShowAuto(!showAuto)}}>
-                              <Plus className="h-4 w-4"/>
-                            </Button>
-                          </div>
-                          {showAuto&&autoSlot===si&&miembrosFiltrados.length>0&&(
-                            <div ref={autoRef} className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                              {miembrosFiltrados.map(m=>{
-                                const yaAgregado=participantesLocal.some(p=>p.slotIdx===si&&p.miembroId===m.id)
-                                return(
-                                  <button
-                                    key={m.id}
-                                    onClick={()=>{
-                                      if(!yaAgregado)addParticipante(si,m.id,`${m.nombre} ${m.apellido}`)
-                                      else toggleParticipante(si,m.id,`${m.nombre} ${m.apellido}`)
-                                    }}
-                                    className={`flex w-full items-center justify-between px-4 py-2 text-sm hover:bg-gray-50 ${
-                                      yaAgregado?'opacity-50':''}`}
-                                  >
-                                    <span>{m.nombre} {m.apellido}</span>
-                                    <span className="text-xs text-gray-400">{yaAgregado?'✓ agregado':''}</span>
-                                  </button>
-                                )
-                              })}
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {campos.map(c=>{
+                          const arr=sd[c.role]
+                          const ak=`${si}-${c.role}`
+                          const isOpen=showAuto&&autoSi===si&&autoField===c.role
+                          return(
+                            <div key={c.role}>
+                              <label className="mb-1 block text-xs font-medium text-gray-500">{c.label}</label>
+                              <div className="flex flex-wrap gap-1 mb-1">
+                                {arr.map(p=>(
+                                  <span key={p.miembroId} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                                    {p.nombreCompleto}
+                                    {user?.role!=='visual'&&(
+                                      <button onClick={()=>toggleRoleMember(si,c.role,p.miembroId,p.nombreCompleto)} className="text-primary/60 hover:text-red-500">
+                                        <X className="h-3 w-3"/>
+                                      </button>
+                                    )}
+                                  </span>
+                                ))}
+                              </div>
+                              {user?.role!=='visual'&&(
+                                <div className="relative" ref={el=>{autoRefs.current[ak]=el}}>
+                                  <div className="flex gap-2">
+                                    <input
+                                      value={isOpen?autoText:''}
+                                      onChange={e=>{setAutoSi(si);setAutoField(c.role);setAutoText(e.target.value);setShowAuto(true)}}
+                                      onFocus={()=>{setAutoSi(si);setAutoField(c.role);setShowAuto(true)}}
+                                      placeholder="Buscar miembro..."
+                                      className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                                    />
+                                    <Button variant="primary" size="sm" onClick={()=>{setAutoSi(si);setAutoField(c.role);setShowAuto(!showAuto)}}>
+                                      <Plus className="h-4 w-4"/>
+                                    </Button>
+                                  </div>
+                                  {isOpen&&miembrosFiltrados.length>0&&(
+                                    <div className="absolute z-10 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
+                                      {miembrosFiltrados.map(m=>{
+                                        const ya=arr.some(p=>p.miembroId===m.id)
+                                        return(
+                                          <button key={m.id} onClick={()=>selectMiembro(si,c.role,m.id,`${m.nombre} ${m.apellido}`)}
+                                            className={`flex w-full items-center justify-between px-3 py-1.5 text-sm hover:bg-gray-50 ${ya?'opacity-50':''}`}>
+                                            <span>{m.nombre} {m.apellido}</span>
+                                            <span className="text-xs text-gray-400">{ya?'✓':''}</span>
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      )}
+                          )
+                        })}
+                      </div>
                     </div>
                   )
                 })}
