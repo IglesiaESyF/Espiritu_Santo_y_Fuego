@@ -266,9 +266,6 @@ export default function CultosPage() {
                     <div className="text-3xl font-bold tracking-tight">{DIAS_LABEL[diaKey]}</div>
                     <div className="mt-0.5 text-sm opacity-75">{formatDateShort(cardDate)}</div>
                   </div>
-                  <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
-                    {slots.length} culto{slots.length !== 1 ? 's' : ''}
-                  </span>
                 </div>
 
                 {slots.length === 0 ? (
