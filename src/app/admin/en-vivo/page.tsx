@@ -19,6 +19,7 @@ function timeout(ms: number) {
 export default function AdminEnVivoPage() {
   const router = useRouter()
   const { puede } = useAuth()
+  const [plataforma, setPlataforma] = useState('facebook')
   const [paginaFacebook, setPaginaFacebook] = useState('')
   const [videoUrl, setVideoUrl] = useState('')
   const [activo, setActivo] = useState(false)
@@ -40,6 +41,7 @@ export default function AdminEnVivoPage() {
       ])
       if (snap.exists()) {
         const d = snap.data()
+        setPlataforma(d.plataforma || 'facebook')
         setPaginaFacebook(d.paginaFacebook || '')
         setVideoUrl(d.videoUrl || '')
         setActivo(d.activo || false)
@@ -54,7 +56,7 @@ export default function AdminEnVivoPage() {
     e.preventDefault()
     setSaving(true)
     setError('')
-    const data = { paginaFacebook, videoUrl, activo, mensaje }
+    const data = { plataforma, paginaFacebook, videoUrl, activo, mensaje }
     try {
       await Promise.race([
         setDoc(doc(db, FIRESTORE_PATH), {
@@ -72,11 +74,23 @@ export default function AdminEnVivoPage() {
     }
   }
 
-  const embedUrl = videoUrl
-    ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
-    : paginaFacebook
-      ? `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(paginaFacebook)}&tabs=timeline&width=500&height=500&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false`
-      : ''
+  const buildEmbedUrl = () => {
+    if (!videoUrl) return ''
+    switch (plataforma) {
+      case 'youtube': {
+        const id = extractYouTubeId(videoUrl)
+        return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1` : ''
+      }
+      case 'facebook':
+        return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
+      case 'otro':
+        return videoUrl
+      default:
+        return ''
+    }
+  }
+
+  const embedUrl = buildEmbedUrl()
 
   return (
     <div>
@@ -90,18 +104,47 @@ export default function AdminEnVivoPage() {
       <Card className="mx-auto max-w-lg">
         <CardContent className="p-6">
           <form onSubmit={handleSave} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">Plataforma</label>
+              <div className="flex gap-4">
+                {[
+                  { value: 'facebook', label: 'Facebook' },
+                  { value: 'youtube', label: 'YouTube' },
+                  { value: 'otro', label: 'Otro (StreamYard, etc.)' },
+                ].map((p) => (
+                  <label key={p.value} className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="plataforma"
+                      value={p.value}
+                      checked={plataforma === p.value}
+                      onChange={() => setPlataforma(p.value)}
+                      className="accent-primary"
+                    />
+                    <span className="text-sm">{p.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <Input
+              label={plataforma === 'youtube' ? 'URL del video de YouTube' : plataforma === 'facebook' ? 'URL del video de Facebook' : 'URL o código embed del streaming'}
+              placeholder={
+                plataforma === 'youtube'
+                  ? 'https://youtube.com/watch?v=...'
+                  : plataforma === 'facebook'
+                    ? 'https://www.facebook.com/.../videos/...'
+                    : 'https://streamyard.com/...'
+              }
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+            />
+
             <Input
               label="Nombre o URL de la página de Facebook"
               placeholder="Ej: https://www.facebook.com/IglesiaEspirituSantoFuego"
               value={paginaFacebook}
               onChange={(e) => setPaginaFacebook(e.target.value)}
-            />
-
-            <Input
-              label="URL del video en vivo (opcional)"
-              placeholder="Ej: https://www.facebook.com/.../videos/..."
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
             />
 
             <div className="flex items-center gap-3">
@@ -169,20 +212,47 @@ export default function AdminEnVivoPage() {
 
       <Card className="mx-auto mt-6 max-w-lg">
         <CardHeader>
-          <h3 className="font-semibold text-dark">Cómo transmitir desde Facebook</h3>
+          <h3 className="font-semibold text-dark">Cómo transmitir en vivo</h3>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600">
-          <p>1. Crea una página de Facebook para la iglesia.</p>
-          <p>2. Abre la página en la app de Facebook en tu celular.</p>
-          <p>3. Toca <strong>"Publicar"</strong> → <strong>"Video en vivo"</strong>.</p>
-          <p>4. Configura y presiona <strong>"Transmitir en vivo"</strong>.</p>
-          <p>5. Vuelve acá y activa el interruptor <strong>"En Vivo ahora"</strong>.</p>
-          <p>6. Opcional: pega la URL del video para mostrarlo directamente.</p>
-          <p className="mt-2 text-xs text-gray-400">
-            Facebook no tiene límite de seguidores para transmitir en vivo desde páginas.
-          </p>
+          {plataforma === 'facebook' && (
+            <>
+              <p>1. Abrí la página de la iglesia en la app de Facebook en tu celular.</p>
+              <p>2. Tocá <strong>"Publicar"</strong> → <strong>"Video en vivo"</strong>.</p>
+              <p>3. Configurá y presioná <strong>"Transmitir en vivo"</strong>.</p>
+              <p>4. Pegá acá la URL del video para mostrarlo en la web.</p>
+              <p className="mt-2 text-xs text-gray-400">Facebook no pide mínimo de seguidores para transmitir desde una página.</p>
+            </>
+          )}
+          {plataforma === 'youtube' && (
+            <>
+              <p>1. Abrí la app de YouTube en tu celular.</p>
+              <p>2. Tocá el icono <strong>"+"</strong> → <strong>"Transmitir en vivo"</strong>.</p>
+              <p>3. Configurá título, visibilidad y presioná <strong>"Comenzar transmisión"</strong>.</p>
+              <p>4. Pegá acá la URL del video de YouTube.</p>
+              <p className="mt-2 text-xs text-gray-400">
+                YouTube puede pedir verificación de cuenta (sin costo) para habilitar lives desde el celular.
+              </p>
+            </>
+          )}
+          {plataforma === 'otro' && (
+            <>
+              <p>1. Usá <strong>StreamYard</strong>, <strong>Restream</strong> u otro servicio.</p>
+              <p>2. Iniciá la transmisión desde la app de ese servicio.</p>
+              <p>3. Copiá el link o código embed que te dan.</p>
+              <p>4. Pegá acá la URL completa o el iframe.</p>
+              <p className="mt-2 text-xs text-gray-400">Estos servicios no piden mínimo de seguidores.</p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
   )
+}
+
+function extractYouTubeId(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  )
+  return m ? m[1] : null
 }

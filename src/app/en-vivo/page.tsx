@@ -11,14 +11,39 @@ import { doc, onSnapshot } from 'firebase/firestore'
 const FIRESTORE_PATH = 'config/live'
 
 interface LiveData {
+  plataforma: string
   paginaFacebook: string
   videoUrl: string
   activo: boolean
   mensaje: string
 }
 
+function extractYouTubeId(url: string): string | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  )
+  return m ? m[1] : null
+}
+
+function buildEmbedUrl(plataforma: string, videoUrl: string): string {
+  if (!videoUrl) return ''
+  switch (plataforma) {
+    case 'youtube': {
+      const id = extractYouTubeId(videoUrl)
+      return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1` : ''
+    }
+    case 'facebook':
+      return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
+    case 'otro':
+      return videoUrl
+    default:
+      return ''
+  }
+}
+
 export default function EnVivoPage() {
   const [liveData, setLiveData] = useState<LiveData>({
+    plataforma: 'facebook',
     paginaFacebook: '',
     videoUrl: '',
     activo: false,
@@ -37,13 +62,8 @@ export default function EnVivoPage() {
     return () => unsub()
   }, [])
 
-  const { paginaFacebook, videoUrl, activo, mensaje } = liveData
-
-  const embedUrl = videoUrl
-    ? `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
-    : paginaFacebook
-      ? `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(paginaFacebook)}&tabs=events&width=500&height=500&small_header=true&adapt_container_width=true&hide_cover=true&show_facepile=false`
-      : ''
+  const { plataforma, paginaFacebook, videoUrl, activo, mensaje } = liveData
+  const embedUrl = buildEmbedUrl(plataforma, videoUrl)
 
   return (
     <>
@@ -60,6 +80,7 @@ export default function EnVivoPage() {
             <div className="flex items-center gap-2 bg-blue-600 px-4 py-2 text-white">
               <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
               <span className="text-sm font-semibold">EN VIVO</span>
+              <span className="ml-2 text-xs text-white/70 uppercase">{plataforma === 'youtube' ? 'YouTube' : plataforma === 'facebook' ? 'Facebook' : 'Streaming'}</span>
               <Wifi className="ml-auto h-4 w-4" />
             </div>
             <div className="w-full" style={{ height: 450 }}>
@@ -73,7 +94,6 @@ export default function EnVivoPage() {
                 allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
               />
             </div>
-
           </Card>
         ) : (
           <Card className="mb-8">
