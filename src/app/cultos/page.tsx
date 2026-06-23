@@ -6,7 +6,8 @@ import Image from 'next/image'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
-import { doc, getDoc, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc, onSnapshot, collection, getDocs } from 'firebase/firestore'
+import type { Miembro } from '@/types'
 
 interface SlotCulto {
   titulo: string; preside: string; lectura: string
@@ -78,10 +79,30 @@ function formatDateShort(d: Date): string {
   return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
 }
 
+function fmtName(m: Miembro | undefined, fallback: string): string {
+  if (m) {
+    const nombres = m.nombre.split(' ').slice(0, 2).join(' ')
+    const apellido = m.apellido.split(' ')[0]
+    return `Hno(a). ${nombres} ${apellido}`
+  }
+  const parts = fallback.split(' ')
+  if (parts.length <= 2) return `Hno(a). ${fallback}`
+  const given = parts.slice(0, Math.min(2, parts.length - 1)).join(' ')
+  return `Hno(a). ${given} ${parts[parts.length - 1]}`
+}
+
+const ROLE_CONFIG: { key: keyof SlotData; label: string }[] = [
+  { key: 'preside', label: 'Preside' },
+  { key: 'lectura', label: 'Lectura Bíblica' },
+  { key: 'predicacion', label: 'Predicación' },
+  { key: 'limpieza', label: 'Limpieza' },
+]
+
 export default function CultosPage() {
   const [semana, setSemana] = useState<SemanaCultos>({})
   const [weekDates, setWeekDates] = useState<Date[]>([])
   const [participacionMap, setParticipacionMap] = useState<Record<string, SlotData[]>>({})
+  const [miembrosMap, setMiembrosMap] = useState<Record<string, Miembro>>({})
   const [currentIndex, setCurrentIndex] = useState(0)
   const [animating, setAnimating] = useState(false)
   const [dragOff, setDragOff] = useState(0)
@@ -92,18 +113,20 @@ export default function CultosPage() {
   useEffect(() => {
     const wd = getWeekDates()
     setWeekDates(wd)
-    const f = (d: Date) => {
-      const y = d.getFullYear()
-      const m = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      return `${y}-${m}-${day}`
-    }
+
+    getDocs(collection(db, 'miembros')).then(snap => {
+      const map: Record<string, Miembro> = {}
+      snap.docs.forEach(d => { map[d.id] = { id: d.id, ...d.data() } as Miembro })
+      setMiembrosMap(map)
+    }).catch(() => {})
+
+    const fechaKey = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     wd.forEach(d => {
-      const fecha = f(d)
-      getDoc(doc(db, 'participacion-cultos', fecha)).then(snap => {
+      const f = fechaKey(d)
+      getDoc(doc(db, 'participacion-cultos', f)).then(snap => {
         if (snap.exists()) {
-          const data = snap.data()
-          setParticipacionMap(prev => ({ ...prev, [fecha]: data.slots || [] }))
+          setParticipacionMap(prev => ({ ...prev, [f]: snap.data().slots || [] }))
         }
       }).catch(() => {})
     })
@@ -194,7 +217,7 @@ export default function CultosPage() {
             const cardDate = weekDates[idx]
             if (!cardDate) return null
             const fecha = `${cardDate.getFullYear()}-${String(cardDate.getMonth()+1).padStart(2,'0')}-${String(cardDate.getDate()).padStart(2,'0')}`
-            const partSlots = fecha ? participacionMap[fecha] : undefined
+            const partSlots = participacionMap[fecha]
             const o = cardStyle(idx - currentIndex)
             const isCurrent = idx === currentIndex
             const drag = isCurrent && !animating ? dragOff : 0
@@ -202,18 +225,12 @@ export default function CultosPage() {
               ? 1 - Math.abs(drag) * 0.0012
               : 1
 
-            function roleNames(slotIdx: number, field: keyof SlotData): string[] {
+            function rolePeople(slotIdx: number, field: keyof SlotData) {
               const ps = partSlots?.[slotIdx]
-              if (ps) {
-                const arr = ps[field] as { nombreCompleto: string }[] | undefined
-                if (arr && arr.length > 0) return arr.map(p => p.nombreCompleto)
-              }
-              return []
-            }
-
-            function displayVal(slot: SlotCulto, slotIdx: number, field: keyof SlotCulto & keyof SlotData): string {
-              const names = roleNames(slotIdx, field)
-              return names.length > 0 ? names.join(', ') : (slot[field] as string || '')
+              if (!ps) return [] as { mid: string; nombre: string }[]
+              const arr = ps[field]
+              if (!arr || arr.length === 0) return []
+              return arr.map(p => ({ mid: p.miembroId, nombre: p.nombreCompleto }))
             }
 
             return (
@@ -240,10 +257,10 @@ export default function CultosPage() {
                 </div>
 
                 {/* day header */}
-                <div className="relative mb-5 flex items-center justify-between border-b border-white/20 pb-3">
+                <div className="relative mb-4 flex items-center justify-between border-b border-white/20 pb-3">
                   <div>
                     <div className="text-3xl font-bold tracking-tight">{DIAS_LABEL[diaKey]}</div>
-                    <div className="mt-0.5 text-sm opacity-75">{cardDate ? formatDateShort(cardDate) : ''}</div>
+                    <div className="mt-0.5 text-sm opacity-75">{formatDateShort(cardDate)}</div>
                   </div>
                   <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold">
                     {slots.length} culto{slots.length !== 1 ? 's' : ''}
@@ -261,44 +278,39 @@ export default function CultosPage() {
                         {slot.titulo && (
                           <h3 className="mb-3 text-base font-bold">{slot.titulo}</h3>
                         )}
-                        <div className="space-y-1.5 text-sm">
-                          {(() => {
-                            const v = displayVal(slot, i, 'preside')
-                            return v ? (
-                              <div className="flex justify-between">
-                                <span className="opacity-70">Preside</span>
-                                <span className="font-semibold">{v}</span>
+
+                        <div className="space-y-2">
+                          {ROLE_CONFIG.map(rc => {
+                            const people = rolePeople(i, rc.key)
+                            const noParticipation = people.length === 0
+                            const templateVal = slot[rc.key as keyof SlotCulto] as string || ''
+
+                            if (noParticipation && !templateVal) return null
+
+                            return (
+                              <div key={rc.key}>
+                                <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-wider opacity-60">
+                                  {rc.label}
+                                </div>
+                                {noParticipation ? (
+                                  <div className="text-sm font-semibold">{templateVal}</div>
+                                ) : (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {people.map(p => (
+                                      <span
+                                        key={p.mid}
+                                        className="inline-block rounded-md bg-white/20 px-2.5 py-1 text-sm font-semibold shadow-sm"
+                                      >
+                                        {fmtName(miembrosMap[p.mid], p.nombre)}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            ) : null
-                          })()}
-                          {(() => {
-                            const v = displayVal(slot, i, 'lectura')
-                            return v ? (
-                              <div className="flex justify-between">
-                                <span className="opacity-70">Lectura</span>
-                                <span className="font-semibold">{v}</span>
-                              </div>
-                            ) : null
-                          })()}
-                          {(() => {
-                            const v = displayVal(slot, i, 'predicacion')
-                            return v ? (
-                              <div className="flex justify-between">
-                                <span className="opacity-70">Predicación</span>
-                                <span className="font-semibold">{v}</span>
-                              </div>
-                            ) : null
-                          })()}
-                          {(() => {
-                            const v = displayVal(slot, i, 'limpieza')
-                            return v ? (
-                              <div className="flex justify-between">
-                                <span className="opacity-70">Limpieza</span>
-                                <span className="font-semibold">{v}</span>
-                              </div>
-                            ) : null
-                          })()}
+                            )
+                          })}
                         </div>
+
                         {(slot.hora_inicio || slot.hora_fin) && (
                           <div className="mt-3 flex items-center gap-1.5 text-sm opacity-80">
                             <Clock className="h-4 w-4" />
