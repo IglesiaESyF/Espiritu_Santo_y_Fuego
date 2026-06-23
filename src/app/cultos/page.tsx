@@ -252,8 +252,8 @@ export default function CultosPage() {
                 onTouchEnd={isCurrent ? onTouchEnd : undefined}
               >
                 {/* watermark logo */}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-10">
-                  <Image src="/logo.png" alt="" width={200} height={200} className="object-contain" />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-25">
+                  <Image src="/logo.png" alt="" width={200} height={200} className="object-contain brightness-0 invert" />
                 </div>
 
                 {/* day header */}
