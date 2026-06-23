@@ -259,9 +259,9 @@ export default function CultosPage() {
                 onTouchEnd={isCurrent ? onTouchEnd : undefined}
               >
                 {/* watermark logo animado */}
-                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-15">
+                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center" style={{ opacity: slots.length > 0 ? 0.5 : 0.12 }}>
                   <span className="logo-wrapper">
-                    <Image src={logoSrc} alt="" width={140} height={140} className="logo-spin h-28 w-28 object-contain md:h-32 md:w-32" />
+                    <Image src={logoSrc} alt="" width={slots.length > 0 ? 200 : 140} height={slots.length > 0 ? 200 : 140} className="logo-spin h-28 w-28 object-contain md:h-32 md:w-32" style={{ scale: slots.length > 0 ? 1.4 : 1 }} />
                   </span>
                 </div>
                 <div className="relative z-10">
