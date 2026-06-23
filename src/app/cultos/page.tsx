@@ -26,14 +26,14 @@ const METRO_COLORS: Record<string,string> = {
   jueves:'#018574', viernes:'#E3008C', sabado:'#C239B3', domingo:'#F7630C',
 }
 
-const DAY_OFFSETS = [
-  { translateX: -200, scale: 0.6,  rotate: -9,  opacity: 0.25, z: 1 },
-  { translateX: -120, scale: 0.78, rotate: -5,  opacity: 0.5,  z: 2 },
-  { translateX: -50,  scale: 0.92, rotate: -2,  opacity: 0.75, z: 3 },
-  { translateX: 0,    scale: 1,    rotate: 0,   opacity: 1,    z: 7 },
-  { translateX: 50,   scale: 0.92, rotate: 2,   opacity: 0.75, z: 3 },
-  { translateX: 120,  scale: 0.78, rotate: 5,   opacity: 0.5,  z: 2 },
-  { translateX: 200,  scale: 0.6,  rotate: 9,   opacity: 0.25, z: 1 },
+const REL_OFFSETS = [
+  { tx: -180, s: 0,    r: 0,  o: 0,    y: 0,  z: 0  },
+  { tx: -90,  s: 0.55, r: -5, o: 0.35, y: 20, z: 1  },
+  { tx: -40,  s: 0.72, r: -2, o: 0.7,  y: 8,  z: 3  },
+  { tx: 0,    s: 1,    r: 0,  o: 1,    y: 0,  z: 7  },
+  { tx: 65,   s: 0.8,  r: 3,  o: 0.6,  y: 0,  z: 4  },
+  { tx: 130,  s: 0.55, r: 6,  o: 0.2,  y: 0,  z: 2  },
+  { tx: 200,  s: 0,    r: 0,  o: 0,    y: 0,  z: 0  },
 ]
 
 function getWeekDates(): Date[] {
@@ -120,16 +120,16 @@ export default function CultosPage() {
           {DIAS.map((diaKey, idx) => {
             const slots = semana[diaKey] || []
             const cardDate = weekDates[idx]
-            const o = DAY_OFFSETS[idx - currentIndex + 3] || DAY_OFFSETS[3]
+            const o = REL_OFFSETS[Math.min(Math.max(idx - currentIndex + 3, 0), 6)] || REL_OFFSETS[3]
 
             return (
               <div
                 key={diaKey}
                 className="absolute inset-x-0 top-0 rounded-2xl p-6 text-white transition-all duration-500 ease-out"
                 style={{
-                  transform: `translateX(${o.translateX}px) scale(${o.scale}) rotate(${o.rotate}deg)`,
+                  transform: `translateX(${o.tx}px) translateY(${o.y}px) scale(${o.s}) rotate(${o.r}deg)`,
                   transformOrigin: 'center center',
-                  opacity: o.opacity,
+                  opacity: o.o,
                   zIndex: o.z,
                   backgroundColor: METRO_COLORS[diaKey],
                   pointerEvents: idx === currentIndex ? 'auto' : 'none',
