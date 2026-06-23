@@ -134,10 +134,6 @@ export const PAISES: Pais[] = [
             barrios: ['Barrio El Centro', 'Barrio San José', 'Barrio San Antonio', 'Barrio El Calvario', 'Barrio La Cruz', 'Barrio Santa Lucía', 'Barrio La Fuente', 'Colonia Los Laureles', 'Colonia Nueva', 'Residencial El Valle', 'Residencial Las Colinas', 'Villa Bosco', 'Los Ángeles', 'Linda Vista', 'Cerro Grande'],
           },
           {
-            nombre: 'Jinotega',
-            ciudades: [], // moved below
-          },
-          {
             nombre: 'Esquipulas',
             barrios: ['Barrio El Centro', 'Barrio San José', 'Barrio La Cruz', 'Los Laureles'],
           },
@@ -384,10 +380,7 @@ export const PAISES: Pais[] = [
             nombre: 'Corn Island',
             barrios: ['Brig Bay', 'South End', 'North End', 'La Loma', 'Long Bay', 'Punta Blanca'],
           },
-          {
-            nombre: 'El Rama',
-            ciudades: [], // already in Chontales
-          },
+
           {
             nombre: 'Laguna de Perlas',
             barrios: ['Barrio El Centro', 'Barrio San José', 'Barrio La Cruz', 'Los Laureles', 'El Bluff'],
