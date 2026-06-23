@@ -326,10 +326,10 @@ export default function CultosPage() {
                   </div>
                 )}
               </div>
-                {/* watermark logo encima del contenido */}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center" style={{ opacity: slots.length > 0 ? 0.55 : 0.1 }}>
-                  <span className="logo-wrapper" style={{ scale: slots.length > 0 ? 1.6 : 1 }}>
-                    <Image src={logoSrc} alt="" width={slots.length > 0 ? 240 : 140} height={slots.length > 0 ? 240 : 140} className="logo-spin h-32 w-32 object-contain md:h-40 md:w-40" />
+                {/* logo en esquina superior derecha */}
+                <div className="pointer-events-none absolute right-3 top-3 flex items-start justify-end md:right-5 md:top-5">
+                  <span className="logo-wrapper">
+                    <Image src={logoSrc} alt="" width={96} height={96} className="logo-spin h-16 w-16 object-contain md:h-20 md:w-20" />
                   </span>
                 </div>
               </div>
