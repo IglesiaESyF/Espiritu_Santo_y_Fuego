@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react'
+import Image from 'next/image'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
@@ -74,7 +75,11 @@ export default function CultosPage() {
   const [semana, setSemana] = useState<SemanaCultos>({})
   const [currentIndex, setCurrentIndex] = useState(0)
   const [animating, setAnimating] = useState(false)
+  const [dragOff, setDragOff] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const weekDates = useMemo(() => getWeekDates(), [])
+  const touchStartRef = useRef(0)
+  const dragOffRef = useRef(0)
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'config', 'cultos-semana'), (snap) => {
@@ -87,6 +92,7 @@ export default function CultosPage() {
     if (animating || currentIndex >= 6) return
     setAnimating(true)
     setCurrentIndex(prev => prev + 1)
+    setDragOff(0); dragOffRef.current = 0; setIsDragging(false)
     setTimeout(() => setAnimating(false), 500)
   }, [animating, currentIndex])
 
@@ -94,6 +100,7 @@ export default function CultosPage() {
     if (animating || currentIndex <= 0) return
     setAnimating(true)
     setCurrentIndex(prev => prev - 1)
+    setDragOff(0); dragOffRef.current = 0; setIsDragging(false)
     setTimeout(() => setAnimating(false), 500)
   }, [animating, currentIndex])
 
@@ -108,6 +115,30 @@ export default function CultosPage() {
 
   const hasPrev = currentIndex > 0
   const hasNext = currentIndex < 6
+
+  function onTouchStart(e: React.TouchEvent) {
+    touchStartRef.current = e.touches[0].clientX
+    setIsDragging(false)
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (animating) return
+    const dx = e.touches[0].clientX - touchStartRef.current
+    if (Math.abs(dx) > 5) {
+      if (!isDragging) setIsDragging(true)
+      const clamped = Math.max(-120, Math.min(120, dx))
+      dragOffRef.current = clamped
+      setDragOff(clamped)
+    }
+  }
+
+  function onTouchEnd() {
+    if (!isDragging) { setDragOff(0); dragOffRef.current = 0; return }
+    const dx = dragOffRef.current
+    setIsDragging(false); setDragOff(0); dragOffRef.current = 0
+    if (dx < -50 && hasNext) goNext()
+    else if (dx > 50 && hasPrev) goPrev()
+  }
 
   return (
     <>
@@ -127,30 +158,44 @@ export default function CultosPage() {
 
         {/* card stack */}
         <div
-          className="relative mx-auto w-full max-w-lg select-none"
-          style={{ minHeight: 480 }}
+          className="relative mx-auto w-full select-none"
+          style={{ maxWidth: 640, minHeight: '55vh' }}
         >
           {DIAS.map((diaKey, idx) => {
             const slots = semana[diaKey] || []
             const cardDate = weekDates[idx]
             const o = cardStyle(idx - currentIndex)
+            const isCurrent = idx === currentIndex
+            const drag = isCurrent && !animating ? dragOff : 0
+            const scaleExtra = isCurrent && isDragging
+              ? 1 - Math.abs(drag) * 0.0012
+              : 1
 
             return (
               <div
                 key={diaKey}
-                className="absolute inset-x-0 top-0 rounded-2xl p-6 text-white transition-all duration-500 ease-out"
+                className={`absolute inset-x-0 top-0 rounded-2xl p-6 text-white overflow-hidden ${
+                  isCurrent && !isDragging ? 'transition-all duration-500 ease-out' : ''
+                }`}
                 style={{
-                  transform: `translateX(${o.tx}px) translateY(${o.y}px) scale(${o.s}) rotate(${o.r}deg)`,
+                  transform: `translateX(${o.tx + drag}px) translateY(${o.y}px) scale(${o.s * scaleExtra}) rotate(${o.r}deg)`,
                   transformOrigin: 'center center',
-                  opacity: o.o,
+                  opacity: isCurrent && isDragging ? Math.min(1, 1 - Math.abs(drag) * 0.004) : o.o,
                   zIndex: o.z,
                   backgroundColor: METRO_COLORS[diaKey],
-                  pointerEvents: idx === currentIndex ? 'auto' : 'none',
-                  minHeight: 440,
+                  pointerEvents: isCurrent ? 'auto' : 'none',
                 }}
+                onTouchStart={isCurrent ? onTouchStart : undefined}
+                onTouchMove={isCurrent ? onTouchMove : undefined}
+                onTouchEnd={isCurrent ? onTouchEnd : undefined}
               >
+                {/* watermark logo */}
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-10">
+                  <Image src="/logo.png" alt="" width={200} height={200} className="object-contain" />
+                </div>
+
                 {/* day header */}
-                <div className="mb-5 flex items-center justify-between border-b border-white/20 pb-3">
+                <div className="relative mb-5 flex items-center justify-between border-b border-white/20 pb-3">
                   <div>
                     <div className="text-3xl font-bold tracking-tight">{DIAS_LABEL[diaKey]}</div>
                     <div className="mt-0.5 text-sm opacity-75">{formatDateShort(cardDate)}</div>
@@ -161,11 +206,11 @@ export default function CultosPage() {
                 </div>
 
                 {slots.length === 0 ? (
-                  <div className="flex items-center justify-center py-16">
+                  <div className="relative flex items-center justify-center py-16">
                     <p className="text-lg opacity-60">Sin actividad programada</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="relative space-y-3">
                     {slots.map((slot, i) => (
                       <div key={i} className="rounded-xl bg-white/15 p-4 backdrop-blur-sm">
                         {slot.titulo && (
@@ -215,22 +260,30 @@ export default function CultosPage() {
           <button
             onClick={goPrev}
             disabled={!hasPrev}
-            className={`absolute left-0 top-1/2 z-20 -translate-x-5 -translate-y-1/2 rounded-full bg-white/90 p-3 text-gray-600 shadow-lg backdrop-blur-sm transition-all hover:scale-110 hover:bg-white active:scale-95 ${
+            className={`group absolute left-0 top-1/2 z-30 -translate-x-4 -translate-y-1/2 ${
               !hasPrev ? 'pointer-events-none opacity-0' : 'opacity-100'
             }`}
             aria-label="Día anterior"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-light text-white shadow-lg shadow-primary/30 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/40 active:scale-95">
+              <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute -inset-2 rounded-full border-2 border-primary/30 opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110" />
+              <ChevronLeft className="relative h-6 w-6 drop-shadow-sm" />
+            </div>
           </button>
           <button
             onClick={goNext}
             disabled={!hasNext}
-            className={`absolute right-0 top-1/2 z-20 translate-x-5 -translate-y-1/2 rounded-full bg-white/90 p-3 text-gray-600 shadow-lg backdrop-blur-sm transition-all hover:scale-110 hover:bg-white active:scale-95 ${
+            className={`group absolute right-0 top-1/2 z-30 translate-x-4 -translate-y-1/2 ${
               !hasNext ? 'pointer-events-none opacity-0' : 'opacity-100'
             }`}
             aria-label="Día siguiente"
           >
-            <ChevronRight className="h-6 w-6" />
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-light text-white shadow-lg shadow-primary/30 transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/40 active:scale-95">
+              <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="absolute -inset-2 rounded-full border-2 border-primary/30 opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-110" />
+              <ChevronRight className="relative h-6 w-6 drop-shadow-sm" />
+            </div>
           </button>
         </div>
 
