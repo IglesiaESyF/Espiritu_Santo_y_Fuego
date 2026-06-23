@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react'
 import Image from 'next/image'
+import logoSrc from '@/../public/logo.png'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
@@ -36,9 +37,10 @@ const METRO_COLORS: Record<string,string> = {
 }
 
 function cardStyle(rel: number) {
-  if (rel === 0) return { tx: 0, s: 1, r: 0, o: 1, y: 0, z: 20 }
+  if (rel === 0) return { tx: 0, s: 1, r: 0, o: 1, y: 0, z: 20, shadow: '0 20px 60px rgba(0,0,0,0.35)' }
   if (rel < 0) {
     const p = Math.abs(rel)
+    const shadowSize = Math.max(8 - p * 2, 2)
     return {
       tx: -40 - (p - 1) * 50,
       s: Math.max(0.78 - (p - 1) * 0.14, 0),
@@ -46,6 +48,7 @@ function cardStyle(rel: number) {
       o: Math.max(0.7 - (p - 1) * 0.18, 0),
       y: 5 * p,
       z: Math.max(15 - p, 1),
+      shadow: `0 ${shadowSize}px ${shadowSize * 2}px rgba(0,0,0,0.15)`,
     }
   }
   return {
@@ -55,6 +58,7 @@ function cardStyle(rel: number) {
     o: Math.max(1 - rel * 0.08, 0.35),
     y: 2 * rel,
     z: Math.max(19 - rel, 1),
+    shadow: `0 ${Math.max(8 - (rel - 1) * 2, 2)}px ${Math.max(16 - (rel - 1) * 4, 4)}px rgba(0,0,0,0.15)`,
   }
 }
 
@@ -245,15 +249,20 @@ export default function CultosPage() {
                   opacity: isCurrent && isDragging ? Math.min(1, 1 - Math.abs(drag) * 0.004) : o.o,
                   zIndex: o.z,
                   backgroundColor: METRO_COLORS[diaKey],
+                  boxShadow: isCurrent
+                    ? `0 ${20 + Math.abs(drag) * 0.2}px ${60 + Math.abs(drag) * 0.4}px rgba(0,0,0,${0.35 + Math.abs(drag) * 0.001})`
+                    : o.shadow,
                   pointerEvents: isCurrent ? 'auto' : 'none',
                 }}
                 onTouchStart={isCurrent ? onTouchStart : undefined}
                 onTouchMove={isCurrent ? onTouchMove : undefined}
                 onTouchEnd={isCurrent ? onTouchEnd : undefined}
               >
-                {/* watermark logo */}
-                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-20">
-                  <Image src="/logo.png" alt="" width="160" height="160" className="h-auto max-h-40 w-auto max-w-40" style={{ filter: 'brightness(0) invert(1)', objectFit: 'contain' }} />
+                {/* watermark logo animado */}
+                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-15">
+                  <span className="logo-wrapper">
+                    <Image src={logoSrc} alt="" width={140} height={140} className="logo-spin h-28 w-28 object-contain md:h-32 md:w-32" />
+                  </span>
                 </div>
                 <div className="relative z-10">
 
