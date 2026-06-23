@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronLeft, ChevronRight, CalendarDays, Clock } from 'lucide-react'
-import Image from 'next/image'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
@@ -253,7 +252,7 @@ export default function CultosPage() {
               >
                 {/* watermark logo */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-25">
-                  <Image src="/logo.png" alt="" width={200} height={200} className="object-contain brightness-0 invert" />
+                  <img src="/logo.png" alt="" className="max-h-40 max-w-40 brightness-0 invert" />
                 </div>
 
                 {/* day header */}
