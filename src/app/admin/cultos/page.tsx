@@ -147,11 +147,11 @@ export default function AdminCultosPage(){
   function getDayClass(d:Date):string{
     const inMonth=d.getMonth()===mes.getMonth()
     if(!inMonth)return 'text-gray-200'
-    const past=d<hoy&&!sameDay(d,hoy)
+    const today=sameDay(d,hoy)
     const cw=sameDay(getMonday(d),getMonday(hoy))
-    const monFri=d.getDay()>=1&&d.getDay()<=5
-    if(sameDay(d,hoy))return 'bg-yellow-200 font-bold ring-2 ring-yellow-500 z-10'
-    if(cw&&monFri)return 'bg-green-100'
+    const past=d<hoy&&!today
+    if(today)return 'bg-yellow-200 font-bold ring-2 ring-yellow-500 z-10'
+    if(cw)return 'bg-green-100'
     if(past)return 'bg-gray-100 text-gray-400'
     return 'bg-blue-50'
   }
@@ -166,6 +166,7 @@ export default function AdminCultosPage(){
   function handleDayClick(d:Date){
     if(d.getMonth()!==mes.getMonth())return
     const f=fmt(d)
+    setParticipantesLocal([])
     const wState=getWeekState(getMonthWeeks(mes.getFullYear(),mes.getMonth()).find(week=>week.some(day=>sameDay(day,d)))||[d])
     if(wState==='future'){
       setPendingDate(f)
