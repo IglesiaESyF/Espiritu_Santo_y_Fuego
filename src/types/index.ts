@@ -70,6 +70,45 @@ export interface User {
   creadoEn: number
 }
 
+export const CATEGORIAS_EDAD = [
+  { value: 'nino', label: 'Niño (0-11)', min: 0, max: 11 },
+  { value: 'preadolescente', label: 'Preadolescente (12-14)', min: 12, max: 14 },
+  { value: 'adolescente', label: 'Adolescente (15-17)', min: 15, max: 17 },
+  { value: 'joven_adulto', label: 'Joven Adulto (18-39)', min: 18, max: 39 },
+  { value: 'adulto_mayor', label: 'Adulto Mayor (40+)', min: 40, max: 200 },
+] as const
+
+export interface Miembro {
+  id: string
+  nombre: string
+  apellido: string
+  fecha_nacimiento: string
+  edad: number
+  pais: string
+  departamento: string
+  ciudad: string
+  barrio: string
+  direccion: string
+  celular: string
+  correo: string
+  estado: 'bautizado' | 'no_bautizado'
+  categoria: string
+  familia_id: string | null
+  notas: string
+  activo: boolean
+  creadoEn: number
+}
+
+export interface Familia {
+  id: string
+  apellido: string
+  nombre_padre: string
+  nombre_madre: string
+  telefono: string
+  direccion: string
+  creadoEn: number
+}
+
 export const ROLES_PRESET: Record<UserRole, Permisos> = {
   'it-admin': {
     caja: { ver: true, crear: true, editar: true, eliminar: true },

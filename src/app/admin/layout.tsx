@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   CalendarDays, Tv, DollarSign, LogOut,
-  Church, Menu, X, Wifi, Shield,
+  Church, Menu, X, Wifi, Shield, Users,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
@@ -88,6 +88,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </Link>
             )
           })}
+
+          {user?.role !== 'visual' && (
+            <Link
+              href="/admin/miembros"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                pathname.startsWith('/admin/miembros')
+                  ? 'bg-primary text-white'
+                  : 'text-gray-300 hover:bg-white/10'
+              }`}
+            >
+              <Users className="h-5 w-5" /> Miembros
+            </Link>
+          )}
 
           {puede('usuarios', 'ver') && (
             <Link
