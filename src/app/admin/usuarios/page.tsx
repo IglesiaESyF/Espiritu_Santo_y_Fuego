@@ -36,6 +36,7 @@ const SECCIONES: { key: keyof Permisos; label: string }[] = [
   { key: 'caja', label: 'Caja' },
   { key: 'actividades', label: 'Actividades' },
   { key: 'cultos', label: 'Cultos' },
+  { key: 'noticias', label: 'Noticias' },
   { key: 'envivo', label: 'En Vivo' },
   { key: 'usuarios', label: 'Usuarios' },
 ]
@@ -53,6 +54,7 @@ function permisosVacios(): Permisos {
     actividades: { ver: false, crear: false, editar: false, eliminar: false },
     cultos: { ver: false, crear: false, editar: false, eliminar: false },
     envivo: { ver: false, activar: false },
+    noticias: { ver: false, crear: false, editar: false, eliminar: false },
     usuarios: { ver: false, crear: false, editar: false, eliminar: false },
   }
 }

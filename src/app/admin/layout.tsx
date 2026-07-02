@@ -20,6 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { key: 'caja', href: '/admin/caja' },
       { key: 'actividades', href: '/admin/actividades' },
       { key: 'cultos', href: '/admin/cultos' },
+      { key: 'noticias', href: '/admin/noticias' },
       { key: 'envivo', href: '/admin/en-vivo' },
       { key: 'usuarios', href: '/admin/usuarios' },
     ]
@@ -43,6 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { href: '/admin/actividades', label: 'Actividades', icon: CalendarDays, permiso: 'actividades' as const },
     { href: '/admin/cultos', label: 'Cultos', icon: Tv, permiso: 'cultos' as const },
+    { href: '/admin/noticias', label: 'Noticias', icon: CalendarDays, permiso: 'noticias' as const },
     { href: '/admin/en-vivo', label: 'En Vivo', icon: Wifi, permiso: 'envivo' as const },
     { href: '/admin/caja', label: 'Caja', icon: DollarSign, permiso: 'caja' as const },
   ]

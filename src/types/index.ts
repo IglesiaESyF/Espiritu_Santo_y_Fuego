@@ -53,6 +53,7 @@ export interface Permisos {
   actividades: PermisosSeccion
   cultos: PermisosSeccion
   envivo: { ver: boolean; activar: boolean }
+  noticias: PermisosSeccion
   usuarios: PermisosSeccion
 }
 
@@ -111,6 +112,7 @@ export const ROLES_PRESET: Record<UserRole, Permisos> = {
     actividades: { ver: true, crear: true, editar: true, eliminar: true },
     cultos: { ver: true, crear: true, editar: true, eliminar: true },
     envivo: { ver: true, activar: true },
+    noticias: { ver: true, crear: true, editar: true, eliminar: true },
     usuarios: { ver: true, crear: true, editar: true, eliminar: true },
   },
   tesorero: {
@@ -118,6 +120,7 @@ export const ROLES_PRESET: Record<UserRole, Permisos> = {
     actividades: { ver: true, crear: false, editar: false, eliminar: false },
     cultos: { ver: true, crear: false, editar: false, eliminar: false },
     envivo: { ver: true, activar: false },
+    noticias: { ver: true, crear: false, editar: false, eliminar: false },
     usuarios: { ver: false, crear: false, editar: false, eliminar: false },
   },
   secretario: {
@@ -125,6 +128,7 @@ export const ROLES_PRESET: Record<UserRole, Permisos> = {
     actividades: { ver: true, crear: true, editar: true, eliminar: true },
     cultos: { ver: true, crear: true, editar: true, eliminar: true },
     envivo: { ver: true, activar: false },
+    noticias: { ver: true, crear: true, editar: true, eliminar: true },
     usuarios: { ver: false, crear: false, editar: false, eliminar: false },
   },
   visual: {
@@ -132,6 +136,7 @@ export const ROLES_PRESET: Record<UserRole, Permisos> = {
     actividades: { ver: true, crear: false, editar: false, eliminar: false },
     cultos: { ver: true, crear: false, editar: false, eliminar: false },
     envivo: { ver: true, activar: false },
+    noticias: { ver: true, crear: false, editar: false, eliminar: false },
     usuarios: { ver: false, crear: false, editar: false, eliminar: false },
   },
 }
