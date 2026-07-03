@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
@@ -95,30 +95,53 @@ export default function HomePage() {
 
         {/* Noticias activas */}
         {noticias.length > 0 && (
-          <section className="mx-auto max-w-6xl px-4 py-20">
-            <h2 className="mb-8 text-center text-3xl font-bold text-dark">
-              Últimas <span className="text-primary">Noticias</span>
+          <section className="relative mx-auto max-w-6xl px-4 py-20">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
+              <div className="absolute -right-20 bottom-10 h-96 w-96 rounded-full bg-primary-light/5 blur-3xl" />
+            </div>
+            <h2 className="relative mb-4 text-center text-3xl font-bold text-dark">
+              Últimas <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Noticias</span>
             </h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {noticias.map(n => (
+            <p className="relative mb-10 text-center text-sm text-gray-500">Mantente al día con lo último de la iglesia</p>
+            <div className="relative grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {noticias.map((n, i) => (
                 <button
                   key={n.id}
                   onClick={() => setSelected(n)}
-                  className="group flex flex-col overflow-hidden rounded-2xl bg-white text-left shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className="group"
+                  style={{ animation: `fadeSlideUp 0.5s ease-out ${i * 0.1}s both` }}
                 >
-                  {n.imagenUrl ? (
-                    <div className="relative h-44 w-full overflow-hidden">
-                      <Image src={n.imagenUrl} alt={n.titulo} fill className="object-cover transition-transform duration-300 group-hover:scale-105" unoptimized />
+                  <div className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:rotate-x-2">
+                    {/* glow hover */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary-light/20 to-primary/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100 rounded-2xl" />
+
+                    <div className="relative overflow-hidden">
+                      {n.imagenUrl ? (
+                        <div className="relative h-48 w-full overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10" />
+                          <img src={n.imagenUrl} alt={n.titulo} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        </div>
+                      ) : (
+                        <div className="flex h-48 w-full items-center justify-center bg-gradient-to-br from-primary/10 via-primary-light/5 to-primary/10">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,transparent_70%)]" />
+                          <Image src={logoSrc} alt="" width={72} height={72} className="h-16 w-16 object-contain opacity-25" />
+                        </div>
+                      )}
+                      {n.videoUrl && (
+                        <span className="absolute left-3 top-3 z-20 inline-flex items-center gap-1 rounded-full bg-black/50 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+                          <Flame className="h-3 w-3" /> Video
+                        </span>
+                      )}
                     </div>
-                  ) : (
-                    <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-primary/10 to-primary-light/10">
-                      <Image src={logoSrc} alt="" width={64} height={64} className="h-16 w-16 object-contain opacity-30" />
+
+                    <div className="relative z-10 flex flex-col p-5">
+                      <h3 className="mb-2 text-lg font-bold text-dark group-hover:text-primary transition-colors">{n.titulo}</h3>
+                      <p className="flex-1 text-sm leading-relaxed text-gray-600 line-clamp-3">{n.mensaje}</p>
+                      <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-1">
+                        Leer más <ArrowRight className="h-3 w-3" />
+                      </span>
                     </div>
-                  )}
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="mb-2 text-lg font-bold text-dark">{n.titulo}</h3>
-                    <p className="flex-1 text-sm leading-relaxed text-gray-600 line-clamp-3">{n.mensaje}</p>
-                    {n.videoUrl && <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600">▶ Ver video</span>}
                   </div>
                 </button>
               ))}
@@ -138,13 +161,14 @@ export default function HomePage() {
       {/* Modal noticia */}
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setSelected(null)}>
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
             <button onClick={() => setSelected(null)} className="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-1.5 text-gray-600 shadow transition hover:bg-white hover:text-gray-900">
               <X className="h-5 w-5" />
             </button>
             {selected.imagenUrl && (
-              <div className="relative h-56 w-full md:h-72">
-                <Image src={selected.imagenUrl} alt={selected.titulo} fill className="object-cover" unoptimized />
+              <div className="relative h-56 w-full md:h-72 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10" />
+                <img src={selected.imagenUrl} alt={selected.titulo} className="h-full w-full object-cover" />
               </div>
             )}
             <div className="p-6">
@@ -155,7 +179,7 @@ export default function HomePage() {
                   href={selected.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
                 >
                   <Flame className="h-4 w-4" /> Ver Video
                 </a>

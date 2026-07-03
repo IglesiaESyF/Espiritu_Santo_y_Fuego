@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { Plus, Pencil, Trash2, Save, ArrowLeft, Upload } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -199,7 +198,7 @@ export default function AdminNoticiasPage() {
                 </div>
                 {uploading && <p className="mt-1 text-xs text-gray-500">Subiendo imagen...</p>}
                 {imagenUrl && (
-                  <Image src={imagenUrl} alt="preview" width={160} height={120} className="mt-2 h-24 w-40 rounded object-cover" unoptimized />
+                  <img src={imagenUrl} alt="preview" className="mt-2 h-24 w-40 rounded object-cover" />
                 )}
               </div>
 
@@ -237,7 +236,7 @@ export default function AdminNoticiasPage() {
                   </div>
                   <p className="mt-1 text-sm text-gray-600 line-clamp-2">{n.mensaje}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {n.imagenUrl && <Image src={n.imagenUrl} alt="" width={80} height={60} className="h-14 w-20 rounded object-cover" unoptimized />}
+                    {n.imagenUrl && <img src={n.imagenUrl} alt="" className="h-14 w-20 rounded object-cover" />}
                     {n.videoUrl && <span className="rounded bg-blue-100 px-2 py-1 text-[10px] text-blue-600">🎬 Video</span>}
                   </div>
                   <p className="mt-1 text-[10px] text-gray-400">
