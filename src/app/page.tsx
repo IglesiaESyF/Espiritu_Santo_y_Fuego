@@ -184,6 +184,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
   const [nombre, setNombre] = useState('')
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
 
   const storageKey = `reaccion_${noticia.id}`
   const [reaccionUsuario, setReaccionUsuario] = useState<string | null>(() => {
@@ -425,33 +426,46 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
               <MessageCircle className="h-4 w-4" /> Comentarios ({comentarios.length})
             </h3>
 
-            <form onSubmit={enviarComentario} className="mb-4 space-y-2">
-              <input
-                type="text"
-                placeholder="Tu nombre"
-                value={nombre}
-                onChange={e => setNombre(e.target.value)}
-                maxLength={50}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                required
-              />
-              <div className="flex gap-2">
+            {!mostrarFormulario ? (
+              <button onClick={() => setMostrarFormulario(true)}
+                className="mb-4 flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/20"
+              >
+                <MessageCircle className="h-4 w-4" /> Comentar
+              </button>
+            ) : (
+              <form onSubmit={enviarComentario} className="mb-4 space-y-2">
                 <input
                   type="text"
-                  placeholder="Escribe un comentario (máx. 100 caracteres)"
-                  value={texto}
-                  onChange={e => setTexto(e.target.value.slice(0, 100))}
-                  maxLength={100}
-                  className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  placeholder="Tu nombre"
+                  value={nombre}
+                  onChange={e => setNombre(e.target.value)}
+                  maxLength={50}
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                   required
                 />
-                <button type="submit" disabled={enviando || !nombre.trim() || !texto.trim()}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:opacity-50"
-                >
-                  {enviando ? '...' : 'Enviar'}
-                </button>
-              </div>
-            </form>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Escribe un comentario (máx. 100 caracteres)"
+                    value={texto}
+                    onChange={e => setTexto(e.target.value.slice(0, 100))}
+                    maxLength={100}
+                    className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    required
+                  />
+                  <button type="submit" disabled={enviando || !nombre.trim() || !texto.trim()}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:opacity-50"
+                  >
+                    {enviando ? '...' : 'Enviar'}
+                  </button>
+                  <button type="button" onClick={() => setMostrarFormulario(false)}
+                    className="rounded-lg bg-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:bg-gray-300"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            )}
 
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {comentarios.length === 0 ? (
