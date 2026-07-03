@@ -11,6 +11,7 @@ interface AuditEntry {
   accion: string
   usuario: string
   detalle: string
+  ubicacion: string
   timestamp: Timestamp
 }
 
@@ -52,7 +53,7 @@ export default function AdminDashboard() {
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Ciudades</p>
-          <p className="mt-1 text-3xl font-bold text-dark">{Object.keys(ubicaciones).length}</p>
+          <p className="mt-1 text-3xl font-bold text-dark">{Object.keys(ubicaciones.ciudades).length}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Sesión expira</p>
@@ -132,6 +133,7 @@ export default function AdminDashboard() {
                   </span>
                   <span className="text-gray-700 font-medium">{log.usuario}</span>
                   <span className="text-gray-500">{log.accion}</span>
+                  {log.ubicacion && <span className="text-[11px] text-gray-400">({log.ubicacion})</span>}
                 </div>
                 <span className="text-[11px] text-gray-400">
                   {log.timestamp?.toDate().toLocaleString('es')}
