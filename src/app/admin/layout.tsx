@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   CalendarDays, Tv, DollarSign, LogOut,
-  Church, Menu, X, Wifi, Shield, Users,
+  Church, Menu, X, Wifi, Shield, Users, BarChart3,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { auditLog } from '@/lib/audit'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -30,6 +31,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return '/admin/dashboard'
   }, [puede])
 
+  // audit log on sensitive sections
+  useEffect(() => {
+    if (!user) return
+    const sensitive: Record<string, string> = {
+      '/admin/caja': 'Caja',
+      '/admin/miembros': 'Miembros',
+      '/admin/usuarios': 'Usuarios',
+    }
+    for (const [path, label] of Object.entries(sensitive)) {
+      if (pathname.startsWith(path)) {
+        auditLog(label, 'acceder', user.nombre, `Accedió a ${label}`)
+        break
+      }
+    }
+  }, [pathname, user])
+
   if (pathname === '/login') return <>{children}</>
 
   if (loading) {
@@ -47,6 +64,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/noticias', label: 'Noticias', icon: CalendarDays, permiso: 'noticias' as const },
     { href: '/admin/en-vivo', label: 'En Vivo', icon: Wifi, permiso: 'envivo' as const },
     { href: '/admin/caja', label: 'Caja', icon: DollarSign, permiso: 'caja' as const },
+    { href: '/admin/dashboard', label: 'Estadísticas', icon: BarChart3, permiso: 'caja' as const },
   ]
 
   const handleLogout = () => {

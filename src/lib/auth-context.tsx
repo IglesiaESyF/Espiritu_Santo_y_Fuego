@@ -26,6 +26,8 @@ const AuthContext = createContext<AuthState>({
   seedInitialAdmin: async () => {},
 })
 
+const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 min
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -33,13 +35,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('iesfuego-auth')
-    if (stored) {
+    const loginTime = localStorage.getItem('iesfuego-login-time')
+    if (stored && loginTime) {
+      const elapsed = Date.now() - parseInt(loginTime, 10)
+      if (elapsed > SESSION_TIMEOUT) {
+        localStorage.removeItem('iesfuego-auth')
+        localStorage.removeItem('iesfuego-login-time')
+        router.push('/login')
+        setLoading(false)
+        return
+      }
       try {
         setUser(JSON.parse(stored) as User)
       } catch { /* ignore */ }
     }
     setLoading(false)
-  }, [])
+  }, [router])
+
+  // reset timeout on user activity
+  useEffect(() => {
+    if (!user) return
+    function refresh() {
+      localStorage.setItem('iesfuego-login-time', String(Date.now()))
+    }
+    window.addEventListener('click', refresh)
+    window.addEventListener('keydown', refresh)
+    return () => {
+      window.removeEventListener('click', refresh)
+      window.removeEventListener('keydown', refresh)
+    }
+  }, [user])
 
   const login = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
@@ -52,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.passwordHash !== hash) return false
       const foundUser: User = { id: docData.id, ...data }
       localStorage.setItem('iesfuego-auth', JSON.stringify(foundUser))
+      localStorage.setItem('iesfuego-login-time', String(Date.now()))
       setUser(foundUser)
       return true
     } catch {
@@ -61,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem('iesfuego-auth')
+    localStorage.removeItem('iesfuego-login-time')
     setUser(null)
     router.push('/login')
   }, [router])
