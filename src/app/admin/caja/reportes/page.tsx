@@ -1130,7 +1130,6 @@ export default function ReportesPage() {
           src="/Espiritu_Santo_y_Fuego/logo.png"
           alt=""
           className="watermark-logo hidden fixed top-1/2 left-1/2 w-[300px] h-[300px] -translate-x-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none z-50"
-          style={{ display: 'none' }}
         />
         {/* Header */}
         <div className="mb-8 border-b-2 border-primary pb-6 text-center">
