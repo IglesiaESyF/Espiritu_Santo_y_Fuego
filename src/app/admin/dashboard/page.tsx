@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getVisitStats, getUbicaciones, getUbicacionesMes, getVisitasRecientes } from '@/lib/analytics'
+import { getVisitStats, getUbicaciones, getVisitasRecientes } from '@/lib/analytics'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, orderBy, limit, query, Timestamp } from 'firebase/firestore'
 
@@ -17,14 +17,12 @@ interface AuditEntry {
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ total: 0, hoy: 0, mes: 0 })
   const [ubicaciones, setUbicaciones] = useState<Record<string, number>>({})
-  const [ubicacionesMes, setUbicacionesMes] = useState<Record<string, number>>({})
   const [recientes, setRecientes] = useState<Record<string, unknown>[]>([])
   const [logs, setLogs] = useState<AuditEntry[]>([])
 
   useEffect(() => {
     getVisitStats().then(setStats)
     getUbicaciones().then(setUbicaciones)
-    getUbicacionesMes().then(setUbicacionesMes)
     getVisitasRecientes(15).then(setRecientes)
     getDocs(query(collection(db, 'auditoria'), orderBy('timestamp', 'desc'), limit(20)))
       .then(snap => {
@@ -62,30 +60,15 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ubicaciones frecuentes (histórico) */}
+      {/* ubicaciones frecuentes (nunca se eliminan) */}
       {Object.keys(ubicaciones).length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-bold text-dark">Ubicaciones Frecuentes <span className="text-sm font-normal text-gray-500">(histórico)</span></h2>
+          <h2 className="mb-3 text-lg font-bold text-dark">
+            Ubicaciones Frecuentes
+            <span className="ml-2 text-sm font-normal text-gray-500">(acumulado histórico — nunca se reinicia)</span>
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
             {Object.entries(ubicaciones)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 12)
-              .map(([ciudad, count]) => (
-                <div key={ciudad} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm">
-                  <span className="capitalize text-gray-700">{ciudad.replace(/_/g, ' ')}</span>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">{count} visitas</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-
-      {/* ubicaciones del mes */}
-      {Object.keys(ubicacionesMes).length > 0 && (
-        <div>
-          <h2 className="mb-3 text-lg font-bold text-dark">Ubicaciones <span className="text-sm font-normal text-gray-500">(este mes)</span></h2>
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-            {Object.entries(ubicacionesMes)
               .sort(([, a], [, b]) => b - a)
               .slice(0, 12)
               .map(([ciudad, count]) => (

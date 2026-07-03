@@ -43,16 +43,11 @@ export async function trackVisit() {
       [`dias.${dayKey}`]: increment(1),
     }, { merge: true })
 
-    // ubicaciones frecuentes (acumulativo histórico)
+    // ubicaciones frecuentes (acumulativo, nunca se reinicia)
     const loc = await getLocation()
     if (loc?.ciudad) {
       const ciudadKey = loc.ciudad.replace(/\s+/g, '_').toLowerCase()
       await setDoc(doc(db, 'analytics', 'ubicaciones'), {
-        [`ciudades.${ciudadKey}`]: increment(1),
-      }, { merge: true })
-
-      // también por mes
-      await setDoc(doc(db, 'analytics', `ubicaciones_${monthKeyVal}`), {
         [`ciudades.${ciudadKey}`]: increment(1),
       }, { merge: true })
     }
@@ -101,16 +96,6 @@ export async function getVisitStats() {
 export async function getUbicaciones() {
   try {
     const ref = doc(db, 'analytics', 'ubicaciones')
-    const snap = await getDoc(ref)
-    return snap.exists() ? (snap.data().ciudades || {}) : {}
-  } catch {
-    return {}
-  }
-}
-
-export async function getUbicacionesMes() {
-  try {
-    const ref = doc(db, 'analytics', `ubicaciones_${monthKey()}`)
     const snap = await getDoc(ref)
     return snap.exists() ? (snap.data().ciudades || {}) : {}
   } catch {
