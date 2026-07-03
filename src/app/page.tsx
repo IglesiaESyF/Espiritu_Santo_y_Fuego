@@ -7,7 +7,7 @@ import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X, ThumbsUp, Smile, Thum
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, addDoc, doc, runTransaction, query, orderBy, limit, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, getDoc, addDoc, doc, runTransaction, query, orderBy, limit, Timestamp } from 'firebase/firestore'
 import logoSrc from '@/../public/logo.png'
 
 interface Noticia {
@@ -179,7 +179,7 @@ export default function HomePage() {
 /* ─────────────── News Modal ─────────────── */
 
 function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void }) {
-  const [reacciones, setReacciones] = useState(noticia.reacciones || { me_gusta: 0, me_encanta: 0, no_me_gusta: 0 })
+  const [reacciones, setReacciones] = useState({ me_gusta: 0, me_encanta: 0, no_me_gusta: 0 })
   const [comentarios, setComentarios] = useState<Comentario[]>([])
   const [nombre, setNombre] = useState('')
   const [texto, setTexto] = useState('')
@@ -192,6 +192,12 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
   })
 
   useEffect(() => {
+    const ref = doc(db, 'noticias', noticia.id)
+    getDoc(ref).then(snap => {
+      if (snap.exists()) {
+        setReacciones(snap.data()?.reacciones || { me_gusta: 0, me_encanta: 0, no_me_gusta: 0 })
+      }
+    }).catch(() => {})
     const col = collection(db, 'noticias', noticia.id, 'comentarios')
     getDocs(query(col, orderBy('timestamp', 'desc'), limit(20))).then(snap => {
       const list: Comentario[] = []
