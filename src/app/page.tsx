@@ -273,31 +273,30 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
 
   async function handleDownload() {
     const { default: jsPDF } = await import('jspdf')
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a5' })
-    const pageW = doc.internal.pageSize.getWidth()
-    let y = 20
 
-    // title
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(16)
-    doc.setTextColor(184, 134, 11)
-    doc.text(noticia.titulo, pageW / 2, y, { align: 'center' })
-    y += 12
+    // carta: 216 × 279 mm
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'carta' })
+    const pw = doc.internal.pageSize.getWidth()
+    const ph = doc.internal.pageSize.getHeight()
+    const margin = 20
+    let y = margin
 
-    // line
-    doc.setDrawColor(184, 134, 11)
-    doc.line(15, y, pageW - 15, y)
-    y += 10
+    // ── watermark (logo tenue centrado) ──
+    async function addWatermark() {
+      try {
+        const resp = await fetch('/logo.png')
+        const blob = await resp.blob()
+        const dataUrl = await new Promise<string>(resolve => {
+          const r = new FileReader()
+          r.onload = () => resolve(r.result as string)
+          r.readAsDataURL(blob)
+        })
+        doc.addImage(dataUrl, 'PNG', (pw - 60) / 2, (ph - 60) / 2 - 20, 60, 60, undefined, 'NONE', 20)
+      } catch { /* ignore watermark */ }
+    }
+    await addWatermark()
 
-    // message
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(11)
-    doc.setTextColor(51, 51, 51)
-    const lines = doc.splitTextToSize(noticia.mensaje, pageW - 30)
-    doc.text(lines, 15, y)
-    y += lines.length * 5 + 10
-
-    // image if any
+    // ── image al inicio ──
     if (noticia.imagenUrl) {
       try {
         const img = new window.Image()
@@ -308,22 +307,60 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
             c.width = img.width; c.height = img.height
             const ctx = c.getContext('2d')!
             ctx.drawImage(img, 0, 0)
-            resolve(c.toDataURL('image/jpeg', 0.8))
+            resolve(c.toDataURL('image/jpeg', 0.85))
           }
           img.onerror = reject
           img.src = noticia.imagenUrl
         })
-        const imgH = 60
-        doc.addImage(dataUrl, 'JPEG', (pageW - 80) / 2, y, 80, imgH)
-        y += imgH + 10
+        const maxW = pw - margin * 2
+        const imgW = Math.min(maxW, 160)
+        const imgH = imgW * (img.height / img.width)
+        doc.addImage(dataUrl, 'JPEG', (pw - imgW) / 2, y, imgW, imgH)
+        y += imgH + 12
       } catch { /* ignore image */ }
     }
 
-    // footer
-    y = Math.max(y, doc.internal.pageSize.getHeight() - 30)
-    doc.setFontSize(8)
-    doc.setTextColor(153, 153, 153)
-    doc.text('Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad', pageW / 2, y, { align: 'center' })
+    // ── línea decorativa ──
+    doc.setDrawColor(184, 134, 11)
+    doc.setLineWidth(0.5)
+    doc.line(margin, y, pw - margin, y)
+    y += 8
+
+    // ── título ──
+    doc.setFont('times', 'bold')
+    doc.setFontSize(18)
+    doc.setTextColor(184, 134, 11)
+    doc.text(noticia.titulo, pw / 2, y, { align: 'center' })
+    y += 10
+
+    // ── segunda línea ──
+    doc.setDrawColor(184, 134, 11)
+    doc.setLineWidth(0.3)
+    doc.line(margin + 30, y, pw - margin - 30, y)
+    y += 8
+
+    // ── mensaje ──
+    doc.setFont('times', 'normal')
+    doc.setFontSize(12)
+    doc.setTextColor(51, 51, 51)
+    const lineH = 6
+    const maxY = ph - margin - 10
+    const fullText = noticia.mensaje
+    const paragraphs = fullText.split('\n').filter(Boolean)
+    for (const p of paragraphs) {
+      if (y > maxY) { doc.addPage(); y = margin; await addWatermark() }
+      const lines = doc.splitTextToSize(p, pw - margin * 2)
+      doc.text(lines, margin, y)
+      y += lines.length * lineH + 4
+    }
+
+    // ── pie ──
+    y = Math.max(y + 8, ph - margin)
+    doc.setFont('times', 'italic')
+    doc.setFontSize(9)
+    doc.setTextColor(140, 140, 140)
+    doc.text('Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad', pw / 2, y, { align: 'center' })
+
     doc.save(`${noticia.titulo.replace(/\s+/g, '_')}.pdf`)
   }
 
