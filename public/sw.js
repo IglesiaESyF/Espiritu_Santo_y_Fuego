@@ -1,4 +1,4 @@
-const CACHE = 'iesfuego-v2'
+const CACHE = 'iesfuego-v3'
 const BASE = '/Espiritu_Santo_y_Fuego'
 
 self.addEventListener('install', () => self.skipWaiting())
@@ -10,24 +10,15 @@ self.addEventListener('activate', (e) => {
 })
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request)
-        .then((res) => {
-          const clone = res.clone()
-          caches.open(CACHE).then((cache) => cache.put(e.request, clone))
-          return res
-        })
-        .catch(() => caches.match(e.request))
-    )
-    return
-  }
+  const req = e.request
+  if (req.method !== 'GET' || !req.url.startsWith(self.location.origin)) return
+  if (req.url.includes('/sw.js')) return
 
   e.respondWith(
-    caches.match(e.request).then((r) => r || fetch(e.request).then((res) => {
+    fetch(req).then((res) => {
       const clone = res.clone()
-      caches.open(CACHE).then((cache) => cache.put(e.request, clone))
+      caches.open(CACHE).then((cache) => cache.put(req, clone))
       return res
-    }))
+    }).catch(() => caches.match(req))
   )
 })

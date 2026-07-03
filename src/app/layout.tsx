@@ -10,7 +10,12 @@ const base = '/Espiritu_Santo_y_Fuego'
 function ServiceWorkerRegister() {
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register(base + '/sw.js', { scope: base + '/' })
+      navigator.serviceWorker.register(base + '/sw.js', { scope: base + '/' }).then(reg => {
+        if (reg.active) reg.active.postMessage({ type: 'SKIP_WAITING' })
+      })
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload()
+      })
     }
   }, [])
   return null
