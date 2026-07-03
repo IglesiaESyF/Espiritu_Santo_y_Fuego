@@ -302,7 +302,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     const { default: jsPDF } = await import('jspdf')
 
     // carta: 216 × 279 mm
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'carta' })
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
     const pw = doc.internal.pageSize.width
     const ph = doc.internal.pageSize.height
     const margin = 20
