@@ -8,14 +8,33 @@ export function setLastLocation(loc: string) {
 }
 
 async function fetchLocation(): Promise<string> {
-  try {
-    const res = await fetch('https://ip-api.com/json/?fields=city,regionName,country', { signal: AbortSignal.timeout(5000) })
-    if (!res.ok) return ''
-    const data = await res.json()
-    return [data.city, data.regionName, data.country].filter(Boolean).join(', ')
-  } catch {
-    return ''
+  const providers = [
+    async () => {
+      const r = await fetch('https://ip-api.com/json/?fields=city,regionName,country', { signal: AbortSignal.timeout(3000) })
+      if (!r.ok) throw new Error()
+      const d = await r.json()
+      if (!d.city) throw new Error()
+      return [d.city, d.regionName, d.country].filter(Boolean).join(', ')
+    },
+    async () => {
+      const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) })
+      if (!r.ok) throw new Error()
+      const d = await r.json()
+      if (!d.city) throw new Error()
+      return [d.city, d.region, d.country_name].filter(Boolean).join(', ')
+    },
+    async () => {
+      const r = await fetch('https://ipinfo.io/json', { signal: AbortSignal.timeout(3000) })
+      if (!r.ok) throw new Error()
+      const d = await r.json()
+      if (!d.city) throw new Error()
+      return [d.city, d.region, d.country].filter(Boolean).join(', ')
+    },
+  ]
+  for (const fn of providers) {
+    try { return await fn() } catch { /* next */ }
   }
+  return ''
 }
 
 export async function auditLog(section: string, accion: string, usuario: string, detalle?: string) {
