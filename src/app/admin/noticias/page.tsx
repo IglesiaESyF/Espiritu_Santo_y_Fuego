@@ -20,6 +20,9 @@ interface Noticia {
   videoUrl: string
   fechaCreacion: Timestamp
   fechaExpiracion: Timestamp
+  descargable?: boolean
+  imprimible?: boolean
+  reacciones?: { me_gusta: number; me_encanta: number; no_me_gusta: number }
 }
 
 const FIRESTORE_COLLECTION = 'noticias'
@@ -41,6 +44,8 @@ export default function AdminNoticiasPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [descargable, setDescargable] = useState(false)
+  const [imprimible, setImprimible] = useState(false)
 
   useEffect(() => {
     if (!puede('noticias', 'ver')) router.replace('/admin/dashboard')
@@ -67,6 +72,8 @@ export default function AdminNoticiasPage() {
     setMensaje('')
     setImagenUrl('')
     setVideoUrl('')
+    setDescargable(false)
+    setImprimible(false)
     setEditingId(null)
   }
 
@@ -75,6 +82,8 @@ export default function AdminNoticiasPage() {
     setMensaje(n.mensaje)
     setImagenUrl(n.imagenUrl || '')
     setVideoUrl(n.videoUrl || '')
+    setDescargable(n.descargable || false)
+    setImprimible(n.imprimible || false)
     setEditingId(n.id || null)
     setShowForm(true)
   }
@@ -113,6 +122,8 @@ export default function AdminNoticiasPage() {
       mensaje,
       imagenUrl: imagenUrl || '',
       videoUrl: videoUrl || '',
+      descargable,
+      imprimible,
       fechaCreacion: editingId ? undefined : ahora,
       fechaExpiracion: Timestamp.fromDate(expiracion),
     }
@@ -208,6 +219,17 @@ export default function AdminNoticiasPage() {
               </div>
 
               <Input label="Video (URL)" placeholder="https://youtube.com/..." value={videoUrl} onChange={e => setVideoUrl(e.target.value)} />
+
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={descargable} onChange={e => setDescargable(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                  Permitir descarga
+                </label>
+                <label className="flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={imprimible} onChange={e => setImprimible(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+                  Permitir impresión
+                </label>
+              </div>
 
               <p className="text-xs text-gray-500">La noticia se eliminará automáticamente después de 15 días.</p>
 

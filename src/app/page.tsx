@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X } from 'lucide-react'
+import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X, ThumbsUp, Smile, ThumbsDown, MessageCircle, Download, Printer } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, addDoc, doc, runTransaction, query, orderBy, limit, Timestamp } from 'firebase/firestore'
 import logoSrc from '@/../public/logo.png'
 
 interface Noticia {
@@ -17,6 +17,16 @@ interface Noticia {
   imagenUrl: string
   videoUrl: string
   fechaExpiracion: Timestamp
+  descargable?: boolean
+  imprimible?: boolean
+  reacciones?: { me_gusta: number; me_encanta: number; no_me_gusta: number }
+}
+
+interface Comentario {
+  id?: string
+  nombre: string
+  texto: string
+  timestamp: Timestamp
 }
 
 export default function HomePage() {
@@ -159,65 +169,306 @@ export default function HomePage() {
       </main>
 
       {/* Modal noticia */}
-      {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md" onClick={() => setSelected(null)}>
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl shadow-black/20 animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-
-            {/* decorative header bg */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-              <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/5 blur-3xl" />
-              <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-primary-light/5 blur-3xl" />
-            </div>
-
-            <button onClick={() => setSelected(null)} className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-lg backdrop-blur-sm transition hover:bg-white hover:text-gray-800 hover:scale-110">
-              <X className="h-5 w-5" />
-            </button>
-
-            {selected.imagenUrl && (
-              <div className="relative h-56 w-full md:h-72 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent z-10" />
-                <img src={selected.imagenUrl} alt={selected.titulo} className="h-full w-full object-cover" />
-              </div>
-            )}
-
-            <div className="relative z-10 p-8 pt-6">
-              {/* title centered */}
-              <div className="text-center mb-6">
-                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
-                  {selected.titulo}
-                </h2>
-                <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-primary/40 to-primary-light/40" />
-              </div>
-
-              {/* message with formatted text */}
-              <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-6 border border-gray-100 shadow-inner">
-                <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-700 [&>br]:block [&>br]:content-[''] [&>br]:my-2">
-                  {selected.mensaje}
-                </p>
-              </div>
-
-              {/* video button */}
-              {selected.videoUrl && (
-                <div className="mt-6 text-center">
-                  <a
-                    href={selected.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105"
-                  >
-                    <Flame className="h-4 w-4" /> Ver Video
-                  </a>
-                </div>
-              )}
-
-              {/* close hint */}
-              <p className="mt-6 text-center text-[11px] text-gray-400">Presiona ESC o haz clic fuera para cerrar</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {selected && <NewsModal noticia={selected} onClose={() => setSelected(null)} />}
 
       <Footer />
     </>
+  )
+}
+
+/* ─────────────── News Modal ─────────────── */
+
+function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void }) {
+  const [reacciones, setReacciones] = useState(noticia.reacciones || { me_gusta: 0, me_encanta: 0, no_me_gusta: 0 })
+  const [comentarios, setComentarios] = useState<Comentario[]>([])
+  const [nombre, setNombre] = useState('')
+  const [texto, setTexto] = useState('')
+  const [enviando, setEnviando] = useState(false)
+
+  const storageKey = `reaccion_${noticia.id}`
+  const [reaccionUsuario, setReaccionUsuario] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem(storageKey)
+  })
+
+  useEffect(() => {
+    const col = collection(db, 'noticias', noticia.id, 'comentarios')
+    getDocs(query(col, orderBy('timestamp', 'desc'), limit(20))).then(snap => {
+      const list: Comentario[] = []
+      snap.forEach(d => list.push({ id: d.id, ...d.data() as Comentario }))
+      setComentarios(list)
+    }).catch(() => {})
+  }, [noticia.id])
+
+  const reaccionar = useCallback(async (tipo: string) => {
+    if (reaccionUsuario) return
+    const campo = `reacciones.${tipo}`
+    try {
+      await runTransaction(db, async (tx) => {
+        const ref = doc(db, 'noticias', noticia.id)
+        const snap = await tx.get(ref)
+        const actual = snap.data()?.reacciones?.[tipo] || 0
+        tx.update(ref, { [`reacciones.${tipo}`]: actual + 1 })
+      })
+      setReacciones(prev => ({ ...prev, [tipo]: prev[tipo as keyof typeof prev] + 1 }))
+      setReaccionUsuario(tipo)
+      localStorage.setItem(storageKey, tipo)
+    } catch { /* silent */ }
+  }, [noticia.id, reaccionUsuario, storageKey])
+
+  async function enviarComentario(e: React.FormEvent) {
+    e.preventDefault()
+    if (!nombre.trim() || !texto.trim() || enviando) return
+    setEnviando(true)
+    try {
+      await addDoc(collection(db, 'noticias', noticia.id, 'comentarios'), {
+        nombre: nombre.trim(),
+        texto: texto.trim().slice(0, 100),
+        timestamp: Timestamp.now(),
+      })
+      setTexto('')
+      const col = collection(db, 'noticias', noticia.id, 'comentarios')
+      const snap = await getDocs(query(col, orderBy('timestamp', 'desc'), limit(20)))
+      const list: Comentario[] = []
+      snap.forEach(d => list.push({ id: d.id, ...d.data() as Comentario }))
+      setComentarios(list)
+    } catch { /* silent */ }
+    setEnviando(false)
+  }
+
+  function handlePrint() {
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`
+      <html><head><title>${noticia.titulo}</title>
+      <style>
+        @page{margin:0.5in}
+        body{font-family:Georgia,serif;color:#333;max-width:700px;margin:auto;padding:20px}
+        h1{text-align:center;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:10px}
+        .content{white-space:pre-wrap;line-height:1.8;margin-top:20px}
+        .footer{text-align:center;margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:10px}
+        .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.05;pointer-events:none;z-index:-1;font-size:60px;text-align:center;width:300px}
+      </style></head><body>
+      <div class="watermark">Iglesia Espíritu Santo y Fuego</div>
+      <h1>${noticia.titulo}</h1>
+      <div class="content">${noticia.mensaje}</div>
+      ${noticia.imagenUrl ? `<div style="text-align:center;margin-top:20px"><img src="${noticia.imagenUrl}" style="max-width:100%;border-radius:8px"/></div>` : ''}
+      ${noticia.videoUrl ? `<p style="text-align:center;margin-top:20px"><a href="${noticia.videoUrl}" style="color:#b8860b">Ver video relacionado</a></p>` : ''}
+      <div class="footer">
+        <p>Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</p>
+        <p>Impreso desde la página oficial</p>
+      </div>
+      </body></html>
+    `)
+    win.document.close()
+    setTimeout(() => { win.print() }, 300)
+  }
+
+  async function handleDownload() {
+    const { default: jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a5' })
+    const pageW = doc.internal.pageSize.getWidth()
+    let y = 20
+
+    // title
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(16)
+    doc.setTextColor(184, 134, 11)
+    doc.text(noticia.titulo, pageW / 2, y, { align: 'center' })
+    y += 12
+
+    // line
+    doc.setDrawColor(184, 134, 11)
+    doc.line(15, y, pageW - 15, y)
+    y += 10
+
+    // message
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(11)
+    doc.setTextColor(51, 51, 51)
+    const lines = doc.splitTextToSize(noticia.mensaje, pageW - 30)
+    doc.text(lines, 15, y)
+    y += lines.length * 5 + 10
+
+    // image if any
+    if (noticia.imagenUrl) {
+      try {
+        const img = new window.Image()
+        img.crossOrigin = 'anonymous'
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          img.onload = () => {
+            const c = document.createElement('canvas')
+            c.width = img.width; c.height = img.height
+            const ctx = c.getContext('2d')!
+            ctx.drawImage(img, 0, 0)
+            resolve(c.toDataURL('image/jpeg', 0.8))
+          }
+          img.onerror = reject
+          img.src = noticia.imagenUrl
+        })
+        const imgH = 60
+        doc.addImage(dataUrl, 'JPEG', (pageW - 80) / 2, y, 80, imgH)
+        y += imgH + 10
+      } catch { /* ignore image */ }
+    }
+
+    // footer
+    y = Math.max(y, doc.internal.pageSize.getHeight() - 30)
+    doc.setFontSize(8)
+    doc.setTextColor(153, 153, 153)
+    doc.text('Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad', pageW / 2, y, { align: 'center' })
+    doc.save(`${noticia.titulo.replace(/\s+/g, '_')}.pdf`)
+  }
+
+  const reactionBtns = [
+    { key: 'me_gusta', label: 'Me gusta', icon: ThumbsUp, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { key: 'me_encanta', label: 'Me encanta', icon: Smile, color: 'text-amber-600', bg: 'bg-amber-100' },
+    { key: 'no_me_gusta', label: 'No me gusta', icon: ThumbsDown, color: 'text-red-600', bg: 'bg-red-100' },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md" onClick={onClose}>
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl shadow-black/20 animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+          <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-primary-light/5 blur-3xl" />
+        </div>
+
+        <button onClick={onClose} className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-lg backdrop-blur-sm transition hover:bg-white hover:text-gray-800 hover:scale-110">
+          <X className="h-5 w-5" />
+        </button>
+
+        {noticia.imagenUrl && (
+          <div className="relative h-56 w-full md:h-72 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent z-10" />
+            <img src={noticia.imagenUrl} alt={noticia.titulo} className="h-full w-full object-cover" />
+          </div>
+        )}
+
+        <div className="relative z-10 p-8 pt-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
+              {noticia.titulo}
+            </h2>
+            <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-primary/40 to-primary-light/40" />
+          </div>
+
+          <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-6 border border-gray-100 shadow-inner">
+            <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-700 [&>br]:block [&>br]:content-[''] [&>br]:my-2">
+              {noticia.mensaje}
+            </p>
+          </div>
+
+          {/* video button */}
+          {noticia.videoUrl && (
+            <div className="mt-6 text-center">
+              <a href={noticia.videoUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105"
+              >
+                <Flame className="h-4 w-4" /> Ver Video
+              </a>
+            </div>
+          )}
+
+          {/* Reactions */}
+          <div className="mt-6 flex justify-center gap-3">
+            {reactionBtns.map(({ key, label, icon: Icon, color, bg }) => (
+              <button
+                key={key}
+                onClick={() => reaccionar(key)}
+                disabled={!!reaccionUsuario}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition ${
+                  reaccionUsuario === key
+                    ? `${bg} ${color} ring-2 ring-offset-1 ring-${color.replace('text-', '')}`
+                    : reaccionUsuario
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <Icon className={`h-4 w-4 ${reaccionUsuario === key ? color : ''}`} />
+                <span>{label}</span>
+                <span className="ml-1 text-xs font-bold tabular-nums">{reacciones[key as keyof typeof reacciones]}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Download / Print */}
+          {(noticia.descargable || noticia.imprimible) && (
+            <div className="mt-6 flex justify-center gap-3">
+              {noticia.descargable && (
+                <button onClick={handleDownload}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-xl hover:scale-105"
+                >
+                  <Download className="h-4 w-4" /> Descargar PDF
+                </button>
+              )}
+              {noticia.imprimible && (
+                <button onClick={handlePrint}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gray-600 to-gray-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-gray-500/25 transition hover:shadow-xl hover:scale-105"
+                >
+                  <Printer className="h-4 w-4" /> Imprimir
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Comments */}
+          <div className="mt-8">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-3">
+              <MessageCircle className="h-4 w-4" /> Comentarios ({comentarios.length})
+            </h3>
+
+            <form onSubmit={enviarComentario} className="mb-4 space-y-2">
+              <input
+                type="text"
+                placeholder="Tu nombre"
+                value={nombre}
+                onChange={e => setNombre(e.target.value)}
+                maxLength={50}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                required
+              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Escribe un comentario (máx. 100 caracteres)"
+                  value={texto}
+                  onChange={e => setTexto(e.target.value.slice(0, 100))}
+                  maxLength={100}
+                  className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  required
+                />
+                <button type="submit" disabled={enviando || !nombre.trim() || !texto.trim()}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark disabled:opacity-50"
+                >
+                  {enviando ? '...' : 'Enviar'}
+                </button>
+              </div>
+            </form>
+
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {comentarios.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-4">Sin comentarios aún. ¡Sé el primero!</p>
+              ) : (
+                comentarios.map((c) => (
+                  <div key={c.id} className="rounded-xl bg-gray-50 px-4 py-2.5 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-gray-700">{c.nombre}</span>
+                      <span className="text-[10px] text-gray-400">
+                        {c.timestamp?.toDate().toLocaleString('es')}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-gray-600">{c.texto}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <p className="mt-6 text-center text-[11px] text-gray-400">Presiona ESC o haz clic fuera para cerrar</p>
+        </div>
+      </div>
+    </div>
   )
 }
