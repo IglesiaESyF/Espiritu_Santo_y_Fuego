@@ -244,9 +244,13 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
   }
 
   function handlePrint() {
+    // intentar usar logo cacheado; si no existe se omite la marca de agua
+    const logoB64 = localStorage.getItem('logoB64') || ''
+    const watermarkHtml = logoB64
+      ? `<div class="watermark"><img src="${logoB64}" alt=""/></div>`
+      : ''
     const win = window.open('', '_blank')
     if (!win) return
-    const logoB64 = localStorage.getItem('logoB64') || ''
     win.document.write(`
       <html><head><title>${noticia.titulo}</title>
       <style>
@@ -261,7 +265,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
         .content{white-space:pre-wrap;line-height:1.9;font-size:14px;margin-top:16px}
         .footer{text-align:center;margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:12px}
       </style></head><body>
-      <div class="watermark"><img src="${logoB64 || '/logo.png'}" alt=""/></div>
+      ${watermarkHtml}
       ${noticia.imagenUrl ? `<div class="imagen"><img src="${noticia.imagenUrl}" alt=""/></div>` : ''}
       <h1>${noticia.titulo}</h1>
       <div class="linea"></div>
@@ -274,21 +278,19 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
       </body></html>
     `)
     win.document.close()
-    setTimeout(() => {
-      // inject logo B64 for watermark if not already cached
-      if (!logoB64) {
-        fetch('/logo.png').then(r=>r.blob()).then(b=>{
-          const r = new FileReader()
-          r.onload = () => { localStorage.setItem('logoB64', r.result as string) }
-          r.readAsDataURL(b)
-        }).catch(()=>{})
-      }
-      win.print()
-    }, 500)
+    // cachear logo para próxima vez
+    if (!logoB64) {
+      fetch('/logo.png').then(r=>r.blob()).then(b=>{
+        const r = new FileReader()
+        r.onload = () => { localStorage.setItem('logoB64', r.result as string) }
+        r.readAsDataURL(b)
+      }).catch(()=>{})
+    }
+    setTimeout(() => { win.print() }, 800)
   }
 
   async function handleDownload() {
-    const { default: jsPDF, GState } = await import('jspdf')
+    const { default: jsPDF } = await import('jspdf')
 
     // carta: 216 × 279 mm
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'carta' })
@@ -297,21 +299,26 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     const margin = 20
     let y = margin
 
-    // ── watermark (logo tenue centrado) ──
+    // ── watermark (logo con opacidad vía canvas) ──
     async function addWatermark() {
       try {
-        const resp = await fetch('/logo.png')
-        const blob = await resp.blob()
-        const dataUrl = await new Promise<string>(resolve => {
-          const r = new FileReader()
-          r.onload = () => resolve(r.result as string)
-          r.readAsDataURL(blob)
+        const img = new window.Image()
+        img.crossOrigin = 'anonymous'
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          img.onload = () => {
+            const c = document.createElement('canvas')
+            const w = 120, h = 120
+            c.width = w; c.height = h
+            const ctx = c.getContext('2d')!
+            ctx.globalAlpha = 0.1
+            ctx.drawImage(img, 0, 0, w, h)
+            resolve(c.toDataURL('image/png'))
+          }
+          img.onerror = reject
+          img.src = '/logo.png'
         })
-        doc.saveGraphicsState()
-        doc.setGState(new GState({ opacity: 0.12 }))
         doc.addImage(dataUrl, 'PNG', (pw - 60) / 2, (ph - 60) / 2 - 20, 60, 60)
-        doc.restoreGraphicsState()
-      } catch { /* ignore watermark */ }
+      } catch { /* ignorar watermark */ }
     }
     await addWatermark()
 
