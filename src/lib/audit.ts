@@ -1,7 +1,13 @@
 import { db } from './firebase'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 
-async function getAdminLocation(): Promise<string> {
+let lastLocation = ''
+
+export function setLastLocation(loc: string) {
+  lastLocation = loc
+}
+
+async function fetchLocation(): Promise<string> {
   try {
     const res = await fetch('https://ip-api.com/json/?fields=city,regionName,country', { signal: AbortSignal.timeout(5000) })
     if (!res.ok) return ''
@@ -14,14 +20,18 @@ async function getAdminLocation(): Promise<string> {
 
 export async function auditLog(section: string, accion: string, usuario: string, detalle?: string) {
   try {
-    const ciudad = await getAdminLocation()
-    await addDoc(collection(db, 'auditoria'), {
+    const ref = await addDoc(collection(db, 'auditoria'), {
       seccion: section,
       accion,
       usuario,
       detalle: detalle || '',
-      ubicacion: ciudad,
+      ubicacion: lastLocation,
       timestamp: serverTimestamp(),
     })
+    if (!lastLocation) {
+      fetchLocation().then(loc => {
+        if (loc) updateDoc(doc(db, 'auditoria', ref.id), { ubicacion: loc })
+      })
+    }
   } catch { /* silent */ }
 }

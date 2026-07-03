@@ -1,5 +1,6 @@
 import { db } from './firebase'
 import { doc, setDoc, addDoc, collection, increment, serverTimestamp, getDoc } from 'firebase/firestore'
+import { setLastLocation } from './audit'
 
 function todayKey(): string {
   const d = new Date()
@@ -46,6 +47,7 @@ export async function trackVisit() {
     // ubicaciones frecuentes (acumulativo, nunca se reinicia)
     const loc = await getLocation()
     if (loc?.ciudad) {
+      setLastLocation([loc.ciudad, loc.region, loc.pais].filter(Boolean).join(', '))
       const ciudadKey = loc.ciudad.replace(/\s+/g, '_').toLowerCase()
       await setDoc(doc(db, 'analytics', 'ubicaciones'), {
         [`ciudades.${ciudadKey}`]: increment(1),

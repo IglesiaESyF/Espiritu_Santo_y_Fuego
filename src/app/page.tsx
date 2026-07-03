@@ -8,7 +8,6 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, Timestamp } from 'firebase/firestore'
-import { trackVisit } from '@/lib/analytics'
 import logoSrc from '@/../public/logo.png'
 
 interface Noticia {
@@ -25,7 +24,6 @@ export default function HomePage() {
   const [selected, setSelected] = useState<Noticia | null>(null)
 
   useEffect(() => {
-    trackVisit()
     getDocs(collection(db, 'noticias')).then(snap => {
       const now = Date.now()
       const list: Noticia[] = []

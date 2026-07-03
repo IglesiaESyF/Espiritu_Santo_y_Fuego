@@ -3,6 +3,7 @@
 import './globals.css'
 import { useEffect } from 'react'
 import { AuthProvider } from '@/lib/auth-context'
+import { trackVisit } from '@/lib/analytics'
 
 const base = '/Espiritu_Santo_y_Fuego'
 
@@ -12,6 +13,11 @@ function ServiceWorkerRegister() {
       navigator.serviceWorker.register(base + '/sw.js', { scope: base + '/' })
     }
   }, [])
+  return null
+}
+
+function PageTracker() {
+  useEffect(() => { trackVisit() }, [])
   return null
 }
 
@@ -34,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-warm text-gray-800 antialiased">
         <AuthProvider>{children}</AuthProvider>
         <ServiceWorkerRegister />
+        <PageTracker />
       </body>
     </html>
   )
