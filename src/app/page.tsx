@@ -160,30 +160,58 @@ export default function HomePage() {
 
       {/* Modal noticia */}
       {selected && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setSelected(null)}>
-          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-            <button onClick={() => setSelected(null)} className="absolute right-4 top-4 z-10 rounded-full bg-white/80 p-1.5 text-gray-600 shadow transition hover:bg-white hover:text-gray-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md" onClick={() => setSelected(null)}>
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-2xl shadow-black/20 animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+
+            {/* decorative header bg */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+              <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-primary/5 blur-3xl" />
+              <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-primary-light/5 blur-3xl" />
+            </div>
+
+            <button onClick={() => setSelected(null)} className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-lg backdrop-blur-sm transition hover:bg-white hover:text-gray-800 hover:scale-110">
               <X className="h-5 w-5" />
             </button>
+
             {selected.imagenUrl && (
               <div className="relative h-56 w-full md:h-72 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent z-10" />
                 <img src={selected.imagenUrl} alt={selected.titulo} className="h-full w-full object-cover" />
               </div>
             )}
-            <div className="p-6">
-              <h2 className="mb-3 text-2xl font-bold text-dark">{selected.titulo}</h2>
-              <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{selected.mensaje}</p>
+
+            <div className="relative z-10 p-8 pt-6">
+              {/* title centered */}
+              <div className="text-center mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">
+                  {selected.titulo}
+                </h2>
+                <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-gradient-to-r from-primary/40 to-primary-light/40" />
+              </div>
+
+              {/* message with formatted text */}
+              <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white p-6 border border-gray-100 shadow-inner">
+                <p className="whitespace-pre-wrap text-base leading-relaxed text-gray-700 [&>br]:block [&>br]:content-[''] [&>br]:my-2">
+                  {selected.mensaje}
+                </p>
+              </div>
+
+              {/* video button */}
               {selected.videoUrl && (
-                <a
-                  href={selected.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
-                >
-                  <Flame className="h-4 w-4" /> Ver Video
-                </a>
+                <div className="mt-6 text-center">
+                  <a
+                    href={selected.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105"
+                  >
+                    <Flame className="h-4 w-4" /> Ver Video
+                  </a>
+                </div>
               )}
+
+              {/* close hint */}
+              <p className="mt-6 text-center text-[11px] text-gray-400">Presiona ESC o haz clic fuera para cerrar</p>
             </div>
           </div>
         </div>

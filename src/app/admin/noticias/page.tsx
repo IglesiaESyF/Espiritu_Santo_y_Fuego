@@ -90,9 +90,10 @@ export default function AdminNoticiasPage() {
       const url = await getDownloadURL(storageRef)
       setImagenUrl(url)
     } catch {
-      setError('Error al subir la imagen.')
+      setError('Error al subir la imagen. Usa el campo "URL de la imagen" como alternativa.')
     }
     setUploading(false)
+    e.target.value = ''
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -189,14 +190,14 @@ export default function AdminNoticiasPage() {
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Imagen</label>
                 <div className="flex gap-3">
-                  <Input placeholder="URL de la imagen" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} />
+                  <Input placeholder="URL de la imagen (pégalo aquí si ya la tienes en internet)" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} />
                   <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
                     <Upload className="h-4 w-4" />
                     Subir
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                   </label>
                 </div>
-                {uploading && <p className="mt-1 text-xs text-gray-500">Subiendo imagen...</p>}
+                {uploading && <p className="mt-1 text-xs text-amber-600">Subiendo imagen... si se tarda mucho, usa el campo URL.</p>}
                 {imagenUrl && (
                   <img src={imagenUrl} alt="preview" className="mt-2 h-24 w-40 rounded object-cover" />
                 )}
