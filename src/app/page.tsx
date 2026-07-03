@@ -246,20 +246,26 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
   function handlePrint() {
     const win = window.open('', '_blank')
     if (!win) return
+    const logoB64 = localStorage.getItem('logoB64') || ''
     win.document.write(`
       <html><head><title>${noticia.titulo}</title>
       <style>
-        @page{margin:0.5in}
+        @page{margin:0.5in;size:letter}
         body{font-family:Georgia,serif;color:#333;max-width:700px;margin:auto;padding:20px}
-        h1{text-align:center;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:10px}
-        .content{white-space:pre-wrap;line-height:1.8;margin-top:20px}
-        .footer{text-align:center;margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:10px}
-        .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.05;pointer-events:none;z-index:-1;font-size:60px;text-align:center;width:300px}
+        .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.08;pointer-events:none;z-index:-1;text-align:center}
+        .watermark img{width:120px;height:auto}
+        .imagen{margin:0 auto 24px;text-align:center}
+        .imagen img{max-width:100%;max-height:300px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.12)}
+        h1{text-align:center;color:#b8860b;font-size:22px;margin:0 0 8px}
+        .linea{margin:0 auto 20px;width:80%;height:1px;background:#b8860b}
+        .content{white-space:pre-wrap;line-height:1.9;font-size:14px;margin-top:16px}
+        .footer{text-align:center;margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:12px}
       </style></head><body>
-      <div class="watermark">Iglesia Espíritu Santo y Fuego</div>
+      <div class="watermark"><img src="${logoB64 || '/logo.png'}" alt=""/></div>
+      ${noticia.imagenUrl ? `<div class="imagen"><img src="${noticia.imagenUrl}" alt=""/></div>` : ''}
       <h1>${noticia.titulo}</h1>
+      <div class="linea"></div>
       <div class="content">${noticia.mensaje}</div>
-      ${noticia.imagenUrl ? `<div style="text-align:center;margin-top:20px"><img src="${noticia.imagenUrl}" style="max-width:100%;border-radius:8px"/></div>` : ''}
       ${noticia.videoUrl ? `<p style="text-align:center;margin-top:20px"><a href="${noticia.videoUrl}" style="color:#b8860b">Ver video relacionado</a></p>` : ''}
       <div class="footer">
         <p>Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</p>
@@ -268,11 +274,21 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
       </body></html>
     `)
     win.document.close()
-    setTimeout(() => { win.print() }, 300)
+    setTimeout(() => {
+      // inject logo B64 for watermark if not already cached
+      if (!logoB64) {
+        fetch('/logo.png').then(r=>r.blob()).then(b=>{
+          const r = new FileReader()
+          r.onload = () => { localStorage.setItem('logoB64', r.result as string) }
+          r.readAsDataURL(b)
+        }).catch(()=>{})
+      }
+      win.print()
+    }, 500)
   }
 
   async function handleDownload() {
-    const { default: jsPDF } = await import('jspdf')
+    const { default: jsPDF, GState } = await import('jspdf')
 
     // carta: 216 × 279 mm
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'carta' })
@@ -291,7 +307,10 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
           r.onload = () => resolve(r.result as string)
           r.readAsDataURL(blob)
         })
-        doc.addImage(dataUrl, 'PNG', (pw - 60) / 2, (ph - 60) / 2 - 20, 60, 60, undefined, 'NONE', 20)
+        doc.saveGraphicsState()
+        doc.setGState(new GState({ opacity: 0.12 }))
+        doc.addImage(dataUrl, 'PNG', (pw - 60) / 2, (ph - 60) / 2 - 20, 60, 60)
+        doc.restoreGraphicsState()
       } catch { /* ignore watermark */ }
     }
     await addWatermark()
