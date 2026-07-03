@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getVisitStats } from '@/lib/analytics'
+import { getVisitStats, getUbicaciones, getUbicacionesMes, getVisitasRecientes } from '@/lib/analytics'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, orderBy, limit, query, Timestamp } from 'firebase/firestore'
 
@@ -15,11 +15,17 @@ interface AuditEntry {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ total: 0, hoy: 0 })
+  const [stats, setStats] = useState({ total: 0, hoy: 0, mes: 0 })
+  const [ubicaciones, setUbicaciones] = useState<Record<string, number>>({})
+  const [ubicacionesMes, setUbicacionesMes] = useState<Record<string, number>>({})
+  const [recientes, setRecientes] = useState<Record<string, unknown>[]>([])
   const [logs, setLogs] = useState<AuditEntry[]>([])
 
   useEffect(() => {
     getVisitStats().then(setStats)
+    getUbicaciones().then(setUbicaciones)
+    getUbicacionesMes().then(setUbicacionesMes)
+    getVisitasRecientes(15).then(setRecientes)
     getDocs(query(collection(db, 'auditoria'), orderBy('timestamp', 'desc'), limit(20)))
       .then(snap => {
         const list: AuditEntry[] = []
@@ -33,14 +39,22 @@ export default function AdminDashboard() {
       <h1 className="text-2xl font-bold text-dark">Panel de Control</h1>
 
       {/* stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-5">
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Visitas Totales</p>
           <p className="mt-1 text-3xl font-bold text-dark">{stats.total}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Este Mes</p>
+          <p className="mt-1 text-3xl font-bold text-primary">{stats.mes}</p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Visitas Hoy</p>
-          <p className="mt-1 text-3xl font-bold text-primary">{stats.hoy}</p>
+          <p className="mt-1 text-3xl font-bold text-dark">{stats.hoy}</p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Ciudades</p>
+          <p className="mt-1 text-3xl font-bold text-dark">{Object.keys(ubicaciones).length}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Sesión expira</p>
@@ -48,9 +62,67 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* ubicaciones frecuentes (histórico) */}
+      {Object.keys(ubicaciones).length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-bold text-dark">Ubicaciones Frecuentes <span className="text-sm font-normal text-gray-500">(histórico)</span></h2>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            {Object.entries(ubicaciones)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 12)
+              .map(([ciudad, count]) => (
+                <div key={ciudad} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm">
+                  <span className="capitalize text-gray-700">{ciudad.replace(/_/g, ' ')}</span>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">{count} visitas</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* ubicaciones del mes */}
+      {Object.keys(ubicacionesMes).length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-bold text-dark">Ubicaciones <span className="text-sm font-normal text-gray-500">(este mes)</span></h2>
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+            {Object.entries(ubicacionesMes)
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 12)
+              .map(([ciudad, count]) => (
+                <div key={ciudad} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm">
+                  <span className="capitalize text-gray-700">{ciudad.replace(/_/g, ' ')}</span>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">{count} visitas</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* visitas recientes */}
+      {recientes.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-lg font-bold text-dark">Visitas Recientes</h2>
+          <div className="space-y-1.5">
+            {recientes.map((v, i) => (
+              <div key={String(v.id) || i} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-2.5 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-700">{String(v.ciudad || 'Desconocido')}</span>
+                  {!!v.pais && <span className="text-xs text-gray-400">{String(v.pais)}</span>}
+                </div>
+                <span className="text-[11px] text-gray-400">
+                  {v.timestamp
+                    ? new Date((v.timestamp as Timestamp).toMillis()).toLocaleString('es')
+                    : ''}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* audit log */}
       <div>
-        <h2 className="mb-3 text-lg font-bold text-dark">Actividad Reciente</h2>
+        <h2 className="mb-3 text-lg font-bold text-dark">Actividad de Administradores</h2>
         {logs.length === 0 ? (
           <p className="text-sm text-gray-500">No hay actividad registrada aún.</p>
         ) : (
