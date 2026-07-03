@@ -108,20 +108,28 @@ export default function AdminDashboard() {
       {recientes.length > 0 && (
         <div>
           <h2 className="mb-3 text-lg font-bold text-dark">Visitas Recientes</h2>
+          <p className="mb-2 text-xs text-gray-400">Doble clic en una fila para abrir ubicación en Google Maps</p>
           <div className="space-y-1.5">
-            {recientes.map((v, i) => (
-              <div key={String(v.id) || i} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-2.5 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-700">{String(v.ciudad || 'Desconocido')}</span>
-                  {!!v.pais && <span className="text-xs text-gray-400">{String(v.pais)}</span>}
+            {recientes.map((v, i) => {
+              const query = [v.ciudad, v.region, v.pais].filter(Boolean).join(', ')
+              const gmaps = `https://www.google.com/maps/search/${encodeURIComponent(query)}`
+              return (
+                <div key={String(v.id) || i}
+                  onDoubleClick={() => query && window.open(gmaps, '_blank')}
+                  className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 transition"
+                  title={query || 'Sin ubicación'}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-700">{String(v.ciudad || 'Desconocido')}</span>
+                    {!!v.pais && <span className="text-xs text-gray-400">{String(v.pais)}</span>}
+                  </div>
+                  <span className="text-[11px] text-gray-400">
+                    {v.timestamp
+                      ? new Date((v.timestamp as Timestamp).toMillis()).toLocaleString('es')
+                      : ''}
+                  </span>
                 </div>
-                <span className="text-[11px] text-gray-400">
-                  {v.timestamp
-                    ? new Date((v.timestamp as Timestamp).toMillis()).toLocaleString('es')
-                    : ''}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
@@ -150,8 +158,12 @@ export default function AdminDashboard() {
           <p className="text-sm text-gray-500">No hay actividad registrada aún.</p>
         ) : (
           <div className="space-y-2">
-            {logs.map(log => (
-              <div key={log.id} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm">
+            {logs.map(log => {
+              const gmaps = log.ubicacion ? `https://www.google.com/maps/search/${encodeURIComponent(log.ubicacion)}` : null
+              return (
+              <div key={log.id}
+                onDoubleClick={() => gmaps && window.open(gmaps, '_blank')}
+                className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition">
                 <div className="flex items-center gap-3">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
                     log.seccion === 'Caja' ? 'bg-green-100 text-green-700' :
@@ -177,7 +189,8 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
