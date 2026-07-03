@@ -16,7 +16,7 @@ interface AuditEntry {
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ total: 0, hoy: 0, mes: 0 })
-  const [ubicaciones, setUbicaciones] = useState<Record<string, number>>({})
+  const [ubicaciones, setUbicaciones] = useState<{ ciudades: Record<string, number>; ultima_visita: Record<string, unknown> }>({ ciudades: {}, ultima_visita: {} })
   const [recientes, setRecientes] = useState<Record<string, unknown>[]>([])
   const [logs, setLogs] = useState<AuditEntry[]>([])
 
@@ -61,22 +61,31 @@ export default function AdminDashboard() {
       </div>
 
       {/* ubicaciones frecuentes (nunca se eliminan) */}
-      {Object.keys(ubicaciones).length > 0 && (
+      {Object.keys(ubicaciones.ciudades).length > 0 && (
         <div>
           <h2 className="mb-3 text-lg font-bold text-dark">
             Ubicaciones Frecuentes
-            <span className="ml-2 text-sm font-normal text-gray-500">(acumulado histórico — nunca se reinicia)</span>
+            <span className="ml-2 text-sm font-normal text-gray-500">(acumulado — nunca se reinicia)</span>
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-            {Object.entries(ubicaciones)
+            {Object.entries(ubicaciones.ciudades)
               .sort(([, a], [, b]) => b - a)
-              .slice(0, 12)
-              .map(([ciudad, count]) => (
-                <div key={ciudad} className="flex items-center justify-between rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm">
-                  <span className="capitalize text-gray-700">{ciudad.replace(/_/g, ' ')}</span>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">{count} visitas</span>
-                </div>
-              ))}
+              .slice(0, 20)
+              .map(([ciudad, count]) => {
+                const ult = ubicaciones.ultima_visita[ciudad]
+                const ultimaStr = ult
+                  ? new Date((ult as { seconds: number }).seconds * 1000).toLocaleString('es')
+                  : ''
+                return (
+                  <div key={ciudad} className="rounded-lg border border-gray-100 bg-white px-4 py-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium capitalize text-gray-700">{ciudad.replace(/_/g, ' ')}</span>
+                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">{count} visitas</span>
+                    </div>
+                    {ultimaStr && <p className="mt-1 text-[10px] text-gray-400">Última: {ultimaStr}</p>}
+                  </div>
+                )
+              })}
           </div>
         </div>
       )}

@@ -49,6 +49,7 @@ export async function trackVisit() {
       const ciudadKey = loc.ciudad.replace(/\s+/g, '_').toLowerCase()
       await setDoc(doc(db, 'analytics', 'ubicaciones'), {
         [`ciudades.${ciudadKey}`]: increment(1),
+        [`ultima_visita.${ciudadKey}`]: serverTimestamp(),
       }, { merge: true })
     }
 
@@ -97,9 +98,14 @@ export async function getUbicaciones() {
   try {
     const ref = doc(db, 'analytics', 'ubicaciones')
     const snap = await getDoc(ref)
-    return snap.exists() ? (snap.data().ciudades || {}) : {}
+    if (!snap.exists()) return { ciudades: {}, ultima_visita: {} }
+    const data = snap.data()
+    return {
+      ciudades: data.ciudades || {},
+      ultima_visita: data.ultima_visita || {},
+    }
   } catch {
-    return {}
+    return { ciudades: {}, ultima_visita: {} }
   }
 }
 
