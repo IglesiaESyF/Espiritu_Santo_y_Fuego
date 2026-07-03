@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getVisitStats, getUbicaciones, getVisitasRecientes } from '@/lib/analytics'
+import { getVisitStats, getUbicaciones, getVisitasRecientes, resetMonthlyCounter, clearVisitasRecientes } from '@/lib/analytics'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, orderBy, limit, query, Timestamp } from 'firebase/firestore'
 
@@ -56,8 +56,21 @@ export default function AdminDashboard() {
           <p className="mt-1 text-3xl font-bold text-dark">{Object.keys(ubicaciones.ciudades).length}</p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Sesión expira</p>
-          <p className="mt-1 text-lg font-semibold text-dark">30 min inactividad</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Borrar conteo</p>
+          <button onClick={async () => {
+            if (!confirm('¿Borrar el contador del mes actual?')) return
+            await resetMonthlyCounter()
+            getVisitStats().then(setStats)
+          }} className="mt-2 w-full rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 transition">
+            Borrar conteo mensual
+          </button>
+          <button onClick={async () => {
+            if (!confirm('¿Eliminar todas las visitas recientes?')) return
+            await clearVisitasRecientes()
+            getVisitasRecientes(15).then(setRecientes)
+          }} className="mt-1.5 w-full rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-200 transition">
+            Limpiar visitas recientes
+          </button>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { db } from './firebase'
-import { doc, setDoc, addDoc, collection, increment, serverTimestamp, getDoc } from 'firebase/firestore'
+import { doc, setDoc, addDoc, collection, getDocs, increment, serverTimestamp, getDoc, deleteDoc } from 'firebase/firestore'
 import { setLastLocation } from './audit'
 
 function todayKey(): string {
@@ -138,4 +138,21 @@ export async function getVisitasRecientes(lim = 50) {
   } catch {
     return []
   }
+}
+
+export async function resetMonthlyCounter() {
+  try {
+    const mk = monthKey()
+    await deleteDoc(doc(db, 'analytics', `mes_${mk}`))
+  } catch { /* silent */ }
+}
+
+export async function clearVisitasRecientes() {
+  try {
+    const col = collection(db, 'visitas_recientes')
+    const snap = await getDocs(col)
+    const promises: Promise<void>[] = []
+    snap.forEach(d => promises.push(deleteDoc(doc(db, 'visitas_recientes', d.id))))
+    await Promise.all(promises)
+  } catch { /* silent */ }
 }
