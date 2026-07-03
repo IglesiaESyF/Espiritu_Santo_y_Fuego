@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { getVisitStats, getUbicaciones, getVisitasRecientes, resetMonthlyCounter, clearVisitasRecientes } from '@/lib/analytics'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, orderBy, limit, query, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, orderBy, limit, query, Timestamp, doc, deleteDoc } from 'firebase/firestore'
 
 interface AuditEntry {
   id: string
@@ -128,7 +128,24 @@ export default function AdminDashboard() {
 
       {/* audit log */}
       <div>
-        <h2 className="mb-3 text-lg font-bold text-dark">Actividad de Administradores</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-dark">Actividad de Administradores</h2>
+          {logs.length > 0 && (
+            <button onClick={async () => {
+              if (!confirm('¿Eliminar TODOS los registros de actividad de administradores?')) return
+              try {
+                const col = collection(db, 'auditoria')
+                const snap = await getDocs(col)
+                const p: Promise<void>[] = []
+                snap.forEach(d => p.push(deleteDoc(doc(db, 'auditoria', d.id))))
+                await Promise.all(p)
+                setLogs([])
+              } catch {}
+            }} className="rounded-lg bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 transition">
+              Eliminar todo
+            </button>
+          )}
+        </div>
         {logs.length === 0 ? (
           <p className="text-sm text-gray-500">No hay actividad registrada aún.</p>
         ) : (
@@ -148,9 +165,17 @@ export default function AdminDashboard() {
                   <span className="text-gray-500">{log.accion}</span>
                   {log.ubicacion && <span className="text-[11px] text-gray-400">({log.ubicacion})</span>}
                 </div>
-                <span className="text-[11px] text-gray-400">
-                  {log.timestamp?.toDate().toLocaleString('es')}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-gray-400">
+                    {log.timestamp?.toDate().toLocaleString('es')}
+                  </span>
+                  <button onClick={async () => {
+                    if (!confirm('¿Eliminar este registro?')) return
+                    try { await deleteDoc(doc(db, 'auditoria', log.id)); setLogs(prev => prev.filter(l => l.id !== log.id)) } catch {}
+                  }} className="text-red-400 hover:text-red-600 transition">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
