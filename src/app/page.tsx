@@ -243,9 +243,26 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     setEnviando(false)
   }
 
-  function handlePrint() {
-    // intentar usar logo cacheado; si no existe se omite la marca de agua
-    const logoB64 = localStorage.getItem('logoB64') || ''
+  // ── helper: obtiene el logo como dataURL (desde caché o fetch) ──
+  async function getLogoB64(): Promise<string> {
+    const cached = localStorage.getItem('logoB64')
+    if (cached) return cached
+    const bp = process.env.NEXT_PUBLIC_BASE_PATH || ''
+    try {
+      const resp = await fetch(bp + '/logo.png')
+      const blob = await resp.blob()
+      const dataUrl = await new Promise<string>(resolve => {
+        const r = new FileReader()
+        r.onload = () => resolve(r.result as string)
+        r.readAsDataURL(blob)
+      })
+      localStorage.setItem('logoB64', dataUrl)
+      return dataUrl
+    } catch { return '' }
+  }
+
+  async function handlePrint() {
+    const logoB64 = await getLogoB64()
     const watermarkHtml = logoB64
       ? `<div class="watermark"><img src="${logoB64}" alt=""/></div>`
       : ''
@@ -278,14 +295,6 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
       </body></html>
     `)
     win.document.close()
-    // cachear logo para próxima vez
-    if (!logoB64) {
-      fetch('/logo.png').then(r=>r.blob()).then(b=>{
-        const r = new FileReader()
-        r.onload = () => { localStorage.setItem('logoB64', r.result as string) }
-        r.readAsDataURL(b)
-      }).catch(()=>{})
-    }
     setTimeout(() => { win.print() }, 800)
   }
 
@@ -294,33 +303,28 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
 
     // carta: 216 × 279 mm
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'carta' })
-    const pw = doc.internal.pageSize.getWidth()
-    const ph = doc.internal.pageSize.getHeight()
+    const pw = doc.internal.pageSize.width
+    const ph = doc.internal.pageSize.height
     const margin = 20
     let y = margin
 
     // ── watermark (logo con opacidad vía canvas) ──
-    async function addWatermark() {
-      try {
-        const img = new window.Image()
-        img.crossOrigin = 'anonymous'
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          img.onload = () => {
-            const c = document.createElement('canvas')
-            const w = 120, h = 120
-            c.width = w; c.height = h
-            const ctx = c.getContext('2d')!
-            ctx.globalAlpha = 0.1
-            ctx.drawImage(img, 0, 0, w, h)
-            resolve(c.toDataURL('image/png'))
-          }
-          img.onerror = reject
-          img.src = '/logo.png'
-        })
-        doc.addImage(dataUrl, 'PNG', (pw - 60) / 2, (ph - 60) / 2 - 20, 60, 60)
-      } catch { /* ignorar watermark */ }
+    const logoB64 = await getLogoB64()
+    let logoDataUrl = ''
+    async function ponerLogo() {
+      if (!logoB64) return
+      if (!logoDataUrl) {
+        try {
+          const img = new window.Image()
+          logoDataUrl = await new Promise<string>((resolve, reject) => {
+            img.onload = () => { const c=document.createElement('canvas'); c.width=120; c.height=120; const cx=c.getContext('2d')!; cx.globalAlpha=0.1; cx.drawImage(img,0,0,120,120); resolve(c.toDataURL('image/png')) }
+            img.onerror = reject; img.src = logoB64
+          })
+        } catch { return }
+      }
+      doc.addImage(logoDataUrl, 'PNG', (pw-60)/2, (ph-60)/2-20, 60, 60)
     }
-    await addWatermark()
+    await ponerLogo()
 
     // ── image al inicio ──
     if (noticia.imagenUrl) {
@@ -374,7 +378,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     const fullText = noticia.mensaje
     const paragraphs = fullText.split('\n').filter(Boolean)
     for (const p of paragraphs) {
-      if (y > maxY) { doc.addPage(); y = margin; await addWatermark() }
+      if (y > maxY) { doc.addPage(); y = margin; await ponerLogo() }
       const lines = doc.splitTextToSize(p, pw - margin * 2)
       doc.text(lines, margin, y)
       y += lines.length * lineH + 4
