@@ -6,12 +6,11 @@ import { Plus, Pencil, Trash2, Save, ArrowLeft, Upload } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { db, storage } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
 import { useAuth } from '@/lib/auth-context'
 import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 interface Noticia {
   id?: string
@@ -80,19 +79,24 @@ export default function AdminNoticiasPage() {
     setShowForm(true)
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setUploading(true)
-    try {
-      const storageRef = ref(storage, `noticias/${Date.now()}_${file.name}`)
-      await uploadBytes(storageRef, file)
-      const url = await getDownloadURL(storageRef)
-      setImagenUrl(url)
-    } catch {
-      setError('Error al subir la imagen. Usa el campo "URL de la imagen" como alternativa.')
+    if (file.size > 300 * 1024) {
+      setError('La imagen es muy pesada. Máximo 300 KB. Usa el campo URL para imágenes más grandes.')
+      return
     }
-    setUploading(false)
+    setUploading(true)
+    const reader = new FileReader()
+    reader.onload = () => {
+      setImagenUrl(reader.result as string)
+      setUploading(false)
+    }
+    reader.onerror = () => {
+      setError('Error al leer la imagen. Intenta con otra.')
+      setUploading(false)
+    }
+    reader.readAsDataURL(file)
     e.target.value = ''
   }
 
@@ -197,7 +201,7 @@ export default function AdminNoticiasPage() {
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploading} />
                   </label>
                 </div>
-                {uploading && <p className="mt-1 text-xs text-amber-600">Subiendo imagen... si se tarda mucho, usa el campo URL.</p>}
+                {uploading && <p className="mt-1 text-xs text-amber-600">Procesando imagen...</p>}
                 {imagenUrl && (
                   <img src={imagenUrl} alt="preview" className="mt-2 h-24 w-40 rounded object-cover" />
                 )}
