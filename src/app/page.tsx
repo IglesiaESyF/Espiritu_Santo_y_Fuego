@@ -243,26 +243,27 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     setEnviando(false)
   }
 
-  // ── helper: obtiene el logo como dataURL (desde caché o fetch) ──
-  async function getLogoB64(): Promise<string> {
-    const cached = localStorage.getItem('logoB64')
-    if (cached) return cached
-    const bp = process.env.NEXT_PUBLIC_BASE_PATH || ''
-    try {
-      const resp = await fetch(bp + '/logo.png')
-      const blob = await resp.blob()
-      const dataUrl = await new Promise<string>(resolve => {
-        const r = new FileReader()
-        r.onload = () => resolve(r.result as string)
-        r.readAsDataURL(blob)
-      })
-      localStorage.setItem('logoB64', dataUrl)
-      return dataUrl
-    } catch { return '' }
+  // ── helper: logo como dataURL (solo desde caché, no bloquea) ──
+  function getLogoCached(): string {
+    return localStorage.getItem('logoB64') || ''
   }
+  // precargar logo al montar el componente
+  useEffect(() => {
+    if (getLogoCached()) return
+    const paths = ['/logo.png']
+    if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH)
+      paths.unshift(process.env.NEXT_PUBLIC_BASE_PATH + '/logo.png')
+    for (const p of paths) {
+      fetch(p).then(r => { if (!r.ok) throw Error(); return r.blob() }).then(b => {
+        const r = new FileReader()
+        r.onload = () => localStorage.setItem('logoB64', r.result as string)
+        r.readAsDataURL(b)
+      }).catch(() => {})
+    }
+  }, [])
 
   async function handlePrint() {
-    const logoB64 = await getLogoB64()
+    const logoB64 = getLogoCached()
     const watermarkHtml = logoB64
       ? `<div class="watermark"><img src="${logoB64}" alt=""/></div>`
       : ''
@@ -309,22 +310,19 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     let y = margin
 
     // ── watermark (logo con opacidad vía canvas) ──
-    const logoB64 = await getLogoB64()
-    let logoDataUrl = ''
-    async function ponerLogo() {
-      if (!logoB64) return
-      if (!logoDataUrl) {
-        try {
-          const img = new window.Image()
-          logoDataUrl = await new Promise<string>((resolve, reject) => {
-            img.onload = () => { const c=document.createElement('canvas'); c.width=120; c.height=120; const cx=c.getContext('2d')!; cx.globalAlpha=0.1; cx.drawImage(img,0,0,120,120); resolve(c.toDataURL('image/png')) }
-            img.onerror = reject; img.src = logoB64
-          })
-        } catch { return }
-      }
-      doc.addImage(logoDataUrl, 'PNG', (pw-60)/2, (ph-60)/2-20, 60, 60)
+    const logoB64 = getLogoCached()
+    let opaqueLogo = ''
+    if (logoB64) {
+      try {
+        const img = new window.Image()
+        opaqueLogo = await new Promise<string>((resolve, reject) => {
+          img.onload = () => { const c=document.createElement('canvas'); c.width=120; c.height=120; const cx=c.getContext('2d')!; cx.globalAlpha=0.1; cx.drawImage(img,0,0,120,120); resolve(c.toDataURL('image/png')) }
+          img.onerror = reject; img.src = logoB64
+        })
+        doc.addImage(opaqueLogo, 'PNG', (pw-60)/2, (ph-60)/2-20, 60, 60)
+      } catch {}
     }
-    await ponerLogo()
+    function ponerMarca() { if (opaqueLogo) doc.addImage(opaqueLogo, 'PNG', (pw-60)/2, (ph-60)/2-20, 60, 60) }
 
     // ── image al inicio ──
     if (noticia.imagenUrl) {
@@ -378,7 +376,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     const fullText = noticia.mensaje
     const paragraphs = fullText.split('\n').filter(Boolean)
     for (const p of paragraphs) {
-      if (y > maxY) { doc.addPage(); y = margin; await ponerLogo() }
+      if (y > maxY) { doc.addPage(); y = margin; ponerMarca() }
       const lines = doc.splitTextToSize(p, pw - margin * 2)
       doc.text(lines, margin, y)
       y += lines.length * lineH + 4
