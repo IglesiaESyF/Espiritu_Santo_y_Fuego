@@ -264,31 +264,50 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
 
   async function handlePrint() {
     const logoB64 = getLogoCached()
-    const watermarkHtml = logoB64
-      ? `<div class="watermark"><img src="${logoB64}" alt=""/></div>`
-      : ''
     const win = window.open('', '_blank')
     if (!win) return
     win.document.write(`
       <html><head><title>${noticia.titulo}</title>
       <style>
         @page{margin:0.5in;size:letter}
-        body{font-family:Georgia,serif;color:#333;max-width:700px;margin:auto;padding:20px}
-        .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.08;pointer-events:none;z-index:-1;text-align:center}
-        .watermark img{width:120px;height:auto}
+        * { margin:0; padding:0; }
+        body{
+          font-family:Georgia,serif;
+          color:#333;
+          max-width:700px;
+          margin:auto;
+          padding:20px;
+          position:relative;
+        }
+        /* Marca de agua en toda la página */
+        body::before {
+          content:'';
+          position:fixed;
+          top:50%;
+          left:50%;
+          transform:translate(-50%,-50%) rotate(-45deg);
+          width:600px;
+          height:600px;
+          background-image:url('${logoB64}');
+          background-repeat:no-repeat;
+          background-position:center;
+          background-size:300px 300px;
+          opacity:0.12;
+          pointer-events:none;
+          z-index:-1;
+        }
         .imagen{margin:0 auto 24px;text-align:center}
         .imagen img{max-width:100%;max-height:300px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,0.12)}
-        h1{text-align:center;color:#b8860b;font-size:22px;margin:0 0 8px}
+        h1{text-align:center;color:#b8860b;font-size:22px;margin:0 0 8px;position:relative;z-index:1}
         .linea{margin:0 auto 20px;width:80%;height:1px;background:#b8860b}
-        .content{white-space:pre-wrap;line-height:1.9;font-size:14px;margin-top:16px}
-        .footer{text-align:center;margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:12px}
+        .content{white-space:pre-wrap;line-height:1.9;font-size:14px;margin-top:16px;position:relative;z-index:1}
+        .footer{text-align:center;margin-top:40px;font-size:12px;color:#999;border-top:1px solid #ddd;padding-top:12px;position:relative;z-index:1}
       </style></head><body>
-      ${watermarkHtml}
       ${noticia.imagenUrl ? `<div class="imagen"><img src="${noticia.imagenUrl}" alt=""/></div>` : ''}
       <h1>${noticia.titulo}</h1>
       <div class="linea"></div>
       <div class="content">${noticia.mensaje}</div>
-      ${noticia.videoUrl ? `<p style="text-align:center;margin-top:20px"><a href="${noticia.videoUrl}" style="color:#b8860b">Ver video relacionado</a></p>` : ''}
+      ${noticia.videoUrl ? `<p style="text-align:center;margin-top:20px;position:relative;z-index:1"><a href="${noticia.videoUrl}" style="color:#b8860b">Ver video relacionado</a></p>` : ''}
       <div class="footer">
         <p>Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</p>
         <p>Impreso desde la página oficial</p>
@@ -309,20 +328,37 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     const margin = 20
     let y = margin
 
-    // ── watermark (logo con opacidad vía canvas) ──
+    // ── Crear marca de agua con opacidad en canvas ──
     const logoB64 = getLogoCached()
-    let opaqueLogo = ''
+    let watermarkImg = ''
     if (logoB64) {
       try {
         const img = new window.Image()
-        opaqueLogo = await new Promise<string>((resolve, reject) => {
-          img.onload = () => { const c=document.createElement('canvas'); c.width=120; c.height=120; const cx=c.getContext('2d')!; cx.globalAlpha=0.1; cx.drawImage(img,0,0,120,120); resolve(c.toDataURL('image/png')) }
-          img.onerror = reject; img.src = logoB64
+        watermarkImg = await new Promise<string>((resolve, reject) => {
+          img.onload = () => {
+            const canvas = document.createElement('canvas')
+            canvas.width = 300
+            canvas.height = 300
+            const ctx = canvas.getContext('2d')!
+            ctx.globalAlpha = 0.12
+            ctx.drawImage(img, 0, 0, 300, 300)
+            resolve(canvas.toDataURL('image/png'))
+          }
+          img.onerror = reject
+          img.src = logoB64
         })
-        doc.addImage(opaqueLogo, 'PNG', (pw-60)/2, (ph-60)/2-20, 60, 60)
       } catch {}
     }
-    function ponerMarca() { if (opaqueLogo) doc.addImage(opaqueLogo, 'PNG', (pw-60)/2, (ph-60)/2-20, 60, 60) }
+
+    // ── Función para agregar marca de agua a cada página ──
+    const addWatermarkToPage = () => {
+      if (watermarkImg) {
+        doc.addImage(watermarkImg, 'PNG', (pw - 100) / 2, (ph - 100) / 2 - 20, 100, 100)
+      }
+    }
+
+    // Agregar marca a la primera página
+    addWatermarkToPage()
 
     // ── image al inicio ──
     if (noticia.imagenUrl) {
@@ -332,7 +368,8 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
         const dataUrl = await new Promise<string>((resolve, reject) => {
           img.onload = () => {
             const c = document.createElement('canvas')
-            c.width = img.width; c.height = img.height
+            c.width = img.width
+            c.height = img.height
             const ctx = c.getContext('2d')!
             ctx.drawImage(img, 0, 0)
             resolve(c.toDataURL('image/jpeg', 0.85))
@@ -375,15 +412,35 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
     const maxY = ph - margin - 10
     const fullText = noticia.mensaje
     const paragraphs = fullText.split('\n').filter(Boolean)
+    
     for (const p of paragraphs) {
-      if (y > maxY) { doc.addPage(); y = margin; ponerMarca() }
+      if (y > maxY) {
+        doc.addPage()
+        y = margin
+        addWatermarkToPage() // Agregar marca de agua a nueva página
+      }
       const lines = doc.splitTextToSize(p, pw - margin * 2)
       doc.text(lines, margin, y)
       y += lines.length * lineH + 4
     }
 
+    // ── video link (opcional) ──
+    if (noticia.videoUrl) {
+      if (y > maxY) {
+        doc.addPage()
+        y = margin
+        addWatermarkToPage()
+      }
+      y += 6
+      doc.setFont('times', 'normal')
+      doc.setFontSize(11)
+      doc.setTextColor(0, 0, 255)
+      doc.textWithLink(`Ver video: ${noticia.videoUrl}`, pw / 2, y, { pageNumber: 1 })
+      y += 8
+    }
+
     // ── pie ──
-    y = Math.max(y + 8, ph - margin)
+    y = Math.max(y + 8, ph - margin - 8)
     doc.setFont('times', 'italic')
     doc.setFontSize(9)
     doc.setTextColor(140, 140, 140)
@@ -436,7 +493,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
           {noticia.videoUrl && (
             <div className="mt-6 text-center">
               <a href={noticia.videoUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:shadow-blue-500/40"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:shadow-blue-500/40 hover:-translate-y-0.5"
               >
                 <Flame className="h-4 w-4" /> Ver Video
               </a>
@@ -465,8 +522,8 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
             ))}
           </div>
 
-          {/* Download / Print - AHORA SIEMPRE VISIBLES */}
-          <div className="mt-6 flex justify-center gap-3">
+          {/* Download / Print - SIEMPRE VISIBLES */}
+          <div className="mt-6 flex justify-center gap-3 flex-wrap">
             <button onClick={handleDownload}
               className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40 hover:-translate-y-0.5"
             >
