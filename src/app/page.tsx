@@ -76,7 +76,7 @@ export default function HomePage() {
               <Link href="/cultos" className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white shadow-lg transition hover:bg-primary-dark">
                 <Tv className="h-5 w-5" /> Nuestros Cultos
               </Link>
-              <Link href="/en-vivo" className="inline-flex items-center gap-2 rounded-xl border-2 border-primary-light px-8 py-3.5 font-semibold text-primary-light transition hover:bg-primary-light hover:text-white">
+              <Link href="/en-vivo" className="inline-flex items-center gap-2 rounded-xl border-2 border-primary-light px-8 py-3.5 font-semibold text-primary-light transition hover:bg-primary-light/10">
                 <Flame className="h-5 w-5" /> En Vivo
               </Link>
             </div>
@@ -124,7 +124,7 @@ export default function HomePage() {
                 >
                   <div className="relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:rotate-x-2">
                     {/* glow hover */}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary-light/20 to-primary/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100 rounded-2xl" />
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary-light/20 to-primary/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
 
                     <div className="relative overflow-hidden">
                       {n.imagenUrl ? (
@@ -407,7 +407,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
           <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-primary-light/5 blur-3xl" />
         </div>
 
-        <button onClick={onClose} className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-lg backdrop-blur-sm transition hover:bg-white hover:text-gray-800 hover:scale-110">
+        <button onClick={onClose} className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-500 shadow-lg backdrop-blur-sm transition hover:bg-white hover:text-gray-700">
           <X className="h-5 w-5" />
         </button>
 
@@ -436,7 +436,7 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
           {noticia.videoUrl && (
             <div className="mt-6 text-center">
               <a href={noticia.videoUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:shadow-blue-500/40"
               >
                 <Flame className="h-4 w-4" /> Ver Video
               </a>
@@ -465,25 +465,19 @@ function NewsModal({ noticia, onClose }: { noticia: Noticia; onClose: () => void
             ))}
           </div>
 
-          {/* Download / Print */}
-          {(noticia.descargable || noticia.imprimible) && (
-            <div className="mt-6 flex justify-center gap-3">
-              {noticia.descargable && (
-                <button onClick={handleDownload}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-xl hover:scale-105"
-                >
-                  <Download className="h-4 w-4" /> Descargar PDF
-                </button>
-              )}
-              {noticia.imprimible && (
-                <button onClick={handlePrint}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gray-600 to-gray-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-gray-500/25 transition hover:shadow-xl hover:scale-105"
-                >
-                  <Printer className="h-4 w-4" /> Imprimir
-                </button>
-              )}
-            </div>
-          )}
+          {/* Download / Print - AHORA SIEMPRE VISIBLES */}
+          <div className="mt-6 flex justify-center gap-3">
+            <button onClick={handleDownload}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40 hover:-translate-y-0.5"
+            >
+              <Download className="h-4 w-4" /> Descargar PDF
+            </button>
+            <button onClick={handlePrint}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-gray-600 to-gray-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-gray-500/25 transition hover:shadow-gray-500/40 hover:-translate-y-0.5"
+            >
+              <Printer className="h-4 w-4" /> Imprimir
+            </button>
+          </div>
 
           {/* Comments */}
           <div className="mt-8">
