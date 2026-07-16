@@ -38,14 +38,14 @@ export function PreStream({ mensaje }: { mensaje?: string }) {
       <div className="glow-ring" style={{ width: 360, height: 360, animationDelay: '2s' }} />
 
       {/* logo 3d */}
-      <div className="scale-[1.8] md:scale-[2.2] mb-6">
+      <div className="scale-[1.8] md:scale-[2.2] mb-12">
         <span className="logo-wrapper" style={{ perspective: '600px' }}>
           <Image src={logoSrc} alt="IESFuego" width={120} height={120} className="logo-spin h-24 w-24 object-contain" style={{ filter: 'drop-shadow(0 0 20px rgba(218,165,32,0.5))' }} />
         </span>
       </div>
 
       {/* message below logo */}
-      <p className="text-xl md:text-2xl font-bold text-white tracking-widest uppercase text-center px-4 drop-shadow-lg">
+      <p className="mt-2 text-xl md:text-2xl font-bold text-white tracking-widest uppercase text-center px-4 drop-shadow-lg">
         Próximamente en vivo
       </p>
       {mensaje && (
