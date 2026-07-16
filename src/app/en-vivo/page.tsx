@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Flame, Video, Wifi, WifiOff } from 'lucide-react'
+import { Flame, Video, Wifi } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { PreStream } from '@/components/pre-stream'
 import { db } from '@/lib/firebase'
 import { doc, onSnapshot } from 'firebase/firestore'
@@ -97,9 +97,7 @@ export default function EnVivoPage() {
             </div>
           </Card>
         ) : (
-          <Card className="mb-8 overflow-hidden">
-            <PreStream mensaje={mensaje} />
-          </Card>
+          <PreStream mensaje={mensaje} />
         )}
 
         {paginaFacebook && (
