@@ -14,7 +14,7 @@ const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
 
 export function PreStream({ mensaje }: { mensaje?: string }) {
   return (
-    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-dark via-dark-light to-dark isolate w-full" style={{ minHeight: 450 }}>
+    <div className="relative flex flex-col items-center justify-start pt-14 md:pt-20 overflow-hidden rounded-xl bg-gradient-to-br from-dark via-dark-light to-dark isolate w-full" style={{ minHeight: 450 }}>
       {/* particles */}
       {PARTICLES.map(p => (
         <div
