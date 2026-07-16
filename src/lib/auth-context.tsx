@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { db } from './firebase'
 import { collection, doc, getDocs, setDoc, getDoc, query, where, Timestamp } from 'firebase/firestore'
 import { hashPassword } from './hash'
+import { auditLog } from './audit'
 import type { User, Permisos, UserRole, PermisosSeccion } from '@/types'
 import { ROLES_PRESET } from '@/types'
 
@@ -17,7 +18,8 @@ interface AuthState {
   seedInitialAdmin: () => Promise<void>
   resetAdminPassword: (pin: string, targetUser?: string) => Promise<boolean>
   findUserByNombre: (nombre: string) => Promise<{ username: string; nombre: string } | null>
-  changePassword: (userId: string, newPassword: string) => Promise<boolean>
+  listarUsuarios: () => Promise<{ username: string; nombre: string }[]>
+  changePassword: (userId: string, oldPassword: string, newPassword: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthState>({
@@ -29,7 +31,8 @@ const AuthContext = createContext<AuthState>({
   seedInitialAdmin: async () => {},
   resetAdminPassword: async () => false,
   findUserByNombre: async () => null,
-  changePassword: async () => false,
+  listarUsuarios: async () => [],
+  changePassword: async (_userId: string, _oldPassword: string, _newPassword: string) => false,
 })
 
 const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 min
@@ -110,19 +113,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const findUserByNombre = useCallback(async (nombre: string): Promise<{ username: string; nombre: string } | null> => {
     try {
       const snap = await getDocs(collection(db, 'usuarios'))
+      console.log('usuarios en DB:', snap.docs.map(d => ({ username: d.data().username, nombre: d.data().nombre, role: d.data().role })))
       const found = snap.docs.find(d => {
         const n = (d.data().nombre || '') as string
         return n.toLowerCase().includes(nombre.toLowerCase())
       })
-      if (!found) return null
+      if (!found) {
+        console.warn('no se encontró coincidencia para:', nombre, 'entre:', snap.docs.map(d => d.data().nombre))
+        return null
+      }
       return { username: found.data().username, nombre: found.data().nombre }
-    } catch { return null }
+    } catch (e) { console.error('findUserByNombre error:', e); return null }
   }, [])
 
-  const changePassword = useCallback(async (userId: string, newPassword: string): Promise<boolean> => {
+  const listarUsuarios = useCallback(async (): Promise<{ username: string; nombre: string }[]> => {
     try {
-      const hash = await hashPassword(newPassword)
-      await setDoc(doc(db, 'usuarios', userId), { passwordHash: hash }, { merge: true })
+      const snap = await getDocs(collection(db, 'usuarios'))
+      return snap.docs.map(d => ({ username: d.data().username, nombre: d.data().nombre }))
+    } catch { return [] }
+  }, [])
+
+  const changePassword = useCallback(async (userId: string, oldPassword: string, newPassword: string): Promise<boolean> => {
+    try {
+      const userSnap = await getDoc(doc(db, 'usuarios', userId))
+      if (!userSnap.exists()) return false
+      const userData = userSnap.data()
+      const oldHash = await hashPassword(oldPassword)
+      if (userData.passwordHash !== oldHash) return false
+
+      await auditLog('Seguridad', 'cambio_contraseña', userData.nombre || userData.username,
+        'Cambio de contraseña manual')
+
+      const newHash = await hashPassword(newPassword)
+      await setDoc(doc(db, 'usuarios', userId), { passwordHash: newHash }, { merge: true })
       return true
     } catch (e) { console.error('changePassword error:', e); return false }
   }, [])
@@ -138,6 +161,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!userDoc) return false
       const hash = await hashPassword('admin123')
       await setDoc(doc(db, 'usuarios', userDoc.id), { passwordHash: hash, activo: true }, { merge: true })
+      auditLog('Seguridad', 'restablecimiento_pin', userDoc.data().nombre || userDoc.data().username,
+        'Contraseña restablecida por PIN')
       console.log('contraseña restablecida para:', userDoc.data().username)
       return true
     } catch (e) { console.error('reset error:', e); return false }
@@ -170,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, puede, seedInitialAdmin, resetAdminPassword, findUserByNombre, changePassword }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, puede, seedInitialAdmin, resetAdminPassword, findUserByNombre, listarUsuarios, changePassword }}>
       {children}
     </AuthContext.Provider>
   )

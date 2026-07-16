@@ -15,11 +15,11 @@ function monthKey(): string {
 async function getLocation(): Promise<{ ciudad: string; pais: string; region: string } | null> {
   const providers = [
     async () => {
-      const r = await fetch('https://ip-api.com/json/?fields=city,country,regionName', { signal: AbortSignal.timeout(4000) })
+      const r = await fetch('https://ipinfo.io/json', { signal: AbortSignal.timeout(4000) })
       if (!r.ok) throw new Error()
       const d = await r.json()
       if (!d.city) throw new Error()
-      return { ciudad: d.city, pais: d.country, region: d.regionName }
+      return { ciudad: d.city, pais: d.country, region: d.region }
     },
     async () => {
       const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) })
@@ -29,11 +29,11 @@ async function getLocation(): Promise<{ ciudad: string; pais: string; region: st
       return { ciudad: d.city, pais: d.country_name, region: d.region }
     },
     async () => {
-      const r = await fetch('https://ipinfo.io/json', { signal: AbortSignal.timeout(4000) })
+      const r = await fetch('https://ip-api.com/json/?fields=city,country,regionName', { signal: AbortSignal.timeout(4000) })
       if (!r.ok) throw new Error()
       const d = await r.json()
       if (!d.city) throw new Error()
-      return { ciudad: d.city, pais: d.country, region: d.region }
+      return { ciudad: d.city, pais: d.country, region: d.regionName }
     },
   ]
   for (const fn of providers) {

@@ -12,7 +12,7 @@ type Paso = 'login' | 'buscar' | 'recuperar' | 'listo'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const { user, login, seedInitialAdmin, resetAdminPassword, findUserByNombre, changePassword } = useAuth()
+  const { user, login, seedInitialAdmin, resetAdminPassword, findUserByNombre, listarUsuarios, changePassword } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -24,6 +24,7 @@ export default function AdminLoginPage() {
   const [pin, setPin] = useState('')
   const [resetMsg, setResetMsg] = useState('')
   const [cambiandoPass, setCambiandoPass] = useState(false)
+  const [actualPass, setActualPass] = useState('')
   const [nuevaPass, setNuevaPass] = useState('')
   const [nuevaPass2, setNuevaPass2] = useState('')
   const [passMsg, setPassMsg] = useState('')
@@ -74,13 +75,13 @@ export default function AdminLoginPage() {
     if (nuevaPass.length < 6) { setPassMsg('La contraseña debe tener al menos 6 caracteres.'); return }
     if (nuevaPass !== nuevaPass2) { setPassMsg('Las contraseñas no coinciden.'); return }
     if (!user) return
-    const ok = await changePassword(user.id, nuevaPass)
+    const ok = await changePassword(user.id, actualPass, nuevaPass)
     if (ok) {
       setPassMsg('Contraseña cambiada exitosamente.')
-      setNuevaPass(''); setNuevaPass2('')
+      setActualPass(''); setNuevaPass(''); setNuevaPass2('')
       setCambiandoPass(false)
     } else {
-      setPassMsg('Error al cambiar la contraseña.')
+      setPassMsg('Error al cambiar la contraseña. Verifica que la contraseña actual sea correcta.')
     }
   }
 
@@ -206,6 +207,9 @@ export default function AdminLoginPage() {
         {user && cambiandoPass && (
           <form onSubmit={handleChangePass} className="mt-4 space-y-3 rounded-2xl bg-white/10 p-6 backdrop-blur-sm">
             <p className="text-xs font-semibold text-gray-400">Cambiar contraseña</p>
+            <input type="password" value={actualPass} onChange={e => setActualPass(e.target.value)}
+              placeholder="Contraseña actual"
+              className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none" required />
             <input type="password" value={nuevaPass} onChange={e => setNuevaPass(e.target.value)}
               placeholder="Nueva contraseña (mín. 6 caracteres)"
               className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none" required />

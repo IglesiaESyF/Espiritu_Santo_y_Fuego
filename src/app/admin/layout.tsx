@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   CalendarDays, Tv, DollarSign, LogOut,
-  Church, Menu, X, Wifi, Shield, Users, BarChart3,
+  Church, Menu, X, Wifi, Shield, Users, BarChart3, ShieldAlert,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { auditLog } from '@/lib/audit'
@@ -134,6 +134,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               }`}
             >
               <Shield className="h-5 w-5" /> Usuarios
+            </Link>
+          )}
+
+          {puede('usuarios', 'ver') && (
+            <Link
+              href="/admin/seguridad"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                pathname.startsWith('/admin/seguridad')
+                  ? 'bg-primary text-white'
+                  : 'text-gray-300 hover:bg-white/10'
+              }`}
+            >
+              <ShieldAlert className="h-5 w-5" /> Seguridad
             </Link>
           )}
 
