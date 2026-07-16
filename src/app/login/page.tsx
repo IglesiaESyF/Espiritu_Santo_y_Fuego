@@ -10,12 +10,15 @@ import { useAuth } from '@/lib/auth-context'
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const { user, login, seedInitialAdmin } = useAuth()
+  const { user, login, seedInitialAdmin, resetAdminPassword } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [recuperar, setRecuperar] = useState(false)
+  const [pin, setPin] = useState('')
+  const [resetMsg, setResetMsg] = useState('')
 
   useEffect(() => {
     seedInitialAdmin()
@@ -33,6 +36,19 @@ export default function AdminLoginPage() {
     if (!ok) {
       setError('Usuario o contraseña incorrectos')
       setLoading(false)
+    }
+  }
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setResetMsg('')
+    const ok = await resetAdminPassword(pin)
+    if (ok) {
+      setResetMsg('Contraseña restablecida a admin123. Ya puedes iniciar sesión.')
+      setRecuperar(false)
+      setPin('')
+    } else {
+      setResetMsg('PIN incorrecto o no se encontró el administrador.')
     }
   }
 
@@ -86,9 +102,29 @@ export default function AdminLoginPage() {
             <p className="text-center text-sm text-red-400">{error}</p>
           )}
 
-          <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>
-            {loading ? 'Ingresando…' : 'Ingresar'}
-          </Button>
+          {resetMsg && (
+            <p className="text-center text-sm text-green-400">{resetMsg}</p>
+          )}
+
+          {recuperar ? (
+            <form onSubmit={handleReset} className="space-y-2">
+              <p className="text-xs text-gray-400">Ingresa el PIN de recuperación para restablecer la contraseña del administrador a <strong>admin123</strong>:</p>
+              <input type="password" value={pin} onChange={e => setPin(e.target.value)} placeholder="PIN de recuperación" className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none" required />
+              <div className="flex gap-2">
+                <Button type="submit" variant="primary" size="md" className="flex-1">Restablecer</Button>
+                <button type="button" onClick={() => { setRecuperar(false); setResetMsg('') }} className="rounded-xl bg-white/10 px-4 py-2 text-sm text-gray-300 hover:bg-white/20 transition">Cancelar</button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>
+                {loading ? 'Ingresando…' : 'Ingresar'}
+              </Button>
+              <button type="button" onClick={() => setRecuperar(true)} className="block w-full text-center text-xs text-gray-500 hover:text-primary-light transition">
+                ¿Olvidaste tu contraseña?
+              </button>
+            </>
+          )}
 
           <Link href="/" className="block text-center text-xs text-gray-500 hover:text-primary-light">
             ← Volver al sitio público

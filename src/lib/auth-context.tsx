@@ -15,6 +15,7 @@ interface AuthState {
   logout: () => void
   puede: (section: keyof Permisos, action: string) => boolean
   seedInitialAdmin: () => Promise<void>
+  resetAdminPassword: (pin: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthState>({
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthState>({
   logout: () => {},
   puede: () => false,
   seedInitialAdmin: async () => {},
+  resetAdminPassword: async () => false,
 })
 
 const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 min
@@ -101,6 +103,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (perms as Record<string, boolean>)[action] ?? false
   }, [user])
 
+  const resetAdminPassword = useCallback(async (pin: string): Promise<boolean> => {
+    if (pin !== process.env.NEXT_PUBLIC_ADMIN_PIN) return false
+    try {
+      const snap = await getDocs(collection(db, 'usuarios'))
+      const adminDoc = snap.docs.find(d => d.data().username === 'admin' || d.data().role === 'it-admin')
+      if (!adminDoc) return false
+      const hash = await hashPassword('admin123')
+      await setDoc(doc(db, 'usuarios', adminDoc.id), { passwordHash: hash, activo: true }, { merge: true })
+      return true
+    } catch (e) { console.error('reset error:', e); return false }
+  }, [])
+
   const seedInitialAdmin = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, 'usuarios'))
@@ -128,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, puede, seedInitialAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, puede, seedInitialAdmin, resetAdminPassword }}>
       {children}
     </AuthContext.Provider>
   )
