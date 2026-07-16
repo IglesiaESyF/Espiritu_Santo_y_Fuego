@@ -15,7 +15,7 @@ interface AuthState {
   logout: () => void
   puede: (section: keyof Permisos, action: string) => boolean
   seedInitialAdmin: () => Promise<void>
-  resetAdminPassword: (pin: string) => Promise<boolean>
+  resetAdminPassword: (pin: string, targetUser?: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthState>({
@@ -103,14 +103,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (perms as Record<string, boolean>)[action] ?? false
   }, [user])
 
-  const resetAdminPassword = useCallback(async (pin: string): Promise<boolean> => {
+  const resetAdminPassword = useCallback(async (pin: string, targetUser?: string): Promise<boolean> => {
     if (pin !== process.env.NEXT_PUBLIC_ADMIN_PIN) return false
     try {
       const snap = await getDocs(collection(db, 'usuarios'))
-      const adminDoc = snap.docs.find(d => d.data().username === 'admin' || d.data().role === 'it-admin')
-      if (!adminDoc) return false
+      console.log('usuarios en DB:', snap.docs.map(d => ({ id: d.id, username: d.data().username, role: d.data().role, activo: d.data().activo })))
+      let userDoc = snap.docs.find(d => d.data().username === targetUser)
+      if (!userDoc) userDoc = snap.docs.find(d => d.data().username === 'admin' || d.data().role === 'it-admin')
+      if (!userDoc) userDoc = snap.docs[0]
+      if (!userDoc) return false
       const hash = await hashPassword('admin123')
-      await setDoc(doc(db, 'usuarios', adminDoc.id), { passwordHash: hash, activo: true }, { merge: true })
+      await setDoc(doc(db, 'usuarios', userDoc.id), { passwordHash: hash, activo: true }, { merge: true })
+      console.log('contraseña restablecida para:', userDoc.data().username)
       return true
     } catch (e) { console.error('reset error:', e); return false }
   }, [])

@@ -39,16 +39,17 @@ export default function AdminLoginPage() {
     }
   }
 
+  const [resetUser, setResetUser] = useState('')
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault()
     setResetMsg('')
-    const ok = await resetAdminPassword(pin)
+    const ok = await resetAdminPassword(pin, resetUser || undefined)
     if (ok) {
       setResetMsg('Contraseña restablecida a admin123. Ya puedes iniciar sesión.')
       setRecuperar(false)
       setPin('')
     } else {
-      setResetMsg('PIN incorrecto o no se encontró el administrador.')
+      setResetMsg('PIN incorrecto o no se encontró el usuario. Abre F12 > Console para ver los usuarios disponibles.')
     }
   }
 
@@ -108,8 +109,9 @@ export default function AdminLoginPage() {
 
           {recuperar ? (
             <form onSubmit={handleReset} className="space-y-2">
-              <p className="text-xs text-gray-400">Ingresa el PIN de recuperación para restablecer la contraseña del administrador a <strong>admin123</strong>:</p>
-              <input type="password" value={pin} onChange={e => setPin(e.target.value)} placeholder="PIN de recuperación" className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none" required />
+              <p className="text-xs text-gray-400">Ingresa tus datos para restablecer la contraseña a <strong>admin123</strong>:</p>
+              <input type="text" value={resetUser} onChange={e => setResetUser(e.target.value)} placeholder="Tu usuario (ej: jbaltodano_IT)" className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none" />
+              <input type="password" value={pin} onChange={e => setPin(e.target.value)} placeholder="PIN de recuperación (1234)" className="w-full rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-gray-500 transition focus:border-primary/40 focus:ring-2 focus:ring-primary/10 focus:outline-none" required />
               <div className="flex gap-2">
                 <Button type="submit" variant="primary" size="md" className="flex-1">Restablecer</Button>
                 <button type="button" onClick={() => { setRecuperar(false); setResetMsg('') }} className="rounded-xl bg-white/10 px-4 py-2 text-sm text-gray-300 hover:bg-white/20 transition">Cancelar</button>
