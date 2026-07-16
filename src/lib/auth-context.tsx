@@ -70,17 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const q = query(collection(db, 'usuarios'), where('username', '==', username), where('activo', '==', true))
       const snap = await getDocs(q)
-      if (snap.empty) return false
+      if (snap.empty) { console.warn('login: usuario no encontrado o inactivo'); return false }
       const docData = snap.docs[0]
       const data = docData.data() as Omit<User, 'id'>
       const hash = await hashPassword(password)
-      if (data.passwordHash !== hash) return false
+      if (data.passwordHash !== hash) { console.warn('login: hash no coincide'); return false }
       const foundUser: User = { id: docData.id, ...data }
       localStorage.setItem('iesfuego-auth', JSON.stringify(foundUser))
       localStorage.setItem('iesfuego-login-time', String(Date.now()))
       setUser(foundUser)
       return true
-    } catch {
+    } catch (e) {
+      console.error('login error:', e)
       return false
     }
   }, [])
@@ -103,7 +104,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const seedInitialAdmin = useCallback(async () => {
     try {
       const snap = await getDocs(collection(db, 'usuarios'))
-      if (!snap.empty) return
+      if (!snap.empty) {
+        // asegurar que admin existe y está activo
+        const adminDoc = snap.docs.find(d => d.data().username === 'admin')
+        if (adminDoc) {
+          if (adminDoc.data().activo === false)
+            await setDoc(doc(db, 'usuarios', adminDoc.id), { activo: true }, { merge: true })
+          return
+        }
+      }
       const hash = await hashPassword('admin123')
       const permisos = ROLES_PRESET['it-admin']
       await setDoc(doc(collection(db, 'usuarios')), {
@@ -115,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activo: true,
         creadoEn: Date.now(),
       })
-    } catch { /* ignore — Firestore may not exist yet */ }
+    } catch (e) { console.error('seedInitialAdmin error:', e) }
   }, [])
 
   return (
