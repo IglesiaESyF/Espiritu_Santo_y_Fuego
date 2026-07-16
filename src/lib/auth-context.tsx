@@ -16,6 +16,8 @@ interface AuthState {
   puede: (section: keyof Permisos, action: string) => boolean
   seedInitialAdmin: () => Promise<void>
   resetAdminPassword: (pin: string, targetUser?: string) => Promise<boolean>
+  findUserByNombre: (nombre: string) => Promise<{ username: string; nombre: string } | null>
+  changePassword: (userId: string, newPassword: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthState>({
@@ -26,6 +28,8 @@ const AuthContext = createContext<AuthState>({
   puede: () => false,
   seedInitialAdmin: async () => {},
   resetAdminPassword: async () => false,
+  findUserByNombre: async () => null,
+  changePassword: async () => false,
 })
 
 const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 min
@@ -103,6 +107,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (perms as Record<string, boolean>)[action] ?? false
   }, [user])
 
+  const findUserByNombre = useCallback(async (nombre: string): Promise<{ username: string; nombre: string } | null> => {
+    try {
+      const snap = await getDocs(collection(db, 'usuarios'))
+      const found = snap.docs.find(d => {
+        const n = (d.data().nombre || '') as string
+        return n.toLowerCase().includes(nombre.toLowerCase())
+      })
+      if (!found) return null
+      return { username: found.data().username, nombre: found.data().nombre }
+    } catch { return null }
+  }, [])
+
+  const changePassword = useCallback(async (userId: string, newPassword: string): Promise<boolean> => {
+    try {
+      const hash = await hashPassword(newPassword)
+      await setDoc(doc(db, 'usuarios', userId), { passwordHash: hash }, { merge: true })
+      return true
+    } catch (e) { console.error('changePassword error:', e); return false }
+  }, [])
+
   const resetAdminPassword = useCallback(async (pin: string, targetUser?: string): Promise<boolean> => {
     if (pin !== process.env.NEXT_PUBLIC_ADMIN_PIN) return false
     try {
@@ -146,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, puede, seedInitialAdmin, resetAdminPassword }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, puede, seedInitialAdmin, resetAdminPassword, findUserByNombre, changePassword }}>
       {children}
     </AuthContext.Provider>
   )
