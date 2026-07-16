@@ -5,6 +5,7 @@ import { Flame, Video, Wifi, WifiOff } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Card, CardContent } from '@/components/ui/card'
+import { PreStream } from '@/components/pre-stream'
 import { db } from '@/lib/firebase'
 import { doc, onSnapshot } from 'firebase/firestore'
 
@@ -96,20 +97,8 @@ export default function EnVivoPage() {
             </div>
           </Card>
         ) : (
-          <Card className="mb-8">
-            <CardContent className="p-6 text-center">
-              <div className="mx-auto mb-6 flex h-48 w-full max-w-xl items-center justify-center rounded-xl bg-dark/5">
-                <div className="text-center">
-                  <WifiOff className="mx-auto mb-3 h-16 w-16 text-primary/60" />
-                  <p className="text-sm text-gray-500">
-                    No hay transmisión en vivo en este momento
-                  </p>
-                  {mensaje && (
-                    <p className="mt-2 text-xs text-gray-400">{mensaje}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
+          <Card className="mb-8 overflow-hidden">
+            <PreStream mensaje={mensaje} />
           </Card>
         )}
 
