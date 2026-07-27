@@ -14,19 +14,42 @@ function getLogoCached(): string {
   return localStorage.getItem('logoB64') || ''
 }
 
+function getLogoPaths(): string[] {
+  const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  return [
+    origin + base + '/logo.png',
+    origin + '/logo.png',
+    base + '/logo.png',
+    '/logo.png',
+  ]
+}
+
+async function fetchLogoToBase64(): Promise<string> {
+  for (const url of getLogoPaths()) {
+    try {
+      const r = await fetch(url)
+      if (!r.ok) continue
+      const blob = await r.blob()
+      const result = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+      if (result && result.startsWith('data:image')) {
+        localStorage.setItem('logoB64', result)
+        return result
+      }
+    } catch { continue }
+  }
+  return ''
+}
+
 function useLogoPreload() {
   useEffect(() => {
     if (getLogoCached()) return
-    const paths = ['/logo.png']
-    if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH)
-      paths.unshift(process.env.NEXT_PUBLIC_BASE_PATH + '/logo.png')
-    for (const p of paths) {
-      fetch(p).then(r => { if (!r.ok) throw Error(); return r.blob() }).then(b => {
-        const r = new FileReader()
-        r.onload = () => localStorage.setItem('logoB64', r.result as string)
-        r.readAsDataURL(b)
-      }).catch(() => {})
-    }
+    fetchLogoToBase64()
   }, [])
 }
 
@@ -48,8 +71,16 @@ export default function AdminDiplomasPage() {
   const [secretario, setSecretario] = useState('Secretario(a) General')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
+  const [logoReady, setLogoReady] = useState(false)
 
   useLogoPreload()
+
+  useEffect(() => {
+    const check = () => setLogoReady(!!getLogoCached())
+    check()
+    const t = setInterval(check, 500)
+    return () => clearInterval(t)
+  }, [])
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
@@ -78,27 +109,11 @@ export default function AdminDiplomasPage() {
     return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`
   }
 
-  async function loadLogoBase64(): Promise<string> {
-    const cached = getLogoCached()
-    if (cached) return cached
-    try {
-      const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
-      const r = await fetch(base + '/logo.png')
-      if (!r.ok) return ''
-      const blob = await r.blob()
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.readAsDataURL(blob)
-      })
-    } catch { return '' }
-  }
-
   async function handleGenerate() {
     if (!miembro) return
     setGenerando(true)
 
-    const logoB64 = await loadLogoBase64()
+    const logoB64 = getLogoCached() || await fetchLogoToBase64()
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
 
@@ -305,12 +320,16 @@ export default function AdminDiplomasPage() {
               variant="primary"
               size="lg"
               className="w-full"
-              disabled={!miembro || generando}
+              disabled={!miembro || generando || !logoReady}
               onClick={handleGenerate}
             >
               <Printer className="mr-2 h-4 w-4" />
-              {generando ? 'Generando...' : 'Imprimir Certificado'}
+              {generando ? 'Generando...' : logoReady ? 'Imprimir Certificado' : 'Cargando logo...'}
             </Button>
+
+            {!logoReady && (
+              <p className="text-xs text-amber-600 text-center">Esperando carga del logo de la iglesia...</p>
+            )}
 
             {miembro && (
               <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
