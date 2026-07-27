@@ -179,8 +179,10 @@ export default function AdminDiplomasPage() {
     <div class="name-underline"></div>
 
     <div class="cert-text" style="margin-top:4mm;">
-      ha sido bautizado(a) conforme al mandamiento del Señor<br>
-      en el libro de <strong>Mateo 28:19</strong>
+      ha sido bautizado(a) conforme al mandamiento del Señor:<br>
+      <em style="font-size:9.5pt; color:#777;">"Por tanto, id y haced discípulos a todas las naciones,<br>
+      bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."</em><br>
+      <strong style="font-size:9pt; color:#999;">— Mateo 28:19</strong>
     </div>
 
     <div class="date-text">Fue bautizado(a) el día</div>
