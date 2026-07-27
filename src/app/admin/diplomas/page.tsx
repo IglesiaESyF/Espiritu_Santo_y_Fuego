@@ -30,6 +30,14 @@ function useLogoPreload() {
   }, [])
 }
 
+function getLogoSrc(): string {
+  if (typeof window === 'undefined') return '/logo.png'
+  const b64 = localStorage.getItem('logoB64')
+  if (b64) return b64
+  const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+  return base + '/logo.png'
+}
+
 export default function AdminDiplomasPage() {
   const router = useRouter()
   const { user, puede } = useAuth()
@@ -74,7 +82,7 @@ export default function AdminDiplomasPage() {
     if (!miembro) return
     setGenerando(true)
 
-    const logoB64 = getLogoCached()
+    const logoSrc = getLogoSrc()
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
 
@@ -99,36 +107,42 @@ export default function AdminDiplomasPage() {
   .corner.bl { bottom: 7mm; left: 7mm; }
   .corner.br { bottom: 7mm; right: 7mm; }
 
-  .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.07; z-index: 0; }
-  .watermark img { width: 120mm; height: 120mm; object-fit: contain; }
+  .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0; pointer-events: none; }
+  .watermark img { width: 130mm; height: 130mm; object-fit: contain; opacity: 0.07; }
 
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 22mm 30mm 18mm; text-align: center; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 20mm 28mm 16mm; text-align: center; }
 
-  .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28pt; color: #b8860b; letter-spacing: 6px; text-transform: uppercase; }
-  .subtitle { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 14pt; color: #333; letter-spacing: 3px; text-transform: uppercase; margin-top: 2mm; }
+  .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 26pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
 
-  .gold-line { width: 80mm; height: 0.5px; background: #b8860b; margin: 4mm auto; position: relative; }
-  .gold-line::after { content: '✦'; position: absolute; top: -5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
+  .gold-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 3mm auto; position: relative; }
+  .gold-line::after { content: '✦'; position: absolute; top: -4.5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
 
-  .church-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-style: italic; font-size: 13pt; color: #b8860b; margin-top: 2mm; }
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 16pt; color: #b8860b; margin-top: 1mm; }
 
-  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #666; margin-top: 6mm; line-height: 1.6; }
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 6mm; line-height: 1.7; }
 
-  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 38pt; color: #b8860b; margin-top: 4mm; text-shadow: 1px 1px 2px rgba(184,134,11,0.15); line-height: 1.1; }
+  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 36pt; color: #b8860b; margin-top: 3mm; line-height: 1.1; }
   .name-underline { width: 100mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto 0; }
 
-  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #666; margin-top: 6mm; }
+  .date-text { font-family: 'Cormorant+Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #333; margin-top: 1mm; }
 
-  .verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9pt; color: #999; margin-top: 8mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9pt; color: #999; margin-top: 6mm; max-width: 200mm; }
 
-  .signatures { display: flex; justify-content: center; gap: 60mm; margin-top: auto; padding-bottom: 4mm; }
+  .bottom-section { margin-top: auto; width: 100%; }
+
+  .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 4mm; }
   .sig-block { text-align: center; }
-  .sig-line { width: 55mm; border-top: 0.5px solid #333; margin-bottom: 2mm; }
+  .sig-line { width: 50mm; border-top: 0.5px solid #333; margin-bottom: 2mm; }
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
 
-  .footer-line { width: 80mm; height: 0.5px; background: #b8860b; margin: 0 auto 2mm; position: relative; }
+  .seal { position: absolute; bottom: 28mm; right: 22mm; width: 30mm; height: 30mm; border: 1.5px solid #b8860b; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.65; z-index: 2; }
+  .seal-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 5.5pt; color: #b8860b; text-transform: uppercase; letter-spacing: 1px; }
+  .seal-center { font-family: 'UnifrakturMaguntia', cursive; font-size: 10pt; color: #b8860b; margin: 1mm 0; }
+  .seal-img { width: 10mm; height: 10mm; object-fit: contain; }
+
+  .footer-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 0 auto 2mm; position: relative; }
   .footer-line::after { content: '✦'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
 
@@ -141,42 +155,55 @@ export default function AdminDiplomasPage() {
   <div class="border-outer"></div>
   <div class="border-inner"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  ${logoB64 ? `<div class="watermark"><img src="${logoB64}"></div>` : ''}
+
+  <div class="watermark"><img src="${logoSrc}"></div>
+
+  <div class="seal">
+    <div class="seal-text">Iglesia Cristiana</div>
+    <div class="seal-text">Espíritu Santo y Fuego</div>
+    <img class="seal-img" src="${logoSrc}">
+    <div class="seal-text">Aprobado</div>
+  </div>
 
   <div class="content">
     <div class="title">Certificado</div>
-    <div class="subtitle">de Bautismo Cristiano</div>
+    <div class="title" style="font-size:13pt; letter-spacing:3px; margin-top:1mm;">de Bautismo</div>
     <div class="gold-line"></div>
-    <div class="church-name">Iglesia Espíritu Santo y Fuego</div>
+    <div class="church-name">Iglesia Cristiana Espíritu Santo y Fuego</div>
 
     <div class="cert-text">
-      Certificamos que la siguiente persona<br>
-      ha sido bautizada conforme al mandamiento del Señor:
+      Certificamos que el(la) hermano(a):
     </div>
 
     <div class="name">${nombreCompleto}</div>
     <div class="name-underline"></div>
 
-    <div class="date-text">Fue bautizado/a el día</div>
+    <div class="cert-text" style="margin-top:4mm;">
+      ha sido bautizado(a) conforme al mandamiento del Señor<br>
+      en el libro de <strong>Mateo 28:19</strong>
+    </div>
+
+    <div class="date-text">Fue bautizado(a) el día</div>
     <div class="date-value">${fechaLarga}</div>
 
     <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." — Gálatas 3:27</div>
 
-    <div class="signatures">
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">${pastor || 'Pastor'}</div>
-        <div class="sig-role">Pastor(a) Principal</div>
+    <div class="bottom-section">
+      <div class="signatures">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-name">${pastor || 'Pastor'}</div>
+          <div class="sig-role">Pastor(a) Principal</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-name">${secretario || 'Secretario(a)'}</div>
+          <div class="sig-role">Secretario(a) General</div>
+        </div>
       </div>
-      <div class="sig-block">
-        <div class="sig-line"></div>
-        <div class="sig-name">${secretario || 'Secretario(a)'}</div>
-        <div class="sig-role">Secretario(a) General</div>
-      </div>
+      <div class="footer-line"></div>
+      <div class="footer-text">Iglesia Cristiana Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
     </div>
-
-    <div class="footer-line"></div>
-    <div class="footer-text">Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
   </div>
 </body>
 </html>`
@@ -186,7 +213,7 @@ export default function AdminDiplomasPage() {
       win.document.write(html)
       win.document.close()
       win.focus()
-      setTimeout(() => win.print(), 800)
+      setTimeout(() => win.print(), 1000)
     }
     setGenerando(false)
   }
