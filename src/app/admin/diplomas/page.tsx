@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, Printer, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { db } from '@/lib/firebase'
@@ -17,7 +17,7 @@ function getLogoUrl(): string {
 
 export default function AdminDiplomasPage() {
   const router = useRouter()
-  const { user, puede } = useAuth()
+  const { user } = useAuth()
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [miembroId, setMiembroId] = useState('')
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
@@ -25,6 +25,7 @@ export default function AdminDiplomasPage() {
   const [secretario, setSecretario] = useState('Secretario(a) General')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
+  const diplomaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
@@ -53,15 +54,8 @@ export default function AdminDiplomasPage() {
     return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`
   }
 
-  async function handleGenerate() {
-    if (!miembro) return
-    setGenerando(true)
-
-    const logoUrl = getLogoUrl()
-    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
-    const fechaLarga = fechaFormateada(fecha)
-
-    const html = `<!DOCTYPE html>
+  function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string): string {
+    return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -70,7 +64,9 @@ export default function AdminDiplomasPage() {
 <style>
   @page { size: landscape letter; margin: 0; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; position: relative; overflow: hidden; }
+  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+
+  .page { position: relative; width: 279mm; height: 216mm; overflow: hidden; }
 
   .border-outer { position: absolute; inset: 10mm; border: 2.5px solid #b8860b; border-radius: 4px; }
   .border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
@@ -82,8 +78,8 @@ export default function AdminDiplomasPage() {
   .corner.bl { bottom: 7mm; left: 7mm; }
   .corner.br { bottom: 7mm; right: 7mm; }
 
-  .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 0; pointer-events: none; }
-  .watermark img { width: 130mm; height: 130mm; object-fit: contain; opacity: 0.07; }
+  .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
+  .watermark img { width: 100mm; height: 100mm; object-fit: contain; opacity: 0.07; }
 
   .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 20mm 28mm 16mm; text-align: center; }
 
@@ -112,11 +108,6 @@ export default function AdminDiplomasPage() {
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
 
-  .seal { position: absolute; bottom: 30mm; left: 50%; transform: translateX(-50%); width: 28mm; height: 28mm; border: 1.5px solid #b8860b; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.55; z-index: 2; }
-  .seal-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 5.5pt; color: #b8860b; text-transform: uppercase; letter-spacing: 1px; }
-  .seal-center { font-family: 'UnifrakturMaguntia', cursive; font-size: 10pt; color: #b8860b; margin: 1mm 0; }
-  .seal-img { width: 10mm; height: 10mm; object-fit: contain; }
-
   .footer-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 0 auto 2mm; position: relative; }
   .footer-line::after { content: '✦'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
@@ -127,63 +118,69 @@ export default function AdminDiplomasPage() {
 </style>
 </head>
 <body>
-  <div class="border-outer"></div>
-  <div class="border-inner"></div>
-  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+  <div class="page">
+    <div class="border-outer"></div>
+    <div class="border-inner"></div>
+    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
 
-  <div class="watermark"><img src="${logoUrl}"></div>
+    <div class="watermark"><img src="${logoUrl}"></div>
 
-  <div class="seal">
-    <div class="seal-text">Iglesia Cristiana</div>
-    <div class="seal-text">Espíritu Santo y Fuego</div>
-    <img class="seal-img" src="${logoUrl}">
-    <div class="seal-text">Aprobado</div>
-  </div>
+    <div class="content">
+      <div class="title">Certificado</div>
+      <div class="title" style="font-size:13pt; letter-spacing:3px; margin-top:1mm;">de Bautismo</div>
+      <div class="gold-line"></div>
+      <div class="church-name">Iglesia Cristiana Espíritu Santo y Fuego</div>
 
-  <div class="content">
-    <div class="title">Certificado</div>
-    <div class="title" style="font-size:13pt; letter-spacing:3px; margin-top:1mm;">de Bautismo</div>
-    <div class="gold-line"></div>
-    <div class="church-name">Iglesia Cristiana Espíritu Santo y Fuego</div>
-
-    <div class="cert-text">
-      Certificamos que el(la) hermano(a):
-    </div>
-
-    <div class="name">${nombreCompleto}</div>
-    <div class="name-underline"></div>
-
-    <div class="cert-text" style="margin-top:4mm;">
-      ha sido bautizado(a) conforme al mandamiento del Señor:<br>
-      <em style="font-size:9.5pt; color:#777;">"Por tanto, id y haced discípulos a todas las naciones,<br>
-      bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."</em><br>
-      <strong style="font-size:9pt; color:#999;">— Mateo 28:19</strong>
-    </div>
-
-    <div class="date-text">Fue bautizado(a) el día</div>
-    <div class="date-value">${fechaLarga}</div>
-
-    <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." — Gálatas 3:27</div>
-
-    <div class="bottom-section">
-      <div class="signatures">
-        <div class="sig-block">
-          <div class="sig-line"></div>
-          <div class="sig-name">${pastor || 'Pastor'}</div>
-          <div class="sig-role">Pastor(a) Principal</div>
-        </div>
-        <div class="sig-block">
-          <div class="sig-line"></div>
-          <div class="sig-name">${secretario || 'Secretario(a)'}</div>
-          <div class="sig-role">Secretario(a) General</div>
-        </div>
+      <div class="cert-text">
+        Certificamos que el(la) hermano(a):
       </div>
-      <div class="footer-line"></div>
-      <div class="footer-text">Iglesia Cristiana Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
+
+      <div class="name">${nombreCompleto}</div>
+      <div class="name-underline"></div>
+
+      <div class="cert-text" style="margin-top:4mm;">
+        ha sido bautizado(a) conforme al mandamiento del Señor:<br>
+        <em style="font-size:9.5pt; color:#777;">"Por tanto, id y haced discípulos a todas las naciones,<br>
+        bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."</em><br>
+        <strong style="font-size:9pt; color:#999;">— Mateo 28:19</strong>
+      </div>
+
+      <div class="date-text">Fue bautizado(a) el día</div>
+      <div class="date-value">${fechaLarga}</div>
+
+      <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." — Gálatas 3:27</div>
+
+      <div class="bottom-section">
+        <div class="signatures">
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${pastor || 'Pastor'}</div>
+            <div class="sig-role">Pastor(a) Principal</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${secretario || 'Secretario(a)'}</div>
+            <div class="sig-role">Secretario(a) General</div>
+          </div>
+        </div>
+        <div class="footer-line"></div>
+        <div class="footer-text">Iglesia Cristiana Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
+      </div>
     </div>
   </div>
 </body>
 </html>`
+  }
+
+  async function handlePrint() {
+    if (!miembro) return
+    setGenerando(true)
+
+    const logoUrl = getLogoUrl()
+    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+    const fechaLarga = fechaFormateada(fecha)
+
+    const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl)
 
     const win = window.open('', '_blank')
     if (win) {
@@ -191,6 +188,48 @@ export default function AdminDiplomasPage() {
       win.document.close()
       win.focus()
       setTimeout(() => win.print(), 1500)
+    }
+    setGenerando(false)
+  }
+
+  async function handleDownloadPDF() {
+    if (!miembro) return
+    setGenerando(true)
+
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
+      const logoUrl = getLogoUrl()
+      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+      const fechaLarga = fechaFormateada(fecha)
+
+      const win = window.open('', '_blank')
+      if (!win) { setGenerando(false); return }
+
+      const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl)
+      win.document.write(html)
+      win.document.close()
+
+      await new Promise(r => setTimeout(r, 3000))
+
+      const canvas = await html2canvas(win.document.body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        width: 1056,
+        height: 816,
+      })
+      win.close()
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95)
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' })
+      const pdfW = pdf.internal.pageSize.getWidth()
+      const pdfH = pdf.internal.pageSize.getHeight()
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
+      pdf.save(`diploma-${nombreCompleto.replace(/\s+/g, '_')}.pdf`)
+    } catch (e) {
+      console.error('Error generando PDF:', e)
     }
     setGenerando(false)
   }
@@ -260,16 +299,29 @@ export default function AdminDiplomasPage() {
               />
             </div>
 
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              disabled={!miembro || generando}
-              onClick={handleGenerate}
-            >
-              <Printer className="mr-2 h-4 w-4" />
-              {generando ? 'Generando...' : 'Imprimir Certificado'}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="primary"
+                size="lg"
+                className="flex-1"
+                disabled={!miembro || generando}
+                onClick={handlePrint}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                {generando ? 'Generando...' : 'Imprimir'}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex-1"
+                disabled={!miembro || generando}
+                onClick={handleDownloadPDF}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {generando ? 'Generando...' : 'Descargar PDF'}
+              </Button>
+            </div>
 
             {miembro && (
               <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
