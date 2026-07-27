@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   CalendarDays, Tv, DollarSign, LogOut,
-  Church, Menu, X, Wifi, Shield, Users, BarChart3, ShieldAlert,
+  Church, Menu, X, Wifi, Shield, Users, BarChart3, ShieldAlert, Award,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { auditLog } from '@/lib/audit'
@@ -148,6 +148,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               }`}
             >
               <ShieldAlert className="h-5 w-5" /> Seguridad
+            </Link>
+          )}
+
+          {(user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))) && (
+            <Link
+              href="/admin/diplomas"
+              onClick={() => setSidebarOpen(false)}
+              className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                pathname.startsWith('/admin/diplomas')
+                  ? 'bg-primary text-white'
+                  : 'text-gray-300 hover:bg-white/10'
+              }`}
+            >
+              <Award className="h-5 w-5" /> Diplomas
             </Link>
           )}
 
