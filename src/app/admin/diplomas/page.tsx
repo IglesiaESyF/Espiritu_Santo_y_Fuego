@@ -15,6 +15,126 @@ function getLogoUrl(): string {
   return window.location.origin + base + '/logo.png'
 }
 
+function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  @page { size: landscape letter; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+
+  .page { position: relative; width: 279mm; height: 216mm; overflow: hidden; }
+
+  .border-outer { position: absolute; inset: 10mm; border: 2.5px solid #b8860b; border-radius: 4px; }
+  .border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
+
+  .corner { position: absolute; width: 8mm; height: 8mm; border: 2px solid #b8860b; border-radius: 50%; }
+  .corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: #b8860b; }
+  .corner.tl { top: 7mm; left: 7mm; }
+  .corner.tr { top: 7mm; right: 7mm; }
+  .corner.bl { bottom: 7mm; left: 7mm; }
+  .corner.br { bottom: 7mm; right: 7mm; }
+
+  .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
+  .watermark img { width: 100mm; height: 100mm; object-fit: contain; opacity: 0.07; }
+
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 18mm 28mm 14mm; text-align: center; }
+
+  .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 26pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
+
+  .gold-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto; position: relative; }
+  .gold-line::after { content: '✦'; position: absolute; top: -4.5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
+
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 16pt; color: #b8860b; margin-top: 1mm; }
+  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 9pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
+
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 5mm; line-height: 1.7; }
+
+  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 36pt; color: #b8860b; margin-top: 2mm; line-height: 1.1; }
+  .name-underline { width: 100mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto 0; }
+
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 4mm; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #333; margin-top: 1mm; }
+
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 9pt; color: #777; margin-top: 5mm; max-width: 200mm; }
+
+  .bottom-section { margin-top: auto; width: 100%; }
+
+  .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 4mm; }
+  .sig-block { text-align: center; }
+  .sig-line { width: 50mm; border-top: 0.5px solid #333; margin-bottom: 2mm; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
+
+  .footer-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 0 auto 2mm; position: relative; }
+  .footer-line::after { content: '✦'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
+  .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="border-outer"></div>
+    <div class="border-inner"></div>
+    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+
+    <div class="watermark"><img src="${logoUrl}"></div>
+
+    <div class="content">
+      <div class="title">Certificado</div>
+      <div class="title" style="font-size:13pt; letter-spacing:3px; margin-top:1mm;">de Bautismo</div>
+      <div class="gold-line"></div>
+      <div class="church-name">Iglesia Cristiana Espíritu Santo y Fuego</div>
+      <div class="church-sub">Misión Cristiana Perfectos en Unidad</div>
+
+      <div class="cert-text">
+        Certificamos que el(la) hermano(a):
+      </div>
+
+      <div class="name">${nombreCompleto}</div>
+      <div class="name-underline"></div>
+
+      <div class="cert-text" style="margin-top:3mm;">
+        ha sido bautizado(a) conforme al mandamiento del Señor:<br>
+        <em style="font-size:9.5pt; color:#777;">"Por tanto, id y haced discípulos a todas las naciones,<br>
+        bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."</em><br>
+        <strong style="font-size:9pt; color:#555;">— Mateo 28:19</strong>
+      </div>
+
+      <div class="date-text">Fue bautizado(a) el día</div>
+      <div class="date-value">${fechaLarga}</div>
+
+      <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." — <strong>Gálatas 3:27</strong></div>
+
+      <div class="bottom-section">
+        <div class="signatures">
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${pastor || 'Pastor'}</div>
+            <div class="sig-role">Pastor(a) Principal</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${secretario || 'Secretario(a)'}</div>
+            <div class="sig-role">Secretario(a) General</div>
+          </div>
+        </div>
+        <div class="footer-line"></div>
+        <div class="footer-text">Iglesia Cristiana Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+}
+
 export default function AdminDiplomasPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -54,122 +174,22 @@ export default function AdminDiplomasPage() {
     return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`
   }
 
-  function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string): string {
-    return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-<style>
-  @page { size: landscape letter; margin: 0; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+  function showDiplomaInHiddenDiv(): HTMLDivElement | null {
+    if (!miembro) return null
+    const logoUrl = getLogoUrl()
+    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+    const fechaLarga = fechaFormateada(fecha)
+    const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
 
-  .page { position: relative; width: 279mm; height: 216mm; overflow: hidden; }
+    const existing = document.getElementById('diploma-render')
+    if (existing) existing.remove()
 
-  .border-outer { position: absolute; inset: 10mm; border: 2.5px solid #b8860b; border-radius: 4px; }
-  .border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
-
-  .corner { position: absolute; width: 8mm; height: 8mm; border: 2px solid #b8860b; border-radius: 50%; }
-  .corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: #b8860b; }
-  .corner.tl { top: 7mm; left: 7mm; }
-  .corner.tr { top: 7mm; right: 7mm; }
-  .corner.bl { bottom: 7mm; left: 7mm; }
-  .corner.br { bottom: 7mm; right: 7mm; }
-
-  .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
-  .watermark img { width: 100mm; height: 100mm; object-fit: contain; opacity: 0.07; }
-
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 20mm 28mm 16mm; text-align: center; }
-
-  .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 26pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
-
-  .gold-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 3mm auto; position: relative; }
-  .gold-line::after { content: '✦'; position: absolute; top: -4.5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
-
-  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 16pt; color: #b8860b; margin-top: 1mm; }
-
-  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 6mm; line-height: 1.7; }
-
-  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 36pt; color: #b8860b; margin-top: 3mm; line-height: 1.1; }
-  .name-underline { width: 100mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto 0; }
-
-  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 5mm; }
-  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #333; margin-top: 1mm; }
-
-  .verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9pt; color: #999; margin-top: 6mm; max-width: 200mm; }
-
-  .bottom-section { margin-top: auto; width: 100%; }
-
-  .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 4mm; }
-  .sig-block { text-align: center; }
-  .sig-line { width: 50mm; border-top: 0.5px solid #333; margin-bottom: 2mm; }
-  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
-  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
-
-  .footer-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 0 auto 2mm; position: relative; }
-  .footer-line::after { content: '✦'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
-  .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
-
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  }
-</style>
-</head>
-<body>
-  <div class="page">
-    <div class="border-outer"></div>
-    <div class="border-inner"></div>
-    <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-
-    <div class="watermark"><img src="${logoUrl}"></div>
-
-    <div class="content">
-      <div class="title">Certificado</div>
-      <div class="title" style="font-size:13pt; letter-spacing:3px; margin-top:1mm;">de Bautismo</div>
-      <div class="gold-line"></div>
-      <div class="church-name">Iglesia Cristiana Espíritu Santo y Fuego</div>
-
-      <div class="cert-text">
-        Certificamos que el(la) hermano(a):
-      </div>
-
-      <div class="name">${nombreCompleto}</div>
-      <div class="name-underline"></div>
-
-      <div class="cert-text" style="margin-top:4mm;">
-        ha sido bautizado(a) conforme al mandamiento del Señor:<br>
-        <em style="font-size:9.5pt; color:#777;">"Por tanto, id y haced discípulos a todas las naciones,<br>
-        bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."</em><br>
-        <strong style="font-size:9pt; color:#999;">— Mateo 28:19</strong>
-      </div>
-
-      <div class="date-text">Fue bautizado(a) el día</div>
-      <div class="date-value">${fechaLarga}</div>
-
-      <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." — Gálatas 3:27</div>
-
-      <div class="bottom-section">
-        <div class="signatures">
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <div class="sig-name">${pastor || 'Pastor'}</div>
-            <div class="sig-role">Pastor(a) Principal</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <div class="sig-name">${secretario || 'Secretario(a)'}</div>
-            <div class="sig-role">Secretario(a) General</div>
-          </div>
-        </div>
-        <div class="footer-line"></div>
-        <div class="footer-text">Iglesia Cristiana Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
-      </div>
-    </div>
-  </div>
-</body>
-</html>`
+    const container = document.createElement('div')
+    container.id = 'diploma-render'
+    container.style.cssText = 'position:fixed;top:0;left:0;width:279mm;height:216mm;z-index:-9999;opacity:0;pointer-events:none;'
+    container.innerHTML = html
+    document.body.appendChild(container)
+    return container
   }
 
   async function handlePrint() {
@@ -180,11 +200,11 @@ export default function AdminDiplomasPage() {
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
 
-    const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl)
+    const diplomaHtml = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
 
     const win = window.open('', '_blank')
     if (win) {
-      win.document.write(html)
+      win.document.write(diplomaHtml)
       win.document.close()
       win.focus()
       setTimeout(() => win.print(), 1500)
@@ -200,34 +220,36 @@ export default function AdminDiplomasPage() {
       const html2canvas = (await import('html2canvas')).default
       const { jsPDF } = await import('jspdf')
 
-      const logoUrl = getLogoUrl()
-      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
-      const fechaLarga = fechaFormateada(fecha)
+      const container = showDiplomaInHiddenDiv()
+      if (!container) { setGenerando(false); return }
 
-      const win = window.open('', '_blank')
-      if (!win) { setGenerando(false); return }
+      const iframe = container.querySelector('iframe')
+      if (iframe) {
+        await new Promise(r => { iframe.onload = r; setTimeout(r, 4000) })
+      } else {
+        await new Promise(r => setTimeout(r, 2000))
+      }
 
-      const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl)
-      win.document.write(html)
-      win.document.close()
+      const page = container.querySelector('.page') || container
 
-      await new Promise(r => setTimeout(r, 3000))
-
-      const canvas = await html2canvas(win.document.body, {
+      const canvas = await html2canvas(page as HTMLElement, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         width: 1056,
         height: 816,
+        logging: false,
       })
-      win.close()
 
+      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
       const imgData = canvas.toDataURL('image/jpeg', 0.95)
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' })
       const pdfW = pdf.internal.pageSize.getWidth()
       const pdfH = pdf.internal.pageSize.getHeight()
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
       pdf.save(`diploma-${nombreCompleto.replace(/\s+/g, '_')}.pdf`)
+
+      container.remove()
     } catch (e) {
       console.error('Error generando PDF:', e)
     }
