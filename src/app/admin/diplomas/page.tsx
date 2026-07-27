@@ -9,56 +9,10 @@ import { db } from '@/lib/firebase'
 import { collection, getDocs } from 'firebase/firestore'
 import type { Miembro } from '@/types'
 
-function getLogoCached(): string {
-  if (typeof window === 'undefined') return ''
-  return localStorage.getItem('logoB64') || ''
-}
-
-function getLogoPaths(): string[] {
-  const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  return [
-    origin + base + '/logo.png',
-    origin + '/logo.png',
-    base + '/logo.png',
-    '/logo.png',
-  ]
-}
-
-async function fetchLogoToBase64(): Promise<string> {
-  for (const url of getLogoPaths()) {
-    try {
-      const r = await fetch(url)
-      if (!r.ok) continue
-      const blob = await r.blob()
-      const result = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = reject
-        reader.readAsDataURL(blob)
-      })
-      if (result && result.startsWith('data:image')) {
-        localStorage.setItem('logoB64', result)
-        return result
-      }
-    } catch { continue }
-  }
-  return ''
-}
-
-function useLogoPreload() {
-  useEffect(() => {
-    if (getLogoCached()) return
-    fetchLogoToBase64()
-  }, [])
-}
-
-function getLogoSrc(): string {
+function getLogoUrl(): string {
   if (typeof window === 'undefined') return '/logo.png'
-  const b64 = localStorage.getItem('logoB64')
-  if (b64) return b64
   const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
-  return base + '/logo.png'
+  return window.location.origin + base + '/logo.png'
 }
 
 export default function AdminDiplomasPage() {
@@ -71,16 +25,6 @@ export default function AdminDiplomasPage() {
   const [secretario, setSecretario] = useState('Secretario(a) General')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
-  const [logoReady, setLogoReady] = useState(false)
-
-  useLogoPreload()
-
-  useEffect(() => {
-    const check = () => setLogoReady(!!getLogoCached())
-    check()
-    const t = setInterval(check, 500)
-    return () => clearInterval(t)
-  }, [])
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
@@ -113,7 +57,7 @@ export default function AdminDiplomasPage() {
     if (!miembro) return
     setGenerando(true)
 
-    const logoB64 = getLogoCached() || await fetchLogoToBase64()
+    const logoUrl = getLogoUrl()
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
 
@@ -155,7 +99,7 @@ export default function AdminDiplomasPage() {
   .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 36pt; color: #b8860b; margin-top: 3mm; line-height: 1.1; }
   .name-underline { width: 100mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto 0; }
 
-  .date-text { font-family: 'Cormorant+Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 5mm; }
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #333; margin-top: 1mm; }
 
   .verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9pt; color: #999; margin-top: 6mm; max-width: 200mm; }
@@ -187,12 +131,12 @@ export default function AdminDiplomasPage() {
   <div class="border-inner"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
 
-  <div class="watermark"><img src="${logoB64}"></div>
+  <div class="watermark"><img src="${logoUrl}"></div>
 
   <div class="seal">
     <div class="seal-text">Iglesia Cristiana</div>
     <div class="seal-text">Espíritu Santo y Fuego</div>
-    <img class="seal-img" src="${logoB64}">
+    <img class="seal-img" src="${logoUrl}">
     <div class="seal-text">Aprobado</div>
   </div>
 
@@ -246,7 +190,7 @@ export default function AdminDiplomasPage() {
       win.document.write(html)
       win.document.close()
       win.focus()
-      setTimeout(() => win.print(), 1000)
+      setTimeout(() => win.print(), 1500)
     }
     setGenerando(false)
   }
@@ -320,16 +264,12 @@ export default function AdminDiplomasPage() {
               variant="primary"
               size="lg"
               className="w-full"
-              disabled={!miembro || generando || !logoReady}
+              disabled={!miembro || generando}
               onClick={handleGenerate}
             >
               <Printer className="mr-2 h-4 w-4" />
-              {generando ? 'Generando...' : logoReady ? 'Imprimir Certificado' : 'Cargando logo...'}
+              {generando ? 'Generando...' : 'Imprimir Certificado'}
             </Button>
-
-            {!logoReady && (
-              <p className="text-xs text-amber-600 text-center">Esperando carga del logo de la iglesia...</p>
-            )}
 
             {miembro && (
               <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-center">
