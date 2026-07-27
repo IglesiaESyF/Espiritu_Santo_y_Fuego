@@ -25,9 +25,9 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
 <style>
   @page { size: landscape letter; margin: 0; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; page-break-after: avoid; page-break-inside: avoid; }
 
-  .page { position: relative; width: 279mm; height: 216mm; overflow: hidden; }
+  .page { position: relative; width: 279mm; height: 216mm; overflow: hidden; page-break-after: avoid; page-break-inside: avoid; }
 
   .border-outer { position: absolute; inset: 10mm; border: 2.5px solid #b8860b; border-radius: 4px; }
   .border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
@@ -75,8 +75,8 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
   .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 8pt; color: #888; }
 
   @media print {
+    html, body { margin: 0 !important; padding: 0 !important; width: 279mm; height: 216mm; }
     *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-    body { margin: 0; }
   }
 </style>
 </head>
@@ -92,7 +92,7 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
       <div class="title">Certificado</div>
       <div class="title" style="font-size:13pt; letter-spacing:3px; margin-top:1mm;">de Bautismo</div>
       <div class="gold-line"></div>
-      <div class="church-name">Iglesia Cristiana Espíritu Santo y Fuego</div>
+      <div class="church-name">Iglesia Espíritu Santo y Fuego</div>
       <div class="church-sub">Misión Cristiana Perfectos en Unidad</div>
 
       <div class="cert-text">
@@ -128,7 +128,7 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
           </div>
         </div>
         <div class="footer-line"></div>
-        <div class="footer-text">Iglesia Cristiana Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
+        <div class="footer-text">Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
       </div>
     </div>
   </div>
