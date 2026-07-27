@@ -57,7 +57,7 @@ export interface Permisos {
   usuarios: PermisosSeccion
 }
 
-export type UserRole = 'it-admin' | 'tesorero' | 'secretario' | 'visual'
+export type UserRole = 'it-admin' | 'pastor' | 'tesorero' | 'secretario' | 'visual'
 
 export interface User {
   id: string
@@ -113,6 +113,14 @@ export const ROLES_PRESET: Record<UserRole, Permisos> = {
     cultos: { ver: true, crear: true, editar: true, eliminar: true },
     envivo: { ver: true, activar: true },
     noticias: { ver: true, crear: true, editar: true, eliminar: true },
+    usuarios: { ver: true, crear: true, editar: true, eliminar: true },
+  },
+  pastor: {
+    caja: { ver: true, crear: true, editar: true, eliminar: false },
+    actividades: { ver: true, crear: true, editar: true, eliminar: false },
+    cultos: { ver: true, crear: true, editar: true, eliminar: false },
+    envivo: { ver: true, activar: false },
+    noticias: { ver: true, crear: true, editar: true, eliminar: false },
     usuarios: { ver: true, crear: true, editar: true, eliminar: true },
   },
   tesorero: {

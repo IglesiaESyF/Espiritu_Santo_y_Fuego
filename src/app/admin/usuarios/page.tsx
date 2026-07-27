@@ -197,7 +197,7 @@ export default function AdminUsuariosPage() {
           <div className="mb-6">
             <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-500">Rol (predefinido)</label>
             <div className="flex flex-wrap gap-2">
-              {(['it-admin', 'tesorero', 'secretario', 'visual'] as UserRole[]).map((r) => (
+              {(['it-admin', 'pastor', 'tesorero', 'secretario', 'visual'] as UserRole[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => applyRolePreset(r)}
