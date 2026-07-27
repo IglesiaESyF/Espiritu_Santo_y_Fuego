@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Printer, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -46,33 +46,33 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
 
   .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 26pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
 
-  .gold-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto; position: relative; }
-  .gold-line::after { content: '✦'; position: absolute; top: -4.5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
+  .gold-line { width: 80mm; height: 1px; background: #b8860b; margin: 2mm auto; position: relative; }
+  .gold-line::after { content: '✦'; position: absolute; top: -5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
 
-  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 16pt; color: #b8860b; margin-top: 1mm; }
-  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 9pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 16pt; color: #b8860b; margin-top: 1mm; font-weight: 700; }
+  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 9pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
 
-  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 5mm; line-height: 1.7; }
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #444; margin-top: 5mm; line-height: 1.7; }
 
   .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 36pt; color: #b8860b; margin-top: 2mm; line-height: 1.1; }
-  .name-underline { width: 100mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto 0; }
+  .name-underline { width: 100mm; height: 1px; background: #b8860b; margin: 2mm auto 0; }
 
-  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #555; margin-top: 4mm; }
-  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #333; margin-top: 1mm; }
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #444; margin-top: 4mm; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #222; margin-top: 1mm; }
 
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 9pt; color: #777; margin-top: 5mm; max-width: 200mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #555; margin-top: 5mm; max-width: 200mm; }
 
   .bottom-section { margin-top: auto; width: 100%; }
 
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 4mm; }
   .sig-block { text-align: center; }
-  .sig-line { width: 50mm; border-top: 0.5px solid #333; margin-bottom: 2mm; }
-  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
-  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
+  .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 2mm; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #222; }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 8pt; color: #666; }
 
-  .footer-line { width: 80mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 0 auto 2mm; position: relative; }
+  .footer-line { width: 80mm; height: 1px; background: #b8860b; margin: 0 auto 2mm; position: relative; }
   .footer-line::after { content: '✦'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
-  .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
+  .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 8pt; color: #888; }
 
   @media print {
     *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
@@ -104,9 +104,9 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
 
       <div class="cert-text" style="margin-top:3mm;">
         ha sido bautizado(a) conforme al mandamiento del Señor:<br>
-        <em style="font-size:9.5pt; color:#777;">"Por tanto, id y haced discípulos a todas las naciones,<br>
-        bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."</em><br>
-        <strong style="font-size:9pt; color:#555;">— Mateo 28:19</strong>
+        <strong style="font-size:10pt; color:#555;">"Por tanto, id y haced discípulos a todas las naciones,<br>
+        bautizándolos en el nombre del Padre, y del Hijo, y del Espíritu Santo."<br>
+        — Mateo 28:19</strong>
       </div>
 
       <div class="date-text">Fue bautizado(a) el día</div>
@@ -136,6 +136,14 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
 </html>`
 }
 
+function openDiplomaWindow(html: string): Window | null {
+  const win = window.open('', '_blank')
+  if (!win) return null
+  win.document.write(html)
+  win.document.close()
+  return win
+}
+
 export default function AdminDiplomasPage() {
   const router = useRouter()
   const { user } = useAuth()
@@ -146,7 +154,6 @@ export default function AdminDiplomasPage() {
   const [secretario, setSecretario] = useState('Secretario(a) General')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
-  const diplomaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
@@ -175,88 +182,39 @@ export default function AdminDiplomasPage() {
     return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`
   }
 
-  async function handlePrint() {
+  function handlePrint() {
     if (!miembro) return
     setGenerando(true)
 
     const logoUrl = getLogoUrl()
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
+    const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
 
-    const diplomaHtml = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
-
-    const win = window.open('', '_blank')
+    const win = openDiplomaWindow(html)
     if (win) {
-      win.document.write(diplomaHtml)
-      win.document.close()
       win.focus()
-      setTimeout(() => win.print(), 1500)
+      setTimeout(() => win.print(), 2000)
     }
     setGenerando(false)
   }
 
-  async function handleDownloadPDF() {
+  function handleDownloadPDF() {
     if (!miembro) return
     setGenerando(true)
 
-    try {
-      const html2canvas = (await import('html2canvas')).default
-      const { jsPDF } = await import('jspdf')
+    const logoUrl = getLogoUrl()
+    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+    const fechaLarga = fechaFormateada(fecha)
+    const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
 
-      const logoUrl = getLogoUrl()
-      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
-      const fechaLarga = fechaFormateada(fecha)
-      const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
-
-      const iframe = document.createElement('iframe')
-      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:279mm;height:216mm;border:none;'
-      document.body.appendChild(iframe)
-
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
-      if (!iframeDoc) { iframe.remove(); setGenerando(false); return }
-
-      iframeDoc.open()
-      iframeDoc.write(html)
-      iframeDoc.close()
-
-      await new Promise<void>((resolve) => {
-        let done = false
-        const finish = () => { if (!done) { done = true; resolve() } }
-        setTimeout(finish, 5000)
-        iframe.onload = () => {
-          try {
-            const fonts = iframe.contentDocument?.fonts
-            if (fonts && fonts.ready) {
-              fonts.ready.then(() => setTimeout(finish, 500))
-            } else {
-              setTimeout(finish, 2000)
-            }
-          } catch { setTimeout(finish, 2000) }
-        }
-      })
-
-      const body = iframe.contentDocument?.body
-      if (!body) { iframe.remove(); setGenerando(false); return }
-
-      const canvas = await html2canvas(body, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        width: body.scrollWidth,
-        height: body.scrollHeight,
-      })
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95)
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' })
-      const pdfW = pdf.internal.pageSize.getWidth()
-      const pdfH = pdf.internal.pageSize.getHeight()
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
-      pdf.save(`diploma-${nombreCompleto.replace(/\s+/g, '_')}.pdf`)
-
-      iframe.remove()
-    } catch (e) {
-      console.error('Error generando PDF:', e)
+    const win = openDiplomaWindow(html)
+    if (win) {
+      win.focus()
+      setTimeout(() => {
+        win.print()
+        win.close()
+      }, 2500)
     }
     setGenerando(false)
   }
@@ -335,7 +293,7 @@ export default function AdminDiplomasPage() {
                 onClick={handlePrint}
               >
                 <Printer className="mr-2 h-4 w-4" />
-                {generando ? 'Generando...' : 'Imprimir'}
+                Imprimir
               </Button>
 
               <Button
@@ -346,7 +304,7 @@ export default function AdminDiplomasPage() {
                 onClick={handleDownloadPDF}
               >
                 <Download className="mr-2 h-4 w-4" />
-                {generando ? 'Generando...' : 'Descargar PDF'}
+                Guardar como PDF
               </Button>
             </div>
 
