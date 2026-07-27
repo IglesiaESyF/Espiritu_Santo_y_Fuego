@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Download, FileText } from 'lucide-react'
+import { ArrowLeft, Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { db } from '@/lib/firebase'
@@ -73,167 +73,120 @@ export default function AdminDiplomasPage() {
   async function handleGenerate() {
     if (!miembro) return
     setGenerando(true)
-    try {
-      const { default: jsPDF } = await import('jspdf')
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
-      const pw = doc.internal.pageSize.width
-      const ph = doc.internal.pageSize.height
 
-      // ── outer gold border ──
-      doc.setDrawColor(184, 134, 11)
-      doc.setLineWidth(2.5)
-      doc.roundedRect(12, 12, pw - 24, ph - 24, 3, 3)
-      doc.setLineWidth(0.8)
-      doc.roundedRect(16, 16, pw - 32, ph - 32, 2, 2)
+    const logoB64 = getLogoCached()
+    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+    const fechaLarga = fechaFormateada(fecha)
 
-      // ── corner ornaments ──
-      const corners = [[18, 18], [pw - 18, 18], [18, ph - 18], [pw - 18, ph - 18]]
-      doc.setFillColor(184, 134, 11)
-      for (const [cx, cy] of corners) {
-        doc.circle(cx, cy, 2.5, 'F')
-        doc.setFillColor(255, 255, 255)
-        doc.circle(cx, cy, 1.2, 'F')
-        doc.setFillColor(184, 134, 11)
-      }
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  @page { size: landscape letter; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; position: relative; overflow: hidden; }
 
-      // ── watermark logo ──
-      const logoB64 = getLogoCached()
-      if (logoB64) {
-        try {
-          const img = new window.Image()
-          const opaqueLogo = await new Promise<string>((resolve, reject) => {
-            img.onload = () => {
-              const c = document.createElement('canvas')
-              c.width = 180; c.height = 180
-              const cx = c.getContext('2d')!
-              cx.globalAlpha = 0.1
-              cx.drawImage(img, 0, 0, 180, 180)
-              resolve(c.toDataURL('image/png'))
-            }
-            img.onerror = reject
-            img.src = logoB64
-          })
-          doc.addImage(opaqueLogo, 'PNG', (pw - 80) / 2, (ph - 80) / 2 - 15, 80, 80)
-        } catch {}
-      }
+  .border-outer { position: absolute; inset: 10mm; border: 2.5px solid #b8860b; border-radius: 4px; }
+  .border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
 
-      // ── decorative top line ──
-      const lm = 30
-      doc.setDrawColor(184, 134, 11)
-      doc.setLineWidth(0.4)
-      doc.line(lm, 38, pw - lm, 38)
-      // center ornament
-      doc.setFillColor(184, 134, 11)
-      doc.circle(pw / 2, 38, 1.5, 'F')
+  .corner { position: absolute; width: 8mm; height: 8mm; border: 2px solid #b8860b; border-radius: 50%; }
+  .corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: #b8860b; }
+  .corner.tl { top: 7mm; left: 7mm; }
+  .corner.tr { top: 7mm; right: 7mm; }
+  .corner.bl { bottom: 7mm; left: 7mm; }
+  .corner.br { bottom: 7mm; right: 7mm; }
 
-      // ── title ──
-      doc.setFont('times', 'bold')
-      doc.setFontSize(22)
-      doc.setTextColor(184, 134, 11)
-      doc.text('CERTIFICADO', pw / 2, 48, { align: 'center' })
-      doc.setFontSize(14)
-      doc.setTextColor(51, 51, 51)
-      doc.text('DE BAUTISMO CRISTIANO', pw / 2, 55, { align: 'center' })
+  .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.07; z-index: 0; }
+  .watermark img { width: 120mm; height: 120mm; object-fit: contain; }
 
-      // ── decorative line under title ──
-      doc.setDrawColor(184, 134, 11)
-      doc.setLineWidth(0.3)
-      doc.line(pw / 2 - 50, 60, pw / 2 + 50, 60)
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 22mm 30mm 18mm; text-align: center; }
 
-      // ── church name ──
-      doc.setFont('times', 'bolditalic')
-      doc.setFontSize(13)
-      doc.setTextColor(184, 134, 11)
-      doc.text('Iglesia Espíritu Santo y Fuego', pw / 2, 68, { align: 'center' })
+  .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28pt; color: #b8860b; letter-spacing: 6px; text-transform: uppercase; }
+  .subtitle { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 14pt; color: #333; letter-spacing: 3px; text-transform: uppercase; margin-top: 2mm; }
 
-      // ── "Certificamos que" ──
-      doc.setFont('times', 'normal')
-      doc.setFontSize(12)
-      doc.setTextColor(80, 80, 80)
-      doc.text('Certificamos que el/las siguiente persona', pw / 2, 78, { align: 'center' })
-      doc.text('ha sido bautizada conforme al mandamiento del Señor:', pw / 2, 84, { align: 'center' })
+  .gold-line { width: 80mm; height: 0.5px; background: #b8860b; margin: 4mm auto; position: relative; }
+  .gold-line::after { content: '✦'; position: absolute; top: -5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
 
-      // ── member name (large elegant) ──
-      doc.setFont('times', 'bold')
-      doc.setFontSize(26)
-      doc.setTextColor(184, 134, 11)
-      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
-      doc.text(nombreCompleto, pw / 2, 98, { align: 'center' })
+  .church-name { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-style: italic; font-size: 13pt; color: #b8860b; margin-top: 2mm; }
 
-      // ── underline under name ──
-      const nameW = doc.getTextWidth(nombreCompleto)
-      doc.setDrawColor(184, 134, 11)
-      doc.setLineWidth(0.3)
-      doc.line(pw / 2 - nameW / 2 - 10, 100, pw / 2 + nameW / 2 + 10, 100)
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #666; margin-top: 6mm; line-height: 1.6; }
 
-      // ── date of baptism ──
-      doc.setFont('times', 'normal')
-      doc.setFontSize(12)
-      doc.setTextColor(80, 80, 80)
-      doc.text('Fue bautizado/a el día', pw / 2, 110, { align: 'center' })
-      doc.setFont('times', 'bold')
-      doc.setFontSize(14)
-      doc.setTextColor(51, 51, 51)
-      doc.text(fechaFormateada(fecha), pw / 2, 118, { align: 'center' })
+  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 38pt; color: #b8860b; margin-top: 4mm; text-shadow: 1px 1px 2px rgba(184,134,11,0.15); line-height: 1.1; }
+  .name-underline { width: 100mm; height: 0.5px; background: linear-gradient(90deg, transparent, #b8860b, transparent); margin: 2mm auto 0; }
 
-      // ── decorative divider ──
-      doc.setDrawColor(184, 134, 11)
-      doc.setLineWidth(0.3)
-      doc.line(pw / 2 - 40, 126, pw / 2 + 40, 126)
-      doc.setFillColor(184, 134, 11)
-      doc.circle(pw / 2, 126, 1.2, 'F')
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 11pt; color: #666; margin-top: 6mm; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #333; margin-top: 1mm; }
 
-      // ── verse ──
-      doc.setFont('times', 'italic')
-      doc.setFontSize(9)
-      doc.setTextColor(140, 140, 140)
-      doc.text('"' + 'Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo.' + '"', pw / 2, 133, { align: 'center' })
-      doc.text('— Gálatas 3:27', pw / 2, 137, { align: 'center' })
+  .verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9pt; color: #999; margin-top: 8mm; }
 
-      // ── signatures ──
-      const sigY = ph - 55
-      // pastor
-      doc.setDrawColor(51, 51, 51)
-      doc.setLineWidth(0.4)
-      doc.line(40, sigY, pw / 2 - 20, sigY)
-      doc.setFont('times', 'bold')
-      doc.setFontSize(10)
-      doc.setTextColor(51, 51, 51)
-      doc.text(pastor || 'Pastor', pw / 4 + 10, sigY + 5, { align: 'center' })
-      doc.setFont('times', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(120, 120, 120)
-      doc.text('Pastor(a) Principal', pw / 4 + 10, sigY + 9, { align: 'center' })
+  .signatures { display: flex; justify-content: center; gap: 60mm; margin-top: auto; padding-bottom: 4mm; }
+  .sig-block { text-align: center; }
+  .sig-line { width: 55mm; border-top: 0.5px solid #333; margin-bottom: 2mm; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
 
-      // secretary
-      doc.setDrawColor(51, 51, 51)
-      doc.setLineWidth(0.4)
-      doc.line(pw / 2 + 20, sigY, pw - 40, sigY)
-      doc.setFont('times', 'bold')
-      doc.setFontSize(10)
-      doc.setTextColor(51, 51, 51)
-      doc.text(secretario || 'Secretario(a)', pw * 3 / 4 - 10, sigY + 5, { align: 'center' })
-      doc.setFont('times', 'normal')
-      doc.setFontSize(8)
-      doc.setTextColor(120, 120, 120)
-      doc.text('Secretario(a) General', pw * 3 / 4 - 10, sigY + 9, { align: 'center' })
+  .footer-line { width: 80mm; height: 0.5px; background: #b8860b; margin: 0 auto 2mm; position: relative; }
+  .footer-line::after { content: '✦'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
+  .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
 
-      // ── footer line ──
-      doc.setDrawColor(184, 134, 11)
-      doc.setLineWidth(0.3)
-      doc.line(lm, ph - 28, pw - lm, ph - 28)
-      doc.setFillColor(184, 134, 11)
-      doc.circle(pw / 2, ph - 28, 1.2, 'F')
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+  <div class="border-outer"></div>
+  <div class="border-inner"></div>
+  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+  ${logoB64 ? `<div class="watermark"><img src="${logoB64}"></div>` : ''}
 
-      // ── footer text ──
-      doc.setFont('times', 'italic')
-      doc.setFontSize(8)
-      doc.setTextColor(140, 140, 140)
-      doc.text('Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad', pw / 2, ph - 24, { align: 'center' })
+  <div class="content">
+    <div class="title">Certificado</div>
+    <div class="subtitle">de Bautismo Cristiano</div>
+    <div class="gold-line"></div>
+    <div class="church-name">Iglesia Espíritu Santo y Fuego</div>
 
-      doc.save(`Bautismo_${nombreCompleto.replace(/\s+/g, '_')}.pdf`)
-    } catch (e) {
-      console.error('Error generando PDF:', e)
+    <div class="cert-text">
+      Certificamos que la siguiente persona<br>
+      ha sido bautizada conforme al mandamiento del Señor:
+    </div>
+
+    <div class="name">${nombreCompleto}</div>
+    <div class="name-underline"></div>
+
+    <div class="date-text">Fue bautizado/a el día</div>
+    <div class="date-value">${fechaLarga}</div>
+
+    <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." — Gálatas 3:27</div>
+
+    <div class="signatures">
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">${pastor || 'Pastor'}</div>
+        <div class="sig-role">Pastor(a) Principal</div>
+      </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">${secretario || 'Secretario(a)'}</div>
+        <div class="sig-role">Secretario(a) General</div>
+      </div>
+    </div>
+
+    <div class="footer-line"></div>
+    <div class="footer-text">Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
+  </div>
+</body>
+</html>`
+
+    const win = window.open('', '_blank')
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+      win.focus()
+      setTimeout(() => win.print(), 800)
     }
     setGenerando(false)
   }
@@ -268,7 +221,7 @@ export default function AdminDiplomasPage() {
                   <option key={m.id} value={m.id}>{m.nombre} {m.apellido}</option>
                 ))}
               </select>
-              {!bautizados.length && <p className="mt-1 text-xs text-amber-600">No hay miembros con estado "Bautizado". Actualiza el estado en Miembros primero.</p>}
+              {!bautizados.length && <p className="mt-1 text-xs text-amber-600">No hay miembros con estado &quot;Bautizado&quot;. Actualiza el estado en Miembros primero.</p>}
             </div>
 
             <div>
@@ -310,8 +263,8 @@ export default function AdminDiplomasPage() {
               disabled={!miembro || generando}
               onClick={handleGenerate}
             >
-              <Download className="mr-2 h-4 w-4" />
-              {generando ? 'Generando...' : 'Generar Certificado PDF'}
+              <Printer className="mr-2 h-4 w-4" />
+              {generando ? 'Generando...' : 'Imprimir Certificado'}
             </Button>
 
             {miembro && (
