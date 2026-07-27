@@ -78,11 +78,27 @@ export default function AdminDiplomasPage() {
     return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`
   }
 
+  async function loadLogoBase64(): Promise<string> {
+    const cached = getLogoCached()
+    if (cached) return cached
+    try {
+      const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+      const r = await fetch(base + '/logo.png')
+      if (!r.ok) return ''
+      const blob = await r.blob()
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(blob)
+      })
+    } catch { return '' }
+  }
+
   async function handleGenerate() {
     if (!miembro) return
     setGenerando(true)
 
-    const logoSrc = getLogoSrc()
+    const logoB64 = await loadLogoBase64()
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
 
@@ -137,7 +153,7 @@ export default function AdminDiplomasPage() {
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #333; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 8pt; color: #999; }
 
-  .seal { position: absolute; bottom: 28mm; right: 22mm; width: 30mm; height: 30mm; border: 1.5px solid #b8860b; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.65; z-index: 2; }
+  .seal { position: absolute; bottom: 30mm; left: 50%; transform: translateX(-50%); width: 28mm; height: 28mm; border: 1.5px solid #b8860b; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.55; z-index: 2; }
   .seal-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 5.5pt; color: #b8860b; text-transform: uppercase; letter-spacing: 1px; }
   .seal-center { font-family: 'UnifrakturMaguntia', cursive; font-size: 10pt; color: #b8860b; margin: 1mm 0; }
   .seal-img { width: 10mm; height: 10mm; object-fit: contain; }
@@ -156,12 +172,12 @@ export default function AdminDiplomasPage() {
   <div class="border-inner"></div>
   <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
 
-  <div class="watermark"><img src="${logoSrc}"></div>
+  <div class="watermark"><img src="${logoB64}"></div>
 
   <div class="seal">
     <div class="seal-text">Iglesia Cristiana</div>
     <div class="seal-text">Espíritu Santo y Fuego</div>
-    <img class="seal-img" src="${logoSrc}">
+    <img class="seal-img" src="${logoB64}">
     <div class="seal-text">Aprobado</div>
   </div>
 
