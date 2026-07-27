@@ -40,7 +40,7 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
   .corner.br { bottom: 7mm; right: 7mm; }
 
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
-  .watermark img { width: 100mm; height: 100mm; object-fit: contain; opacity: 0.07; }
+  .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.10; }
 
   .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 18mm 28mm 14mm; text-align: center; }
 
@@ -75,7 +75,8 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
   .footer-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 7.5pt; color: #aaa; }
 
   @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    body { margin: 0; }
   }
 </style>
 </head>
@@ -174,24 +175,6 @@ export default function AdminDiplomasPage() {
     return `${parseInt(d)} de ${meses[parseInt(m) - 1]} de ${y}`
   }
 
-  function showDiplomaInHiddenDiv(): HTMLDivElement | null {
-    if (!miembro) return null
-    const logoUrl = getLogoUrl()
-    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
-    const fechaLarga = fechaFormateada(fecha)
-    const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
-
-    const existing = document.getElementById('diploma-render')
-    if (existing) existing.remove()
-
-    const container = document.createElement('div')
-    container.id = 'diploma-render'
-    container.style.cssText = 'position:fixed;top:0;left:0;width:279mm;height:216mm;z-index:-9999;opacity:0;pointer-events:none;'
-    container.innerHTML = html
-    document.body.appendChild(container)
-    return container
-  }
-
   async function handlePrint() {
     if (!miembro) return
     setGenerando(true)
@@ -220,28 +203,50 @@ export default function AdminDiplomasPage() {
       const html2canvas = (await import('html2canvas')).default
       const { jsPDF } = await import('jspdf')
 
-      const container = showDiplomaInHiddenDiv()
-      if (!container) { setGenerando(false); return }
+      const logoUrl = getLogoUrl()
+      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+      const fechaLarga = fechaFormateada(fecha)
+      const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
 
-      const iframe = container.querySelector('iframe')
-      if (iframe) {
-        await new Promise(r => { iframe.onload = r; setTimeout(r, 4000) })
-      } else {
-        await new Promise(r => setTimeout(r, 2000))
-      }
+      const iframe = document.createElement('iframe')
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:279mm;height:216mm;border:none;'
+      document.body.appendChild(iframe)
 
-      const page = container.querySelector('.page') || container
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+      if (!iframeDoc) { iframe.remove(); setGenerando(false); return }
 
-      const canvas = await html2canvas(page as HTMLElement, {
+      iframeDoc.open()
+      iframeDoc.write(html)
+      iframeDoc.close()
+
+      await new Promise<void>((resolve) => {
+        let done = false
+        const finish = () => { if (!done) { done = true; resolve() } }
+        setTimeout(finish, 5000)
+        iframe.onload = () => {
+          try {
+            const fonts = iframe.contentDocument?.fonts
+            if (fonts && fonts.ready) {
+              fonts.ready.then(() => setTimeout(finish, 500))
+            } else {
+              setTimeout(finish, 2000)
+            }
+          } catch { setTimeout(finish, 2000) }
+        }
+      })
+
+      const body = iframe.contentDocument?.body
+      if (!body) { iframe.remove(); setGenerando(false); return }
+
+      const canvas = await html2canvas(body, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        width: 1056,
-        height: 816,
         logging: false,
+        width: body.scrollWidth,
+        height: body.scrollHeight,
       })
 
-      const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
       const imgData = canvas.toDataURL('image/jpeg', 0.95)
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' })
       const pdfW = pdf.internal.pageSize.getWidth()
@@ -249,7 +254,7 @@ export default function AdminDiplomasPage() {
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH)
       pdf.save(`diploma-${nombreCompleto.replace(/\s+/g, '_')}.pdf`)
 
-      container.remove()
+      iframe.remove()
     } catch (e) {
       console.error('Error generando PDF:', e)
     }
