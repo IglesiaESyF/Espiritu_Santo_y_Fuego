@@ -136,7 +136,7 @@ function getMmCSS(): string {
   }`
 }
 
-function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, miembro?: Miembro): string {
+function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean): string {
   const captureScript = capturePng ? `
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
@@ -160,53 +160,60 @@ window.addEventListener('load', function() {
 });
 </script>` : ''
 
-  const pages = [
-    `<div class="page diploma">${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</div>`,
-  ]
-
-  if (miembro) {
-    pages.push(getCertificacionPageHtml(miembro, logoUrl, pastor, secretario, fechaLarga))
-  }
-
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-<style>${getMmCSS()}${miembro ? getCertificacionCss() : ''}</style>
+<style>${getMmCSS()}</style>
 ${captureScript}
 </head>
-<body>${pages.join('\n')}</body>
+<body><div class="page diploma">${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</div></body>
 </html>`
 }
 
 function getCertificacionCss(): string {
   return `
-  .page.certificacion { position: relative; width: 279mm; height: 216mm; overflow: hidden; font-family: 'Cormorant Garamond', serif; background: #fff; page-break-before: always; }
+  @page { size: letter portrait; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 216mm; height: 279mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+  .page.certificacion { position: relative; width: 216mm; height: 279mm; overflow: hidden; font-family: 'Cormorant Garamond', serif; background: #fff; }
   .cert-border-outer { position: absolute; inset: 10mm; border: 2px solid #b8860b; border-radius: 4px; }
   .cert-border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
   .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
   .cert-watermark img { width: 140mm; height: 140mm; object-fit: contain; opacity: 0.08; }
-  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 20mm 24mm 18mm; }
-  .cert-header { text-align: center; margin-bottom: 8mm; }
-  .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 18pt; color: #b8860b; font-weight: 700; }
-  .cert-header .sub { font-family: 'Cormorant Garamond', serif; font-size: 10pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
-  .cert-header .gold-line { width: 60mm; height: 1px; background: #b8860b; margin: 3mm auto; }
-  .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #b8860b; letter-spacing: 3px; text-transform: uppercase; }
-  .cert-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2.5mm; padding: 0 10mm; }
-  .cert-row { display: flex; }
-  .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #b8860b; min-width: 70mm; }
-  .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #333; border-bottom: 1px dashed #ccc; flex: 1; padding-left: 2mm; }
-  .cert-footer { text-align: center; margin-top: auto; padding-top: 5mm; }
-  .cert-footer-text { font-family: 'Cormorant Garamond', serif; font-size: 9pt; color: #888; font-weight: 700; }
+  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 22mm 20mm 18mm; }
+  .cert-header { text-align: center; margin-bottom: 10mm; }
+  .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: #b8860b; font-weight: 700; }
+  .cert-header .sub { font-family: 'Cormorant Garamond', serif; font-size: 11pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
+  .cert-header .gold-line { width: 60mm; height: 1px; background: #b8860b; margin: 4mm auto; }
+  .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18pt; color: #b8860b; letter-spacing: 3px; text-transform: uppercase; }
+  .cert-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3mm; padding: 0 8mm; }
+  .cert-row { display: flex; flex-direction: column; gap: 0.5mm; }
+  .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #b8860b; }
+  .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #333; border-bottom: 1px dashed #ccc; padding-bottom: 1mm; padding-left: 2mm; }
+  .cert-footer { text-align: center; margin-top: auto; padding-top: 6mm; }
+  .cert-footer-text { font-family: 'Cormorant Garamond', serif; font-size: 10pt; color: #888; font-weight: 700; }
   @media print {
-    .page.certificacion { page-break-before: always; }
+    html, body { margin: 0 !important; padding: 0 !important; width: 216mm; height: 279mm; }
     *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
   }`
 }
 
-function getCertificacionPageHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, fechaBautismo: string): string {
+
+
+function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean): Window | null {
+  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, capturePng)
+  const win = window.open('', '_blank')
+  if (!win) return null
+  win.document.write(html)
+  win.document.close()
+  win.focus()
+  return win
+}
+
+function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, fechaBautismo: string): string {
   function fmt(d: string): string {
     if (!d) return ''
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
@@ -234,37 +241,49 @@ function getCertificacionPageHtml(miembro: Miembro, logoUrl: string, pastor: str
   const llegoBautizado = miembro.llego_bautizado ? 'Sí' : 'No'
   const motivo = miembro.motivo_llegada || 'No registrado'
 
-  return `<div class="page certificacion">
-    <div class="cert-border-outer"></div>
-    <div class="cert-border-inner"></div>
-    <div class="cert-watermark"><img src="${logoUrl}"></div>
-    <div class="cert-content">
-      <div class="cert-header">
-        <div class="church">Iglesia Espíritu Santo y Fuego</div>
-        <div class="sub">Misión Cristiana Perfectos en Unidad</div>
-        <div class="gold-line"></div>
-        <div class="title">Certificación de Datos del Bautizado</div>
-      </div>
-      <div class="cert-body">
-        <div class="cert-row"><span class="cert-label">Nombre completo:</span><span class="cert-value">${miembro.nombre} ${miembro.apellido}</span></div>
-        <div class="cert-row"><span class="cert-label">Fecha de nacimiento:</span><span class="cert-value">${fechaNac}</span></div>
-        <div class="cert-row"><span class="cert-label">Nacionalidad:</span><span class="cert-value">${nacionalidad}</span></div>
-        <div class="cert-row"><span class="cert-label">Dirección:</span><span class="cert-value">${direccion}</span></div>
-        <div class="cert-row"><span class="cert-label">Fecha de bautismo:</span><span class="cert-value">${fechaBautismo || 'No registrada'}</span></div>
-        <div class="cert-row"><span class="cert-label">Fecha de 1ra. llegada a la iglesia:</span><span class="cert-value">${fechaLleg}</span></div>
-        <div class="cert-row"><span class="cert-label">Tiempo en la iglesia:</span><span class="cert-value">${tiempoIglesia}</span></div>
-        <div class="cert-row"><span class="cert-label">¿Llegó bautizado de otra iglesia?:</span><span class="cert-value">${llegoBautizado}</span></div>
-        <div class="cert-row"><span class="cert-label">Motivo de llegada:</span><span class="cert-value">${motivo}</span></div>
-      </div>
-      <div class="cert-footer">
-        <div class="cert-footer-text">Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
-      </div>
+  const body = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>${getCertificacionCss()}</style>
+</head>
+<body>
+<div class="page certificacion">
+  <div class="cert-border-outer"></div>
+  <div class="cert-border-inner"></div>
+  <div class="cert-watermark"><img src="${logoUrl}"></div>
+  <div class="cert-content">
+    <div class="cert-header">
+      <div class="church">Iglesia Esp\u00edritu Santo y Fuego</div>
+      <div class="sub">Misi\u00f3n Cristiana Perfectos en Unidad</div>
+      <div class="gold-line"></div>
+      <div class="title">Certificaci\u00f3n de Datos del Bautizado</div>
     </div>
-  </div>`
+    <div class="cert-body">
+      <div class="cert-row"><span class="cert-label">Nombre completo:</span><span class="cert-value">${miembro.nombre} ${miembro.apellido}</span></div>
+      <div class="cert-row"><span class="cert-label">Fecha de nacimiento:</span><span class="cert-value">${fechaNac}</span></div>
+      <div class="cert-row"><span class="cert-label">Nacionalidad:</span><span class="cert-value">${nacionalidad}</span></div>
+      <div class="cert-row"><span class="cert-label">Direcci\u00f3n:</span><span class="cert-value">${direccion}</span></div>
+      <div class="cert-row"><span class="cert-label">Fecha de bautismo:</span><span class="cert-value">${fechaBautismo || 'No registrada'}</span></div>
+      <div class="cert-row"><span class="cert-label">Fecha de 1ra. llegada a la iglesia:</span><span class="cert-value">${fechaLleg}</span></div>
+      <div class="cert-row"><span class="cert-label">Tiempo en la iglesia:</span><span class="cert-value">${tiempoIglesia}</span></div>
+      <div class="cert-row"><span class="cert-label">\u00bfLleg\u00f3 bautizado de otra iglesia?:</span><span class="cert-value">${llegoBautizado}</span></div>
+      <div class="cert-row"><span class="cert-label">Motivo de llegada:</span><span class="cert-value">${motivo}</span></div>
+    </div>
+    <div class="cert-footer">
+      <div class="cert-footer-text">Iglesia Esp\u00edritu Santo y Fuego \u2014 Misi\u00f3n Cristiana Perfectos en Unidad</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`
+  return body
 }
 
-function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, miembro?: Miembro): Window | null {
-  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, capturePng, miembro)
+function openCertificacionWindow(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, fechaBautismo: string): Window | null {
+  const html = buildCertificacionHtml(miembro, logoUrl, pastor, secretario, fechaBautismo)
   const win = window.open('', '_blank')
   if (!win) return null
   win.document.write(html)
@@ -288,6 +307,7 @@ export default function AdminDiplomasPage() {
   const [secretario, setSecretario] = useState('')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
+  const [generandoCert, setGenerandoCert] = useState(false)
   const [tipoMiembro, setTipoMiembro] = useState<'existente' | 'nuevo'>('existente')
   const [searchText, setSearchText] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
@@ -397,7 +417,7 @@ export default function AdminDiplomasPage() {
       nombreCompleto = `${nuevoNombre.trim()} ${nuevoApellido.trim()}`
     }
 
-    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, true, tipoMiembro === 'existente' ? (miembro ?? undefined) : undefined)
+    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, true)
     if (win) {
       setTimeout(() => {
         win.print()
@@ -415,6 +435,21 @@ export default function AdminDiplomasPage() {
       }, 3500)
     } else {
       setGenerando(false)
+    }
+  }
+
+  function handlePrintCertificacion() {
+    if (!miembro) return
+    setGenerandoCert(true)
+    const logoUrl = getLogoUrl()
+    const pastorNombre = pastor || 'Pastor'
+    const secretarioNombre = secretario || 'Secretario(a)'
+    const fechaLarga = fechaFormateada(fecha)
+    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, fechaLarga)
+    if (win) {
+      setTimeout(() => { win.print(); setGenerandoCert(false) }, 1500)
+    } else {
+      setGenerandoCert(false)
     }
   }
 
@@ -564,7 +599,7 @@ export default function AdminDiplomasPage() {
                 </div>
               </div>
 
-              <div className="pt-3">
+              <div className="pt-3 space-y-3">
                 <Button
                   variant="primary"
                   size="lg"
@@ -575,6 +610,18 @@ export default function AdminDiplomasPage() {
                   <Printer className="mr-2 h-4 w-4" />
                   {generando ? 'Generando...' : 'Imprimir Diploma'}
                 </Button>
+                {tipoMiembro === 'existente' && miembro && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full border-[#e0d8c8] text-gray-700 shadow-sm hover:border-amber-300 hover:bg-amber-50/50"
+                    disabled={generandoCert}
+                    onClick={handlePrintCertificacion}
+                  >
+                    <ScrollText className="mr-2 h-4 w-4" />
+                    {generandoCert ? 'Generando...' : 'Imprimir Certificación'}
+                  </Button>
+                )}
               </div>
 
               {tipoMiembro === 'existente' && miembro && (
