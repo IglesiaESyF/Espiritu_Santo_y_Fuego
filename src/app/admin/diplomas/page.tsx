@@ -213,7 +213,7 @@ function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: 
   return win
 }
 
-function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, fechaBautismo: string): string {
+function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, testigo: string, fechaBautismo: string): string {
   function fmt(d: string): string {
     if (!d) return ''
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
@@ -239,7 +239,7 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
   const fechaLleg = fmt(miembro.fecha_llegada_iglesia) || 'No registrada'
   const tiempoIglesia = calcTiempo(miembro.fecha_llegada_iglesia)
   const llegoBautizado = miembro.llego_bautizado ? 'Sí' : 'No'
-  const motivo = miembro.motivo_llegada || 'No registrado'
+  const testigoNombre = testigo || '_________________________'
 
   const body = `<!DOCTYPE html>
 <html>
@@ -247,7 +247,13 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-<style>${getCertificacionCss()}</style>
+<style>${getCertificacionCss()}
+.cert-sigs { display: flex; justify-content: space-between; margin-top: 10mm; padding: 0 8mm; }
+.cert-sig-block { text-align: center; flex: 1; }
+.cert-sig-line { width: 70%; height: 1px; background: #333; margin: 0 auto 2mm; }
+.cert-sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #222; }
+.cert-sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #666; }
+</style>
 </head>
 <body>
 <div class="page certificacion">
@@ -270,7 +276,23 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
       <div class="cert-row"><span class="cert-label">Fecha de 1ra. llegada a la iglesia:</span><span class="cert-value">${fechaLleg}</span></div>
       <div class="cert-row"><span class="cert-label">Tiempo en la iglesia:</span><span class="cert-value">${tiempoIglesia}</span></div>
       <div class="cert-row"><span class="cert-label">\u00bfLleg\u00f3 bautizado de otra iglesia?:</span><span class="cert-value">${llegoBautizado}</span></div>
-      <div class="cert-row"><span class="cert-label">Motivo de llegada:</span><span class="cert-value">${motivo}</span></div>
+    </div>
+    <div class="cert-sigs">
+      <div class="cert-sig-block">
+        <div class="cert-sig-line"></div>
+        <div class="cert-sig-name">${pastor}</div>
+        <div class="cert-sig-role">Pastor(a) Principal</div>
+      </div>
+      <div class="cert-sig-block">
+        <div class="cert-sig-line"></div>
+        <div class="cert-sig-name">${secretario}</div>
+        <div class="cert-sig-role">Secretario(a) General</div>
+      </div>
+      <div class="cert-sig-block">
+        <div class="cert-sig-line"></div>
+        <div class="cert-sig-name">${testigoNombre}</div>
+        <div class="cert-sig-role">Testigo</div>
+      </div>
     </div>
     <div class="cert-footer">
       <div class="cert-footer-text">Iglesia Esp\u00edritu Santo y Fuego \u2014 Misi\u00f3n Cristiana Perfectos en Unidad</div>
@@ -282,8 +304,8 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
   return body
 }
 
-function openCertificacionWindow(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, fechaBautismo: string): Window | null {
-  const html = buildCertificacionHtml(miembro, logoUrl, pastor, secretario, fechaBautismo)
+function openCertificacionWindow(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, testigo: string, fechaBautismo: string): Window | null {
+  const html = buildCertificacionHtml(miembro, logoUrl, pastor, secretario, testigo, fechaBautismo)
   const win = window.open('', '_blank')
   if (!win) return null
   win.document.write(html)
@@ -315,6 +337,7 @@ export default function AdminDiplomasPage() {
   const [nuevoApellido, setNuevoApellido] = useState('')
   const [guardarMiembro, setGuardarMiembro] = useState(true)
   const searchRef = useRef<HTMLDivElement>(null)
+  const [testigo, setTestigo] = useState('')
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
@@ -332,6 +355,13 @@ export default function AdminDiplomasPage() {
     if (p) setPastor(`${p.nombre} ${p.apellido}`)
     const s = miembros.find(m => m.cargo === 'Secretario(a) General')
     if (s) setSecretario(`${s.nombre} ${s.apellido}`)
+    const t = miembros.find(m =>
+      m.cargo &&
+      m.cargo !== 'Ninguno' &&
+      m.cargo !== 'Pastor(a) Principal' &&
+      m.cargo !== 'Secretario(a) General'
+    )
+    if (t) setTestigo(`${t.nombre} ${t.apellido}`)
   }, [miembros])
 
   function onClickOutside(e: MouseEvent) {
@@ -444,8 +474,9 @@ export default function AdminDiplomasPage() {
     const logoUrl = getLogoUrl()
     const pastorNombre = pastor || 'Pastor'
     const secretarioNombre = secretario || 'Secretario(a)'
+    const testigoNombre = testigo || 'Líder'
     const fechaLarga = fechaFormateada(fecha)
-    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, fechaLarga)
+    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, testigoNombre, fechaLarga)
     if (win) {
       setTimeout(() => { win.print(); setGenerandoCert(false) }, 1500)
     } else {
@@ -594,6 +625,16 @@ export default function AdminDiplomasPage() {
                     value={secretario}
                     onChange={e => setSecretario(e.target.value)}
                     placeholder="Nombre del secretario"
+                    className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Testigo (Líder)</label>
+                  <input
+                    type="text"
+                    value={testigo}
+                    onChange={e => setTestigo(e.target.value)}
+                    placeholder="Nombre del testigo"
                     className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
                   />
                 </div>
