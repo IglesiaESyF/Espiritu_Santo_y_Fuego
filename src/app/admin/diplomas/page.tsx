@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Printer, ScrollText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { db } from '@/lib/firebase'
 import { collection, getDocs } from 'firebase/firestore'
-import html2canvas from 'html2canvas'
 import type { Miembro } from '@/types'
 
 function getLogoUrl(): string {
@@ -136,7 +135,29 @@ function getMmCSS(): string {
   }`
 }
 
-function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
+function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean): string {
+  const captureScript = capturePng ? `
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+window.addEventListener('load', function() {
+  setTimeout(async function() {
+    try {
+      await document.fonts.ready;
+      var canvas = await html2canvas(document.body, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 1056,
+        height: 816,
+      });
+      window.opener.postMessage({ type: 'diploma-png', data: canvas.toDataURL('image/png') }, '*');
+    } catch(e) {
+      window.opener.postMessage({ type: 'diploma-png-error', error: String(e) }, '*');
+    }
+  }, 2500);
+});
+</script>` : ''
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -144,28 +165,19 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
 <style>${getMmCSS()}</style>
+${captureScript}
 </head>
 <body>${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</body>
 </html>`
 }
 
-function buildPxDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
-  return `<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-<style>${getDiplomaCSS()}</style>
-${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}`
-}
-
-function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, onLoad?: (win: Window) => void): Window | null {
-  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean): Window | null {
+  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, capturePng)
   const win = window.open('', '_blank')
   if (!win) return null
   win.document.write(html)
   win.document.close()
   win.focus()
-  if (onLoad) {
-    setTimeout(() => onLoad(win), 2500)
-  }
   return win
 }
 
@@ -179,8 +191,6 @@ export default function AdminDiplomasPage() {
   const [secretario, setSecretario] = useState('Secretario(a) General')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
-  const [previewHTML, setPreviewHTML] = useState('')
-  const previewRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
@@ -218,35 +228,27 @@ export default function AdminDiplomasPage() {
       .replace(/(\d+)pt/g, (m, n) => n + 'pt')
   }
 
-  async function handlePrint() {
+  useEffect(() => {
+    function handler(e: MessageEvent) {
+      if (e.data?.type === 'diploma-png') {
+        const link = document.createElement('a')
+        link.download = `${(miembro?.nombre ?? '')}_${(miembro?.apellido ?? '')}_diploma.png`.replace(/\s+/g, '_')
+        link.href = e.data.data
+        link.click()
+      }
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }, [miembro])
+
+  function handlePrint() {
     if (!miembro) return
     setGenerando(true)
     const logoUrl = getLogoUrl()
     const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
     const fechaLarga = fechaFormateada(fecha)
-
-    const pxHtml = buildPxDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
-    setPreviewHTML(pxHtml)
-    await new Promise(r => setTimeout(r, 100))
-    if (previewRef.current) {
-      try {
-        const canvas = await html2canvas(previewRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: false,
-          backgroundColor: '#ffffff',
-          width: 1056,
-          height: 816,
-        })
-        const link = document.createElement('a')
-        link.download = `${nombreCompleto.replace(/\s+/g, '_')}_diploma.png`
-        link.href = canvas.toDataURL('image/png')
-        link.click()
-      } catch {}
-    }
-    setPreviewHTML('')
-    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
-    if (win) setTimeout(() => { win.print(); setGenerando(false) }, 2500)
+    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, true)
+    if (win) setTimeout(() => { win.print(); setGenerando(false) }, 3500)
     else setGenerando(false)
   }
 
@@ -358,12 +360,6 @@ export default function AdminDiplomasPage() {
 
 
       </div>
-      <div
-        ref={previewRef}
-        className="fixed left-0 top-0 z-[-1] overflow-hidden"
-        style={{ width: '1056px', height: '816px', opacity: 0 }}
-        dangerouslySetInnerHTML={{ __html: previewHTML }}
-      />
     </div>
   )
 }
