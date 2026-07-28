@@ -379,8 +379,8 @@ export default function AdminDiplomasPage() {
     if (p) setPastor(`${p.nombre} ${p.apellido}`)
     const s = miembros.find(m => m.cargo === 'Secretario(a) General')
     if (s) setSecretario(`${s.nombre} ${s.apellido}`)
-    const t = miembros.find(m => m.cargo === 'Diácono(a)')
-    if (t) setTestigo(`${t.nombre} ${t.apellido}`)
+    const d = miembros.find(m => m.cargo === 'Diácono(a)')
+    if (d && !testigo) setTestigo(`${d.nombre} ${d.apellido}`)
   }, [miembros])
 
   function onClickOutside(e: MouseEvent) {
@@ -402,6 +402,7 @@ export default function AdminDiplomasPage() {
 
   const bautizados = useMemo(() => miembros.filter(m => m.estado === 'bautizado'), [miembros])
   const miembro = useMemo(() => miembros.find(m => m.id === miembroId) || null, [miembros, miembroId])
+  const diaconos = useMemo(() => miembros.filter(m => m.cargo === 'Diácono(a)'), [miembros])
 
   const filteredMiembros = useMemo(() => {
     if (!searchText.trim()) return bautizados
@@ -656,13 +657,16 @@ export default function AdminDiplomasPage() {
                 </div>
                 <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Testigo (Diácono)</label>
-                  <input
-                    type="text"
+                  <select
                     value={testigo}
                     onChange={e => setTestigo(e.target.value)}
-                    placeholder="Nombre del diácono"
                     className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
-                  />
+                  >
+                    {diaconos.length === 0 && <option value="">No hay diáconos registrados</option>}
+                    {diaconos.map(d => (
+                      <option key={d.id} value={`${d.nombre} ${d.apellido}`}>{d.nombre} {d.apellido}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
