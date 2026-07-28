@@ -118,6 +118,7 @@ export const CARGOS_MIEMBRO = [
   'Tesorero(a)',
   'Evangelista',
   'Misionero(a)',
+  'Representante de la Iglesia',
   'Líder de Jóvenes',
   'Líder de Alabanza',
   'Ujier',
