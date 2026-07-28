@@ -40,12 +40,12 @@ function getDiplomaCSS(): string {
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #444; margin-top: 6px; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #222; margin-top: 2px; }
   .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #555; margin-top: 6px; max-width: 750px; }
-  .bottom-section { margin-top: 20px; width: 100%; }
+  .bottom-section { margin-top: 45px; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 150px; padding-bottom: 8px; }
   .sig-line { width: 150px; border-top: 1px solid #333; margin-bottom: 4px; }
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #222; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #666; }
-  .footer-line { width: 300px; height: 1px; background: #b8860b; margin: 0 auto 4px; position: relative; }
+  .footer-line { width: 300px; height: 1px; background: #b8860b; margin: 11px auto 4px; position: relative; }
   .footer-line::after { content: '\u2726'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 6pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #888; }`
 }
@@ -121,12 +121,12 @@ function getMmCSS(): string {
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #444; margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #222; margin-top: 0.5mm; }
   .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #555; margin-top: 1.5mm; max-width: 200mm; }
-  .bottom-section { margin-top: 5mm; width: 100%; }
+  .bottom-section { margin-top: 12mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #222; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #666; }
-  .footer-line { width: 80mm; height: 1px; background: #b8860b; margin: 0 auto 1.5mm; position: relative; }
+  .footer-line { width: 80mm; height: 1px; background: #b8860b; margin: 3mm auto 1.5mm; position: relative; }
   .footer-line::after { content: '\u2726'; position: absolute; top: -3mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 6pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #888; }
   @media print {
