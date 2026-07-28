@@ -39,7 +39,7 @@ function getDiplomaCSS(): string {
   .name-underline { width: 378px; height: 1px; background: #b8860b; margin: 5px auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 15pt; color: #444; margin-top: 6px; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #222; margin-top: 2px; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #555; margin-top: 4px; max-width: 750px; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #555; margin-top: -8px; max-width: 750px; }
   .bottom-section { margin-top: 55px; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 150px; padding-bottom: 8px; }
   .sig-line { width: 150px; border-top: 1px solid #333; margin-bottom: 4px; }
@@ -120,7 +120,7 @@ function getMmCSS(): string {
   .name-underline { width: 100mm; height: 1px; background: #b8860b; margin: 1.5mm auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 15pt; color: #444; margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #222; margin-top: 0.5mm; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #555; margin-top: 1mm; max-width: 200mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #555; margin-top: -2mm; max-width: 200mm; }
   .bottom-section { margin-top: 14mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
