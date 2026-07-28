@@ -315,7 +315,7 @@ ${captureScript}
       <div class="cert-sig-block">
         <div class="cert-sig-line"></div>
         <div class="cert-sig-name">${testigoNombre}</div>
-        <div class="cert-sig-role">Testigo</div>
+        <div class="cert-sig-role">Diácono</div>
       </div>
     </div>
     <div class="cert-footer">
@@ -379,12 +379,7 @@ export default function AdminDiplomasPage() {
     if (p) setPastor(`${p.nombre} ${p.apellido}`)
     const s = miembros.find(m => m.cargo === 'Secretario(a) General')
     if (s) setSecretario(`${s.nombre} ${s.apellido}`)
-    const t = miembros.find(m =>
-      m.cargo &&
-      m.cargo !== 'Ninguno' &&
-      m.cargo !== 'Pastor(a) Principal' &&
-      m.cargo !== 'Secretario(a) General'
-    )
+    const t = miembros.find(m => m.cargo === 'Diácono(a)')
     if (t) setTestigo(`${t.nombre} ${t.apellido}`)
   }, [miembros])
 
@@ -660,12 +655,12 @@ export default function AdminDiplomasPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Testigo (Líder)</label>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Testigo (Diácono)</label>
                   <input
                     type="text"
                     value={testigo}
                     onChange={e => setTestigo(e.target.value)}
-                    placeholder="Nombre del testigo"
+                    placeholder="Nombre del diácono"
                     className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
                   />
                 </div>
