@@ -213,7 +213,7 @@ function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: 
   return win
 }
 
-function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, testigo: string, fechaBautismo: string): string {
+function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, testigo: string, fechaBautismo: string, capturePng?: boolean): string {
   function fmt(d: string): string {
     if (!d) return ''
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
@@ -241,6 +241,29 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
   const llegoBautizado = miembro.llego_bautizado ? 'Sí' : 'No'
   const testigoNombre = testigo || '_________________________'
 
+  const captureScript = capturePng ? `
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+window.addEventListener('load', function() {
+  setTimeout(async function() {
+    try {
+      await document.fonts.ready;
+      var target = document.querySelector('.page.certificacion') || document.body;
+      var canvas = await html2canvas(target, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        width: 816,
+        height: 1056,
+      });
+      window.opener.postMessage({ type: 'certificacion-png', data: canvas.toDataURL('image/png') }, '*');
+    } catch(e) {
+      window.opener.postMessage({ type: 'certificacion-png-error', error: String(e) }, '*');
+    }
+  }, 2500);
+});
+</script>` : ''
+
   const body = `<!DOCTYPE html>
 <html>
 <head>
@@ -254,6 +277,7 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
 .cert-sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #222; }
 .cert-sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #666; }
 </style>
+${captureScript}
 </head>
 <body>
 <div class="page certificacion">
@@ -304,8 +328,8 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
   return body
 }
 
-function openCertificacionWindow(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, testigo: string, fechaBautismo: string): Window | null {
-  const html = buildCertificacionHtml(miembro, logoUrl, pastor, secretario, testigo, fechaBautismo)
+function openCertificacionWindow(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, testigo: string, fechaBautismo: string, capturePng?: boolean): Window | null {
+  const html = buildCertificacionHtml(miembro, logoUrl, pastor, secretario, testigo, fechaBautismo, capturePng)
   const win = window.open('', '_blank')
   if (!win) return null
   win.document.write(html)
@@ -426,6 +450,13 @@ export default function AdminDiplomasPage() {
         link.href = e.data.data
         link.click()
       }
+      if (e.data?.type === 'certificacion-png') {
+        if (!miembro) return
+        const link = document.createElement('a')
+        link.download = `${miembro.nombre}_${miembro.apellido}_certificacion.png`.replace(/\s+/g, '_')
+        link.href = e.data.data
+        link.click()
+      }
     }
     window.addEventListener('message', handler)
     return () => window.removeEventListener('message', handler)
@@ -476,7 +507,7 @@ export default function AdminDiplomasPage() {
     const secretarioNombre = secretario || 'Secretario(a)'
     const testigoNombre = testigo || 'Líder'
     const fechaLarga = fechaFormateada(fecha)
-    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, testigoNombre, fechaLarga)
+    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, testigoNombre, fechaLarga, true)
     if (win) {
       setTimeout(() => { win.print(); setGenerandoCert(false) }, 1500)
     } else {
