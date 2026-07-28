@@ -28,7 +28,7 @@ function getDiplomaCSS(): string {
   .corner.br { bottom: 26px; right: 26px; }
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
   .watermark img { width: 600px; height: 600px; object-fit: contain; opacity: 0.15; }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 140px 90px 140px; text-align: center; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 102px 90px 140px; text-align: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
   .gold-line { width: 300px; height: 1px; background: #b8860b; margin: 5px auto; position: relative; }
   .gold-line::after { content: '\u2726'; position: absolute; top: -13px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
@@ -109,7 +109,7 @@ function getMmCSS(): string {
   .corner.br { bottom: 7mm; right: 7mm; }
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
   .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.15; }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 37mm 24mm 37mm; text-align: center; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 27mm 24mm 37mm; text-align: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 28pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
   .gold-line { width: 80mm; height: 1px; background: #b8860b; margin: 1.5mm auto; position: relative; }
   .gold-line::after { content: '\u2726'; position: absolute; top: -3.5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
