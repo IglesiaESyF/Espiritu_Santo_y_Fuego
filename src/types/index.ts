@@ -100,11 +100,30 @@ export interface Miembro {
   correo: string
   estado: 'bautizado' | 'no_bautizado'
   categoria: string
+  cargo: string
   familiares: Familiar[]
   notas: string
   activo: boolean
   creadoEn: number
 }
+
+export const CARGOS_MIEMBRO = [
+  'Pastor(a) Principal',
+  'Pastor(a)',
+  'Copastor(a)',
+  'Secretario(a) General',
+  'Secretario(a)',
+  'Diácono(a)',
+  'Tesorero(a)',
+  'Evangelista',
+  'Misionero(a)',
+  'Líder de Jóvenes',
+  'Líder de Alabanza',
+  'Ujier',
+  'Maestro(a)',
+  'Anciano(a)',
+  'Ninguno',
+] as const
 
 export const ROLES_PRESET: Record<UserRole, Permisos> = {
   'it-admin': {

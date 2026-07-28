@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Printer, ScrollText } from 'lucide-react'
+import { ArrowLeft, Printer, ScrollText, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { db } from '@/lib/firebase'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore'
 import type { Miembro } from '@/types'
+import { CARGOS_MIEMBRO } from '@/types'
 
 function getLogoUrl(): string {
   if (typeof window === 'undefined') return '/logo.png'
@@ -181,22 +182,52 @@ function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: 
   return win
 }
 
+const CATEGORIA_LABEL: Record<string, string> = {
+  nino: 'Niño', preadolescente: 'Preadolescente', adolescente: 'Adolescente',
+  joven_adulto: 'Joven Adulto', adulto_mayor: 'Adulto Mayor',
+}
+
 export default function AdminDiplomasPage() {
   const router = useRouter()
   const { user } = useAuth()
   const [miembros, setMiembros] = useState<Miembro[]>([])
   const [miembroId, setMiembroId] = useState('')
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
-  const [pastor, setPastor] = useState('Pastor ')
-  const [secretario, setSecretario] = useState('Secretario(a) General')
+  const [pastor, setPastor] = useState('')
+  const [secretario, setSecretario] = useState('')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
+  const [tipoMiembro, setTipoMiembro] = useState<'existente' | 'nuevo'>('existente')
+  const [searchText, setSearchText] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [nuevoNombre, setNuevoNombre] = useState('')
+  const [nuevoApellido, setNuevoApellido] = useState('')
+  const [guardarMiembro, setGuardarMiembro] = useState(true)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
     if (!ok) router.replace('/admin/dashboard')
     else loadMiembros()
   }, [])
+
+  useEffect(() => {
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const p = miembros.find(m => m.cargo === 'Pastor(a) Principal')
+    if (p) setPastor(`${p.nombre} ${p.apellido}`)
+    const s = miembros.find(m => m.cargo === 'Secretario(a) General')
+    if (s) setSecretario(`${s.nombre} ${s.apellido}`)
+  }, [miembros])
+
+  function onClickOutside(e: MouseEvent) {
+    if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+      setShowDropdown(false)
+    }
+  }
 
   async function loadMiembros() {
     setLoading(true)
@@ -211,6 +242,20 @@ export default function AdminDiplomasPage() {
 
   const bautizados = useMemo(() => miembros.filter(m => m.estado === 'bautizado'), [miembros])
   const miembro = useMemo(() => miembros.find(m => m.id === miembroId) || null, [miembros, miembroId])
+
+  const filteredMiembros = useMemo(() => {
+    if (!searchText.trim()) return bautizados
+    const q = searchText.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    return bautizados.filter(m =>
+      `${m.nombre} ${m.apellido}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+    ).slice(0, 10)
+  }, [bautizados, searchText])
+
+  function seleccionarMiembro(m: Miembro) {
+    setMiembroId(m.id)
+    setSearchText(`${m.nombre} ${m.apellido}`)
+    setShowDropdown(false)
+  }
 
   function fechaFormateada(f: string): string {
     if (!f) return ''
@@ -231,29 +276,60 @@ export default function AdminDiplomasPage() {
   useEffect(() => {
     function handler(e: MessageEvent) {
       if (e.data?.type === 'diploma-png') {
+        const nombre = miembro
+          ? `${miembro.nombre}_${miembro.apellido}`
+          : `${nuevoNombre}_${nuevoApellido}`.trim().replace(/\s+/g, '_')
         const link = document.createElement('a')
-        link.download = `${(miembro?.nombre ?? '')}_${(miembro?.apellido ?? '')}_diploma.png`.replace(/\s+/g, '_')
+        link.download = `${nombre}_diploma.png`.replace(/\s+/g, '_')
         link.href = e.data.data
         link.click()
       }
     }
     window.addEventListener('message', handler)
     return () => window.removeEventListener('message', handler)
-  }, [miembro])
+  }, [miembro, nuevoNombre, nuevoApellido])
 
   function handlePrint() {
-    if (!miembro) return
     setGenerando(true)
     const logoUrl = getLogoUrl()
-    const nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+    const pastorNombre = pastor || 'Pastor'
+    const secretarioNombre = secretario || 'Secretario(a)'
     const fechaLarga = fechaFormateada(fecha)
-    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, true)
-    if (win) setTimeout(() => { win.print(); setGenerando(false) }, 3500)
-    else setGenerando(false)
+
+    let nombreCompleto: string
+    if (tipoMiembro === 'existente') {
+      if (!miembro) { setGenerando(false); return }
+      nombreCompleto = `${miembro.nombre} ${miembro.apellido}`
+    } else {
+      if (!nuevoNombre.trim() || !nuevoApellido.trim()) { setGenerando(false); return }
+      nombreCompleto = `${nuevoNombre.trim()} ${nuevoApellido.trim()}`
+    }
+
+    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, true)
+    if (win) {
+      setTimeout(() => {
+        win.print()
+        setGenerando(false)
+        if (tipoMiembro === 'nuevo' && guardarMiembro && nuevoNombre.trim() && nuevoApellido.trim()) {
+          setDoc(doc(db, 'miembros', crypto.randomUUID()), {
+            nombre: nuevoNombre.trim(), apellido: nuevoApellido.trim(),
+            fecha_nacimiento: '', edad: 0, pais: 'Nicaragua', departamento: '',
+            ciudad: '', barrio: '', direccion: '', celular: '', correo: '',
+            estado: 'bautizado', categoria: '', cargo: '', familiares: [],
+            notas: '', activo: true, creadoEn: Date.now(),
+          }).catch(() => {})
+        }
+      }, 3500)
+    } else {
+      setGenerando(false)
+    }
   }
 
   const ok = user?.role === 'it-admin' || user?.role === 'secretario' || (user?.cargo && user.cargo.toLowerCase().includes('pastor'))
   if (!ok) return null
+
+  const puedeImprimir = (tipoMiembro === 'existente' && miembro) ||
+    (tipoMiembro === 'nuevo' && nuevoNombre.trim() && nuevoApellido.trim())
 
   return (
     <div className="min-h-screen bg-[#f8f6f0]">
@@ -276,7 +352,7 @@ export default function AdminDiplomasPage() {
               <ScrollText className="h-5 w-5 text-amber-700" />
             </div>
             <div>
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800">Informaci\u00f3n del Certificado</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800">Información del Certificado</h2>
               <p className="text-xs text-gray-400">Complete los datos para generar el diploma</p>
             </div>
           </div>
@@ -288,19 +364,80 @@ export default function AdminDiplomasPage() {
           ) : (
             <div className="space-y-5">
               <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Miembro bautizado</label>
-                <select
-                  value={miembroId}
-                  onChange={e => setMiembroId(e.target.value)}
-                  className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
-                >
-                  <option value="">Seleccionar miembro bautizado</option>
-                  {bautizados.map(m => (
-                    <option key={m.id} value={m.id}>{m.nombre} {m.apellido}</option>
-                  ))}
-                </select>
-                {!bautizados.length && <p className="mt-1.5 text-xs text-amber-600">No hay miembros con estado &quot;Bautizado&quot;. Actualice el estado en Miembros primero.</p>}
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Tipo de certificado</label>
+                <div className="flex gap-4 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="tipoMiembro" checked={tipoMiembro === 'nuevo'} onChange={() => { setTipoMiembro('nuevo'); setMiembroId(''); setSearchText('') }} className="accent-amber-600" />
+                    <span className="text-sm text-gray-700">Nuevo bautizado</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="tipoMiembro" checked={tipoMiembro === 'existente'} onChange={() => setTipoMiembro('existente')} className="accent-amber-600" />
+                    <span className="text-sm text-gray-700">Reimprimir (miembro activo)</span>
+                  </label>
+                </div>
               </div>
+
+              {tipoMiembro === 'nuevo' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Nombre</label>
+                    <input
+                      type="text" value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)}
+                      placeholder="Nombre del bautizado"
+                      className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Apellido</label>
+                    <input
+                      type="text" value={nuevoApellido} onChange={e => setNuevoApellido(e.target.value)}
+                      placeholder="Apellido del bautizado"
+                      className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={guardarMiembro} onChange={e => setGuardarMiembro(e.target.checked)} className="accent-amber-600" />
+                      <span className="text-sm text-gray-600">Guardar como nuevo miembro en la base de datos</span>
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <div ref={searchRef}>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Miembro bautizado</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchText}
+                      onChange={e => { setSearchText(e.target.value); setMiembroId(''); setShowDropdown(true) }}
+                      onFocus={() => setShowDropdown(true)}
+                      placeholder="Escriba para buscar miembro bautizado..."
+                      className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] pl-9 pr-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                    />
+                    {showDropdown && filteredMiembros.length > 0 && (
+                      <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-[#e0d8c8] bg-white shadow-lg">
+                        {filteredMiembros.map(m => (
+                          <button
+                            key={m.id}
+                            onClick={() => seleccionarMiembro(m)}
+                            className="flex w-full items-center justify-between px-4 py-2.5 text-sm hover:bg-amber-50/50 transition-colors"
+                          >
+                            <span className="font-medium text-gray-800">{m.nombre} {m.apellido}</span>
+                            <span className="text-xs text-gray-400">{m.categoria ? CATEGORIA_LABEL[m.categoria] : ''}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {showDropdown && searchText.trim() && filteredMiembros.length === 0 && (
+                      <div className="absolute z-10 mt-1 w-full rounded-xl border border-[#e0d8c8] bg-white px-4 py-3 text-sm text-gray-400 shadow-lg">
+                        No se encontraron miembros
+                      </div>
+                    )}
+                  </div>
+                  {!bautizados.length && <p className="mt-1.5 text-xs text-amber-600">No hay miembros con estado &quot;Bautizado&quot;. Actualice el estado en Miembros primero.</p>}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -313,7 +450,7 @@ export default function AdminDiplomasPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Pastor</label>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Pastor(a) Principal</label>
                   <input
                     type="text"
                     value={pastor}
@@ -323,7 +460,7 @@ export default function AdminDiplomasPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Secretario(a)</label>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Secretario(a) General</label>
                   <input
                     type="text"
                     value={secretario}
@@ -339,7 +476,7 @@ export default function AdminDiplomasPage() {
                   variant="primary"
                   size="lg"
                   className="w-full bg-gradient-to-r from-amber-700 to-yellow-700 text-white shadow-lg shadow-amber-900/20 hover:from-amber-800 hover:to-yellow-800"
-                  disabled={!miembro || generando}
+                  disabled={!puedeImprimir || generando}
                   onClick={handlePrint}
                 >
                   <Printer className="mr-2 h-4 w-4" />
@@ -347,18 +484,23 @@ export default function AdminDiplomasPage() {
                 </Button>
               </div>
 
-              {miembro && (
+              {tipoMiembro === 'existente' && miembro && (
                 <div className="rounded-xl border border-amber-200/40 bg-gradient-to-br from-amber-50/60 to-white p-4 text-center">
                   <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Vista previa</p>
                   <p className="mt-1 text-lg font-bold text-gray-800">{miembro.nombre} {miembro.apellido}</p>
                   <p className="text-xs text-gray-500">{fechaFormateada(fecha)}</p>
                 </div>
               )}
+              {tipoMiembro === 'nuevo' && nuevoNombre.trim() && (
+                <div className="rounded-xl border border-amber-200/40 bg-gradient-to-br from-amber-50/60 to-white p-4 text-center">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Vista previa</p>
+                  <p className="mt-1 text-lg font-bold text-gray-800">{nuevoNombre} {nuevoApellido}</p>
+                  <p className="text-xs text-gray-500">{fechaFormateada(fecha)}</p>
+                </div>
+              )}
             </div>
           )}
         </div>
-
-
       </div>
     </div>
   )

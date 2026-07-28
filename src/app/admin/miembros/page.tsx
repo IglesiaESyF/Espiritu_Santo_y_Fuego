@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth-context'
 import { collection, doc, getDocs, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { PAISES, getDepartamentos, getCiudades, getBarrios } from '@/data/ubicaciones'
 import type { Miembro, Familiar } from '@/types'
+import { CARGOS_MIEMBRO } from '@/types'
 
 const PARENTESCOS = [
   'Padre', 'Madre', 'Hermano', 'Hermana', 'Abuelo', 'Abuela',
@@ -51,7 +52,7 @@ function emptyMiembro(): Omit<Miembro, 'id' | 'creadoEn'> {
   return {
     nombre: '', apellido: '', fecha_nacimiento: '', edad: 0,
     pais: 'Nicaragua', departamento: '', ciudad: '', barrio: '', direccion: '',
-    celular: '', correo: '', estado: 'no_bautizado', categoria: '',
+    celular: '', correo: '', estado: 'no_bautizado', categoria: '', cargo: '',
     familiares: [], notas: '', activo: true,
   }
 }
@@ -139,7 +140,7 @@ export default function AdminMiembrosPage() {
       nombre: m.nombre, apellido: m.apellido, fecha_nacimiento: m.fecha_nacimiento,
       edad: m.edad, pais: m.pais, departamento: m.departamento, ciudad: m.ciudad,
       barrio: m.barrio, direccion: m.direccion, celular: m.celular, correo: m.correo,
-      estado: m.estado, categoria: m.categoria, familiares: m.familiares || [],
+      estado: m.estado, categoria: m.categoria, cargo: m.cargo || '', familiares: m.familiares || [],
       notas: m.notas, activo: m.activo,
     })
     setEditingId(m.id)
@@ -270,6 +271,7 @@ export default function AdminMiembrosPage() {
               <th className="px-4 py-3">Nombre</th>
               <th className="px-4 py-3">Edad</th>
               <th className="px-4 py-3">Categoría</th>
+              <th className="px-4 py-3">Cargo</th>
               <th className="px-4 py-3">Celular</th>
               <th className="px-4 py-3">Estado</th>
               <th className="px-4 py-3">Familiares</th>
@@ -281,12 +283,15 @@ export default function AdminMiembrosPage() {
               <tr key={m.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-medium">{m.nombre} {m.apellido}</td>
                 <td className="px-4 py-3 text-gray-500">{m.edad} años</td>
-                <td className="px-4 py-3">
-                  <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORIA_COLOR[m.categoria] || 'bg-gray-100 text-gray-600'}`}>
-                    {CATEGORIA_LABEL[m.categoria] || m.categoria}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-gray-500">{m.celular}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${CATEGORIA_COLOR[m.categoria] || 'bg-gray-100 text-gray-600'}`}>
+                      {CATEGORIA_LABEL[m.categoria] || m.categoria}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {m.cargo ? <span className="text-xs font-medium text-gray-600">{m.cargo}</span> : '-'}
+                  </td>
+                  <td className="px-4 py-3 text-gray-500">{m.celular}</td>
                 <td className="px-4 py-3">
                   <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${m.estado === 'bautizado' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                     {m.estado === 'bautizado' ? 'Bautizado' : 'No Bautizado'}
@@ -304,9 +309,9 @@ export default function AdminMiembrosPage() {
                 </td>
               </tr>
             ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-400">No se encontraron miembros</td></tr>
-            )}
+              {filtered.length === 0 && (
+                <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-400">No se encontraron miembros</td></tr>
+              )}
           </tbody>
         </table>
       </div>
@@ -377,6 +382,15 @@ export default function AdminMiembrosPage() {
                     <span className="text-sm">No Bautizado</span>
                   </label>
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Cargo en la Iglesia</label>
+                <select value={form.cargo} onChange={(e) => handleField('cargo', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="">Ninguno</option>
+                  {CARGOS_MIEMBRO.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
               </div>
 
               <div>
