@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth-context'
 import { collection, doc, getDocs, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { PAISES, getDepartamentos, getCiudades, getBarrios } from '@/data/ubicaciones'
 import type { Miembro, Familiar } from '@/types'
-import { CARGOS_MIEMBRO } from '@/types'
+import { CARGOS_MIEMBRO, MOTIVOS_LLEGADA } from '@/types'
 
 const PARENTESCOS = [
   'Padre', 'Madre', 'Hermano', 'Hermana', 'Abuelo', 'Abuela',
@@ -52,7 +52,7 @@ function emptyMiembro(): Omit<Miembro, 'id' | 'creadoEn'> {
   return {
     nombre: '', apellido: '', fecha_nacimiento: '', edad: 0,
     pais: 'Nicaragua', departamento: '', ciudad: '', barrio: '', direccion: '',
-    celular: '', correo: '', estado: 'no_bautizado', fecha_bautismo: '', categoria: '', cargo: '',
+    celular: '', correo: '', estado: 'no_bautizado', fecha_bautismo: '', fecha_llegada_iglesia: '', llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: '',
     familiares: [], notas: '', activo: true,
   }
 }
@@ -140,7 +140,7 @@ export default function AdminMiembrosPage() {
       nombre: m.nombre, apellido: m.apellido, fecha_nacimiento: m.fecha_nacimiento,
       edad: m.edad, pais: m.pais, departamento: m.departamento, ciudad: m.ciudad,
       barrio: m.barrio, direccion: m.direccion, celular: m.celular, correo: m.correo,
-      estado: m.estado, fecha_bautismo: m.fecha_bautismo || '', categoria: m.categoria, cargo: m.cargo || '', familiares: m.familiares || [],
+      estado: m.estado, fecha_bautismo: m.fecha_bautismo || '', fecha_llegada_iglesia: m.fecha_llegada_iglesia || '', llego_bautizado: m.llego_bautizado || false, motivo_llegada: m.motivo_llegada || '', categoria: m.categoria, cargo: m.cargo || '', familiares: m.familiares || [],
       notas: m.notas, activo: m.activo,
     })
     setEditingId(m.id)
@@ -388,6 +388,35 @@ export default function AdminMiembrosPage() {
                 <label className="mb-1 block text-sm font-medium text-gray-700">Fecha de Bautismo</label>
                 <input type="date" value={form.fecha_bautismo} onChange={(e) => handleField('fecha_bautismo', e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Fecha de primera llegada a la iglesia</label>
+                <input type="date" value={form.fecha_llegada_iglesia} onChange={(e) => handleField('fecha_llegada_iglesia', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">¿Llegó bautizado de otra iglesia?</label>
+                <div className="flex gap-3 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="llego_bautizado" checked={form.llego_bautizado === true} onChange={() => handleField('llego_bautizado', true)} className="accent-primary" />
+                    <span className="text-sm">Sí</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="llego_bautizado" checked={form.llego_bautizado === false} onChange={() => handleField('llego_bautizado', false)} className="accent-primary" />
+                    <span className="text-sm">No</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Motivo de llegada a la iglesia</label>
+                <select value={form.motivo_llegada} onChange={(e) => handleField('motivo_llegada', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none">
+                  <option value="">Seleccionar...</option>
+                  {MOTIVOS_LLEGADA.map((m) => <option key={m} value={m}>{m}</option>)}
+                </select>
               </div>
 
               <div>

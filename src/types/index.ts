@@ -100,6 +100,9 @@ export interface Miembro {
   correo: string
   estado: 'bautizado' | 'no_bautizado'
   fecha_bautismo: string
+  fecha_llegada_iglesia: string
+  llego_bautizado: boolean
+  motivo_llegada: string
   categoria: string
   cargo: string
   familiares: Familiar[]
@@ -107,6 +110,13 @@ export interface Miembro {
   activo: boolean
   creadoEn: number
 }
+
+export const MOTIVOS_LLEGADA = [
+  'Traslado',
+  'Reconciliación',
+  'Aceptar a Jesús por primera vez',
+  'Traslado de una iglesia a otra',
+] as const
 
 export const CARGOS_MIEMBRO = [
   'Pastor(a) Principal',

@@ -136,7 +136,7 @@ function getMmCSS(): string {
   }`
 }
 
-function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean): string {
+function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, miembro?: Miembro): string {
   const captureScript = capturePng ? `
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
@@ -144,7 +144,8 @@ window.addEventListener('load', function() {
   setTimeout(async function() {
     try {
       await document.fonts.ready;
-      var canvas = await html2canvas(document.body, {
+      var target = document.querySelector('.page.diploma') || document.body;
+      var canvas = await html2canvas(target, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
@@ -159,21 +160,111 @@ window.addEventListener('load', function() {
 });
 </script>` : ''
 
+  const pages = [
+    `<div class="page diploma">${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</div>`,
+  ]
+
+  if (miembro) {
+    pages.push(getCertificacionPageHtml(miembro, logoUrl, pastor, secretario, fechaLarga))
+  }
+
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-<style>${getMmCSS()}</style>
+<style>${getMmCSS()}${miembro ? getCertificacionCss() : ''}</style>
 ${captureScript}
 </head>
-<body>${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</body>
+<body>${pages.join('\n')}</body>
 </html>`
 }
 
-function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean): Window | null {
-  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, capturePng)
+function getCertificacionCss(): string {
+  return `
+  .page.certificacion { position: relative; width: 279mm; height: 216mm; overflow: hidden; font-family: 'Cormorant Garamond', serif; background: #fff; page-break-before: always; }
+  .cert-border-outer { position: absolute; inset: 10mm; border: 2px solid #b8860b; border-radius: 4px; }
+  .cert-border-inner { position: absolute; inset: 14mm; border: 0.8px solid #b8860b; border-radius: 3px; }
+  .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
+  .cert-watermark img { width: 140mm; height: 140mm; object-fit: contain; opacity: 0.08; }
+  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 20mm 24mm 18mm; }
+  .cert-header { text-align: center; margin-bottom: 8mm; }
+  .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 18pt; color: #b8860b; font-weight: 700; }
+  .cert-header .sub { font-family: 'Cormorant Garamond', serif; font-size: 10pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
+  .cert-header .gold-line { width: 60mm; height: 1px; background: #b8860b; margin: 3mm auto; }
+  .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #b8860b; letter-spacing: 3px; text-transform: uppercase; }
+  .cert-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 2.5mm; padding: 0 10mm; }
+  .cert-row { display: flex; }
+  .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #b8860b; min-width: 70mm; }
+  .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #333; border-bottom: 1px dashed #ccc; flex: 1; padding-left: 2mm; }
+  .cert-footer { text-align: center; margin-top: auto; padding-top: 5mm; }
+  .cert-footer-text { font-family: 'Cormorant Garamond', serif; font-size: 9pt; color: #888; font-weight: 700; }
+  @media print {
+    .page.certificacion { page-break-before: always; }
+    *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  }`
+}
+
+function getCertificacionPageHtml(miembro: Miembro, logoUrl: string, pastor: string, secretario: string, fechaBautismo: string): string {
+  function fmt(d: string): string {
+    if (!d) return ''
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const [y, m, day] = d.split('-')
+    return `${parseInt(day)} de ${meses[parseInt(m) - 1]} de ${y}`
+  }
+  function calcTiempo(fecha: string): string {
+    if (!fecha) return ''
+    const inicio = new Date(fecha)
+    const hoy = new Date()
+    let años = hoy.getFullYear() - inicio.getFullYear()
+    let meses = hoy.getMonth() - inicio.getMonth()
+    if (meses < 0) { años--; meses += 12 }
+    const partes: string[] = []
+    if (años > 0) partes.push(`${años} año${años !== 1 ? 's' : ''}`)
+    if (meses > 0) partes.push(`${meses} mes${meses !== 1 ? 'es' : ''}`)
+    return partes.join(' y ') || 'Menos de 1 mes'
+  }
+
+  const direccion = [miembro.direccion, miembro.barrio, miembro.ciudad, miembro.departamento].filter(Boolean).join(', ') || 'No registrada'
+  const nacionalidad = miembro.pais || 'No registrada'
+  const fechaNac = fmt(miembro.fecha_nacimiento) || 'No registrada'
+  const fechaLleg = fmt(miembro.fecha_llegada_iglesia) || 'No registrada'
+  const tiempoIglesia = calcTiempo(miembro.fecha_llegada_iglesia)
+  const llegoBautizado = miembro.llego_bautizado ? 'Sí' : 'No'
+  const motivo = miembro.motivo_llegada || 'No registrado'
+
+  return `<div class="page certificacion">
+    <div class="cert-border-outer"></div>
+    <div class="cert-border-inner"></div>
+    <div class="cert-watermark"><img src="${logoUrl}"></div>
+    <div class="cert-content">
+      <div class="cert-header">
+        <div class="church">Iglesia Espíritu Santo y Fuego</div>
+        <div class="sub">Misión Cristiana Perfectos en Unidad</div>
+        <div class="gold-line"></div>
+        <div class="title">Certificación de Datos del Bautizado</div>
+      </div>
+      <div class="cert-body">
+        <div class="cert-row"><span class="cert-label">Nombre completo:</span><span class="cert-value">${miembro.nombre} ${miembro.apellido}</span></div>
+        <div class="cert-row"><span class="cert-label">Fecha de nacimiento:</span><span class="cert-value">${fechaNac}</span></div>
+        <div class="cert-row"><span class="cert-label">Nacionalidad:</span><span class="cert-value">${nacionalidad}</span></div>
+        <div class="cert-row"><span class="cert-label">Dirección:</span><span class="cert-value">${direccion}</span></div>
+        <div class="cert-row"><span class="cert-label">Fecha de bautismo:</span><span class="cert-value">${fechaBautismo || 'No registrada'}</span></div>
+        <div class="cert-row"><span class="cert-label">Fecha de 1ra. llegada a la iglesia:</span><span class="cert-value">${fechaLleg}</span></div>
+        <div class="cert-row"><span class="cert-label">Tiempo en la iglesia:</span><span class="cert-value">${tiempoIglesia}</span></div>
+        <div class="cert-row"><span class="cert-label">¿Llegó bautizado de otra iglesia?:</span><span class="cert-value">${llegoBautizado}</span></div>
+        <div class="cert-row"><span class="cert-label">Motivo de llegada:</span><span class="cert-value">${motivo}</span></div>
+      </div>
+      <div class="cert-footer">
+        <div class="cert-footer-text">Iglesia Espíritu Santo y Fuego — Misión Cristiana Perfectos en Unidad</div>
+      </div>
+    </div>
+  </div>`
+}
+
+function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, miembro?: Miembro): Window | null {
+  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, capturePng, miembro)
   const win = window.open('', '_blank')
   if (!win) return null
   win.document.write(html)
@@ -306,7 +397,7 @@ export default function AdminDiplomasPage() {
       nombreCompleto = `${nuevoNombre.trim()} ${nuevoApellido.trim()}`
     }
 
-    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, true)
+    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, true, tipoMiembro === 'existente' ? (miembro ?? undefined) : undefined)
     if (win) {
       setTimeout(() => {
         win.print()
@@ -316,8 +407,9 @@ export default function AdminDiplomasPage() {
             nombre: nuevoNombre.trim(), apellido: nuevoApellido.trim(),
             fecha_nacimiento: '', edad: 0, pais: 'Nicaragua', departamento: '',
             ciudad: '', barrio: '', direccion: '', celular: '', correo: '',
-            estado: 'bautizado', categoria: '', cargo: '', familiares: [],
-            notas: '', activo: true, creadoEn: Date.now(),
+            estado: 'bautizado', fecha_bautismo: fecha, fecha_llegada_iglesia: '',
+            llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: '',
+            familiares: [], notas: '', activo: true, creadoEn: Date.now(),
           }).catch(() => {})
         }
       }, 3500)
