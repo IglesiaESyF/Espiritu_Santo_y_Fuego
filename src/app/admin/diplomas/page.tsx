@@ -255,6 +255,7 @@ export default function AdminDiplomasPage() {
     setMiembroId(m.id)
     setSearchText(`${m.nombre} ${m.apellido}`)
     setShowDropdown(false)
+    if (m.fecha_bautismo) setFecha(m.fecha_bautismo)
   }
 
   function fechaFormateada(f: string): string {

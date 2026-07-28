@@ -99,6 +99,7 @@ export interface Miembro {
   celular: string
   correo: string
   estado: 'bautizado' | 'no_bautizado'
+  fecha_bautismo: string
   categoria: string
   cargo: string
   familiares: Familiar[]

@@ -52,7 +52,7 @@ function emptyMiembro(): Omit<Miembro, 'id' | 'creadoEn'> {
   return {
     nombre: '', apellido: '', fecha_nacimiento: '', edad: 0,
     pais: 'Nicaragua', departamento: '', ciudad: '', barrio: '', direccion: '',
-    celular: '', correo: '', estado: 'no_bautizado', categoria: '', cargo: '',
+    celular: '', correo: '', estado: 'no_bautizado', fecha_bautismo: '', categoria: '', cargo: '',
     familiares: [], notas: '', activo: true,
   }
 }
@@ -140,7 +140,7 @@ export default function AdminMiembrosPage() {
       nombre: m.nombre, apellido: m.apellido, fecha_nacimiento: m.fecha_nacimiento,
       edad: m.edad, pais: m.pais, departamento: m.departamento, ciudad: m.ciudad,
       barrio: m.barrio, direccion: m.direccion, celular: m.celular, correo: m.correo,
-      estado: m.estado, categoria: m.categoria, cargo: m.cargo || '', familiares: m.familiares || [],
+      estado: m.estado, fecha_bautismo: m.fecha_bautismo || '', categoria: m.categoria, cargo: m.cargo || '', familiares: m.familiares || [],
       notas: m.notas, activo: m.activo,
     })
     setEditingId(m.id)
@@ -382,6 +382,12 @@ export default function AdminMiembrosPage() {
                     <span className="text-sm">No Bautizado</span>
                   </label>
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Fecha de Bautismo</label>
+                <input type="date" value={form.fecha_bautismo} onChange={(e) => handleField('fecha_bautismo', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none" />
               </div>
 
               <div>
