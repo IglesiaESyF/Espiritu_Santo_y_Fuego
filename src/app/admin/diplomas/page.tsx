@@ -43,11 +43,11 @@ function getDiplomaCSS(): string {
   .bottom-section { margin-top: auto; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 150px; padding-bottom: 8px; }
   .sig-line { width: 150px; border-top: 1px solid #333; margin-bottom: 4px; }
-  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #222; }
-  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #666; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #222; }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #666; }
   .footer-line { width: 300px; height: 1px; background: #b8860b; margin: 0 auto 4px; position: relative; }
   .footer-line::after { content: '\u2726'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 6pt; }
-  .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 9pt; color: #888; }`
+  .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #888; }`
 }
 
 function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
@@ -124,11 +124,11 @@ function getMmCSS(): string {
   .bottom-section { margin-top: auto; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
-  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #222; }
-  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #666; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 13pt; color: #222; }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #666; }
   .footer-line { width: 80mm; height: 1px; background: #b8860b; margin: 0 auto 1.5mm; position: relative; }
   .footer-line::after { content: '\u2726'; position: absolute; top: -3mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 6pt; }
-  .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 9pt; color: #888; }
+  .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 10pt; color: #888; }
   @media print {
     html, body { margin: 0 !important; padding: 0 !important; width: 279mm; height: 216mm; }
     *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
