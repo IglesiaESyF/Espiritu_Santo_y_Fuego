@@ -28,26 +28,26 @@ function getDiplomaCSS(): string {
   .corner.bl { bottom: 26px; left: 26px; }
   .corner.br { bottom: 26px; right: 26px; }
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
-  .watermark img { width: 600px; height: 600px; object-fit: contain; opacity: 0.10; }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 53px 90px 38px; text-align: center; }
+  .watermark img { width: 600px; height: 600px; object-fit: contain; opacity: 0.18; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 38px 90px 30px; text-align: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 34pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
-  .gold-line { width: 300px; height: 1px; background: #b8860b; margin: 8px auto; position: relative; }
-  .gold-line::after { content: '\u2726'; position: absolute; top: -19px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
-  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 24pt; color: #b8860b; margin-top: 4px; font-weight: 700; }
-  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
-  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 15px; line-height: 1.6; }
-  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 48pt; color: #b8860b; margin-top: 8px; line-height: 1.1; }
-  .name-underline { width: 378px; height: 1px; background: #b8860b; margin: 8px auto 0; }
-  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 11px; }
-  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18pt; color: #222; margin-top: 4px; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #555; margin-top: 15px; max-width: 750px; }
+  .gold-line { width: 300px; height: 1px; background: #b8860b; margin: 6px auto; position: relative; }
+  .gold-line::after { content: '\u2726'; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 24pt; color: #b8860b; margin-top: 2px; font-weight: 700; }
+  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 11px; line-height: 1.5; }
+  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 48pt; color: #b8860b; margin-top: 4px; line-height: 1.1; }
+  .name-underline { width: 378px; height: 1px; background: #b8860b; margin: 6px auto 0; }
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 8px; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18pt; color: #222; margin-top: 2px; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #555; margin-top: 10px; max-width: 750px; }
   .bottom-section { margin-top: auto; width: 100%; }
-  .signatures { display: flex; justify-content: center; gap: 190px; padding-bottom: 15px; }
-  .sig-line { width: 190px; border-top: 1px solid #333; margin-bottom: 8px; }
+  .signatures { display: flex; justify-content: center; gap: 190px; padding-bottom: 10px; }
+  .sig-line { width: 190px; border-top: 1px solid #333; margin-bottom: 6px; }
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #222; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #666; }
-  .footer-line { width: 300px; height: 1px; background: #b8860b; margin: 0 auto 8px; position: relative; }
-  .footer-line::after { content: '\u2726'; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
+  .footer-line { width: 300px; height: 1px; background: #b8860b; margin: 0 auto 6px; position: relative; }
+  .footer-line::after { content: '\u2726'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #888; }`
 }
 
@@ -66,7 +66,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
       <div class="cert-text">Certificamos que el(la) hermano(a):</div>
       <div class="name">${nombreCompleto}</div>
       <div class="name-underline"></div>
-      <div class="cert-text" style="margin-top:11px;">
+      <div class="cert-text" style="margin-top:8px;">
         ha sido bautizado(a) conforme al mandamiento del Se\u00f1or:<br>
         <strong style="font-size:15pt; color:#555;">"Por tanto, id y haced disc\u00edpulos a todas las naciones,<br>
         bautiz\u00e1ndolos en el nombre del Padre, y del Hijo, y del Esp\u00edritu Santo."<br>
@@ -109,26 +109,26 @@ function getMmCSS(): string {
   .corner.bl { bottom: 7mm; left: 7mm; }
   .corner.br { bottom: 7mm; right: 7mm; }
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
-  .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.10; }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 14mm 24mm 10mm; text-align: center; }
+  .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.18; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 10mm 24mm 8mm; text-align: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 34pt; color: #b8860b; letter-spacing: 5px; text-transform: uppercase; }
-  .gold-line { width: 80mm; height: 1px; background: #b8860b; margin: 2mm auto; position: relative; }
-  .gold-line::after { content: '\u2726'; position: absolute; top: -5mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
-  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 24pt; color: #b8860b; margin-top: 1mm; font-weight: 700; }
-  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
-  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 4mm; line-height: 1.6; }
-  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 48pt; color: #b8860b; margin-top: 2mm; line-height: 1.1; }
-  .name-underline { width: 100mm; height: 1px; background: #b8860b; margin: 2mm auto 0; }
-  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 3mm; }
-  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18pt; color: #222; margin-top: 1mm; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #555; margin-top: 4mm; max-width: 200mm; }
+  .gold-line { width: 80mm; height: 1px; background: #b8860b; margin: 1.5mm auto; position: relative; }
+  .gold-line::after { content: '\u2726'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 8pt; }
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 24pt; color: #b8860b; margin-top: 0.5mm; font-weight: 700; }
+  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #b8860b; letter-spacing: 2px; text-transform: uppercase; margin-top: 0.5mm; }
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 3mm; line-height: 1.5; }
+  .name { font-family: 'UnifrakturMaguntia', cursive; font-size: 48pt; color: #b8860b; margin-top: 1mm; line-height: 1.1; }
+  .name-underline { width: 100mm; height: 1px; background: #b8860b; margin: 1.5mm auto 0; }
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #444; margin-top: 2mm; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 18pt; color: #222; margin-top: 0.5mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 16pt; color: #555; margin-top: 2.5mm; max-width: 200mm; }
   .bottom-section { margin-top: auto; width: 100%; }
-  .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 4mm; }
-  .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 2mm; }
+  .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
+  .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 14pt; color: #222; }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 12pt; color: #666; }
-  .footer-line { width: 80mm; height: 1px; background: #b8860b; margin: 0 auto 2mm; position: relative; }
-  .footer-line::after { content: '\u2726'; position: absolute; top: -4mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
+  .footer-line { width: 80mm; height: 1px; background: #b8860b; margin: 0 auto 1.5mm; position: relative; }
+  .footer-line::after { content: '\u2726'; position: absolute; top: -3mm; left: 50%; transform: translateX(-50%); color: #b8860b; font-size: 7pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 11pt; color: #888; }
   @media print {
     html, body { margin: 0 !important; padding: 0 !important; width: 279mm; height: 216mm; }
