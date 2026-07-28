@@ -374,12 +374,16 @@ export default function AdminDiplomasPage() {
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [])
 
+  function cargoArr(m: Miembro): string[] {
+    return Array.isArray(m.cargo) ? m.cargo : (m.cargo ? [m.cargo] : [])
+  }
+
   useEffect(() => {
-    const p = miembros.find(m => m.cargo === 'Pastor(a) Principal')
+    const p = miembros.find(m => cargoArr(m).includes('Pastor(a) Principal'))
     if (p) setPastor(`${p.nombre} ${p.apellido}`)
-    const s = miembros.find(m => m.cargo === 'Secretario(a) General')
+    const s = miembros.find(m => cargoArr(m).includes('Secretario(a) General'))
     if (s) setSecretario(`${s.nombre} ${s.apellido}`)
-    const d = miembros.find(m => m.cargo === 'Diácono(a)')
+    const d = miembros.find(m => cargoArr(m).includes('Diácono(a)'))
     if (d && !testigo) setTestigo(`${d.nombre} ${d.apellido}`)
   }, [miembros])
 
@@ -402,7 +406,7 @@ export default function AdminDiplomasPage() {
 
   const bautizados = useMemo(() => miembros.filter(m => m.estado === 'bautizado'), [miembros])
   const miembro = useMemo(() => miembros.find(m => m.id === miembroId) || null, [miembros, miembroId])
-  const diaconos = useMemo(() => miembros.filter(m => m.cargo === 'Diácono(a)'), [miembros])
+  const diaconos = useMemo(() => miembros.filter(m => cargoArr(m).includes('Diácono(a)')), [miembros])
 
   const filteredMiembros = useMemo(() => {
     if (!searchText.trim()) return bautizados
@@ -485,7 +489,7 @@ export default function AdminDiplomasPage() {
             fecha_nacimiento: '', edad: 0, pais: 'Nicaragua', departamento: '',
             ciudad: '', barrio: '', direccion: '', celular: '', correo: '',
             estado: 'bautizado', fecha_bautismo: fecha, fecha_llegada_iglesia: '',
-            llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: '',
+            llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: [],
             familiares: [], notas: '', activo: true, creadoEn: Date.now(),
           }).catch(() => {})
         }

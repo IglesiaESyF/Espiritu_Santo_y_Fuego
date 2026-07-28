@@ -52,7 +52,7 @@ function emptyMiembro(): Omit<Miembro, 'id' | 'creadoEn'> {
   return {
     nombre: '', apellido: '', fecha_nacimiento: '', edad: 0,
     pais: 'Nicaragua', departamento: '', ciudad: '', barrio: '', direccion: '',
-    celular: '', correo: '', estado: 'no_bautizado', fecha_bautismo: '', fecha_llegada_iglesia: '', llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: '',
+    celular: '', correo: '', estado: 'no_bautizado', fecha_bautismo: '', fecha_llegada_iglesia: '', llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: [],
     familiares: [], notas: '', activo: true,
   }
 }
@@ -121,7 +121,7 @@ export default function AdminMiembrosPage() {
     return r
   }, [miembros, search, filterCategoria, filterEstado])
 
-  function handleField(field: keyof typeof form, value: string | boolean | null) {
+  function handleField(field: keyof typeof form, value: string | boolean | null | string[]) {
     setForm((prev) => {
       const next = { ...prev, [field]: value }
       if (field === 'fecha_nacimiento') {
@@ -136,11 +136,12 @@ export default function AdminMiembrosPage() {
   }
 
   function handleEdit(m: Miembro) {
+    const cargoArr = Array.isArray(m.cargo) ? m.cargo : (m.cargo ? [m.cargo] : [])
     setForm({
       nombre: m.nombre, apellido: m.apellido, fecha_nacimiento: m.fecha_nacimiento,
       edad: m.edad, pais: m.pais, departamento: m.departamento, ciudad: m.ciudad,
       barrio: m.barrio, direccion: m.direccion, celular: m.celular, correo: m.correo,
-      estado: m.estado, fecha_bautismo: m.fecha_bautismo || '', fecha_llegada_iglesia: m.fecha_llegada_iglesia || '', llego_bautizado: m.llego_bautizado || false, motivo_llegada: m.motivo_llegada || '', categoria: m.categoria, cargo: m.cargo || '', familiares: m.familiares || [],
+      estado: m.estado, fecha_bautismo: m.fecha_bautismo || '', fecha_llegada_iglesia: m.fecha_llegada_iglesia || '', llego_bautizado: m.llego_bautizado || false, motivo_llegada: m.motivo_llegada || '', categoria: m.categoria, cargo: cargoArr, familiares: m.familiares || [],
       notas: m.notas, activo: m.activo,
     })
     setEditingId(m.id)
@@ -289,7 +290,13 @@ export default function AdminMiembrosPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-gray-500">
-                    {m.cargo ? <span className="text-xs font-medium text-gray-600">{m.cargo}</span> : '-'}
+                    {(Array.isArray(m.cargo) ? m.cargo : (m.cargo ? [m.cargo] : [])).filter(Boolean).length > 0
+                      ? <div className="flex flex-wrap gap-1">
+                          {(Array.isArray(m.cargo) ? m.cargo : (m.cargo ? [m.cargo] : [])).filter(Boolean).map((c, i) => (
+                            <span key={i} className="inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">{c}</span>
+                          ))}
+                        </div>
+                      : '-'}
                   </td>
                   <td className="px-4 py-3 text-gray-500">{m.celular}</td>
                 <td className="px-4 py-3">
@@ -420,12 +427,30 @@ export default function AdminMiembrosPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Cargo en la Iglesia</label>
-                <select value={form.cargo} onChange={(e) => handleField('cargo', e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:outline-none">
-                  <option value="">Ninguno</option>
-                  {CARGOS_MIEMBRO.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Cargos en la Iglesia</label>
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-300 p-3 space-y-1.5">
+                  {CARGOS_MIEMBRO.map((c) => {
+                    const checked = Array.isArray(form.cargo) ? form.cargo.includes(c) : form.cargo === c
+                    return (
+                      <label key={c} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            const current = Array.isArray(form.cargo) ? [...form.cargo] : (form.cargo ? [form.cargo] : [])
+                            if (current.includes(c)) {
+                              handleField('cargo', current.filter(x => x !== c))
+                            } else {
+                              handleField('cargo', [...current, c])
+                            }
+                          }}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm">{c}</span>
+                      </label>
+                    )
+                  })}
+                </div>
               </div>
 
               <div>

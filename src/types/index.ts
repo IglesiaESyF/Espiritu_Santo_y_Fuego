@@ -104,7 +104,7 @@ export interface Miembro {
   llego_bautizado: boolean
   motivo_llegada: string
   categoria: string
-  cargo: string
+  cargo: string | string[]
   familiares: Familiar[]
   notas: string
   activo: boolean
