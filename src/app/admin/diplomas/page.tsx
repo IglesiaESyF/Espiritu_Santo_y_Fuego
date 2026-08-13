@@ -28,7 +28,7 @@ interface DiplomaConfig {
   tamNombre: number
   tamTexto: number
   fuenteNombre: 'cursiva' | 'gotica'
-  template: 'clasico' | 'elegante'
+  template: 'clasico' | 'elegante' | 'marco'
 }
 
 const DEFAULT_CONFIG: DiplomaConfig = {
@@ -49,6 +49,7 @@ const DEFAULT_CONFIG: DiplomaConfig = {
 const TEMPLATES: Record<DiplomaConfig['template'], { label: string; desc: string }> = {
   clasico: { label: 'Clásico', desc: 'Marco de borde configurable, logo y marca de agua de lluvia' },
   elegante: { label: 'Elegante', desc: 'Marco dorado pulido, paloma blanca y ondas de agua' },
+  marco: { label: 'Marco', desc: 'Diseño personalizado con el logo de la iglesia arriba a la izquierda' },
 }
 
 const FUENTES_NOMBRE: Record<DiplomaConfig['fuenteNombre'], { label: string; family: string }> = {
@@ -486,6 +487,87 @@ function getEleganteBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl
   </div>`
 }
 
+function getMarcoCss(cfg: DiplomaConfig): string {
+  return `${colorVars(cfg)}
+  @page { size: landscape letter; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+  .page.marco { position: relative; width: 279mm; height: 216mm; overflow: hidden; background: #fff; }
+  .marco-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  .marco-logo { position: absolute; top: 12mm; left: 12mm; width: 24mm; height: 24mm; z-index: 3; border-radius: 50%; padding: 1.2mm; background: rgba(255,255,255,0.95); border: 0.5mm solid var(--c-borde); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 1.5mm rgba(0,0,0,0.18); }
+  .marco-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+  .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 26mm; -webkit-text-stroke: var(--stroke); }
+  .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
+  .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 5px; text-transform: uppercase; }
+  .gold-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto; position: relative; }
+  .gold-line::after { content: '\u2726'; position: absolute; top: -3.5mm; left: 50%; transform: translateX(-50%); color: var(--c-borde); font-size: 7pt; }
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); margin-top: 0.8mm; font-weight: 700; -webkit-text-stroke: 0; }
+  .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.8mm; }
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; line-height: 1.4; }
+  .name { font-family: var(--fn-nombre); font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
+  .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: -2mm; max-width: 200mm; }
+  .bottom-section { margin-top: 18mm; width: 100%; }
+  .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
+  .sig-block { display: flex; flex-direction: column; align-items: center; }
+  .sig-line { width: 42mm; min-width: 42mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-text); }
+  .footer-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 3mm auto 1.5mm; position: relative; }
+  .footer-line::after { content: '\u2726'; position: absolute; top: -3mm; left: 50%; transform: translateX(-50%); color: var(--c-borde); font-size: 6pt; }
+  .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 10pt; color: var(--c-text); }
+  @media print {
+    html, body { margin: 0 !important; padding: 0 !important; width: 279mm; height: 216mm; }
+    *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  }`
+}
+
+function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, marcoBgUrl: string): string {
+  return `<div class="page diploma marco">
+    <img class="marco-bg" src="${marcoBgUrl}" alt="">
+    <div class="marco-logo"><img src="${logoUrl}"></div>
+    <div class="content">
+      <div class="content-inner">
+      <div class="title">Certificado</div>
+      <div class="title" style="font-size:16pt; letter-spacing:3px; margin-top:3px;">de Bautismo</div>
+      <div class="gold-line"></div>
+      <div class="church-name">Iglesia Espíritu Santo y Fuego</div>
+      <div class="church-sub">Misión Cristiana Perfectos en Unidad</div>
+      <div class="cert-text">Certificamos que el(la) hermano(a):</div>
+      <div class="name">${nombreCompleto}</div>
+      <div class="name-underline"></div>
+      <div class="cert-text" style="margin-top:8px;">
+        ha sido bautizado(a) conforme al mandamiento del Se\u00f1or:<br>
+        <strong style="font-size:var(--fs-texto); color:var(--c-text);">"Por tanto, id y haced disc\u00edpulos a todas las naciones,<br>
+        bautiz\u00e1ndolos en el nombre del Padre, y del Hijo, y del Esp\u00edritu Santo."<br>
+        \u2014 Mateo 28:19</strong>
+      </div>
+      <div class="date-text">Fue bautizado(a) el d\u00eda</div>
+      <div class="date-value">${fechaLarga}</div>
+      <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." \u2014 <strong>G\u00e1latas 3:27</strong></div>
+      <div class="bottom-section">
+        <div class="signatures">
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${pastor || 'Pastor'}</div>
+            <div class="sig-role">Pastor(a) Principal</div>
+          </div>
+          <div class="sig-block">
+            <div class="sig-line"></div>
+            <div class="sig-name">${secretario || 'Secretario(a)'}</div>
+            <div class="sig-role">Secretario(a) General</div>
+          </div>
+        </div>
+        <div class="footer-line"></div>
+        <div class="footer-text">Iglesia Esp\u00edritu Santo y Fuego \u2014 Misi\u00f3n Cristiana Perfectos en Unidad</div>
+      </div>
+      </div>
+    </div>
+  </div>`
+}
+
 function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): string {
   const captureScript = capturePng ? `
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -512,8 +594,20 @@ window.addEventListener('load', function() {
 </script>` : ''
 
   const elegante = cfg.template === 'elegante'
-  const css = elegante ? getEleganteCss(cfg) : getMmCSS(cfg)
-  const body = elegante ? getEleganteBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario) : getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+  const marco = cfg.template === 'marco'
+  let css = getMmCSS(cfg)
+  let body: string
+  if (elegante) {
+    css = getEleganteCss(cfg)
+    body = getEleganteBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+  } else if (marco) {
+    css = getMarcoCss(cfg)
+    const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
+    const marcoBgUrl = (typeof window !== 'undefined' ? window.location.origin : '') + base + '/diploma-marco.png'
+    body = getMarcoBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, marcoBgUrl)
+  } else {
+    body = getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+  }
 
   return `<!DOCTYPE html>
 <html>
