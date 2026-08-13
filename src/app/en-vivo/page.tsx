@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { Flame, Video, Wifi } from 'lucide-react'
+import { Flame, Video, Wifi, Maximize, Minimize } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Card } from '@/components/ui/card'
@@ -119,6 +119,26 @@ export default function EnVivoPage() {
     mensaje: '',
   })
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [esPantallaCompleta, setEsPantallaCompleta] = useState(false)
+  const videoWrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onFsChange() {
+      setEsPantallaCompleta(document.fullscreenElement === videoWrapRef.current)
+    }
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  function toggleFullscreen() {
+    const el = videoWrapRef.current
+    if (!el) return
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {})
+    } else {
+      el.requestFullscreen().catch(() => {})
+    }
+  }
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -175,7 +195,7 @@ export default function EnVivoPage() {
                 <span className="ml-2 text-xs text-white/70 uppercase">{plataforma === 'youtube' ? 'YouTube' : plataforma === 'facebook' ? 'Facebook' : 'Streaming'}</span>
                 <Wifi className="ml-auto h-4 w-4" />
               </div>
-              <div className="w-full" style={{ height: 450 }}>
+              <div className="relative w-full bg-black" ref={videoWrapRef} style={{ height: 450 }}>
                 <iframe
                   src={embedUrl}
                   className="h-full w-full"
@@ -185,6 +205,14 @@ export default function EnVivoPage() {
                   allowFullScreen
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                 />
+                <button
+                  onClick={toggleFullscreen}
+                  className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80"
+                  title={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                  aria-label={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                >
+                  {esPantallaCompleta ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                </button>
               </div>
             </Card>
           )
