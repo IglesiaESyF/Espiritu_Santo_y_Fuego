@@ -49,26 +49,70 @@ const FUENTES_NOMBRE: Record<DiplomaConfig['fuenteNombre'], { label: string; fam
   gotica: { label: 'Gótica legible (Grenze Gotisch)', family: "'Grenze Gotisch', 'UnifrakturMaguntia', cursive" },
 }
 
-const TIPOS_BORDE: Record<string, { label: string; outer: string; inner: string; corner: string }> = {
+interface BordeDef {
+  label: string
+  outer: string
+  inner: string
+  corner: string
+  cornerShape?: 'circle' | 'cross' | 'diamond' | 'bracket'
+  sideDots?: boolean
+}
+
+const TIPOS_BORDE: Record<string, BordeDef> = {
   doble: { label: 'Doble', outer: '3px double var(--c-borde)', inner: '1px double var(--c-borde)', corner: '2px solid var(--c-borde)' },
   doble_grueso: { label: 'Doble grueso', outer: '4px double var(--c-borde)', inner: '1.5px double var(--c-borde)', corner: '3px solid var(--c-borde)' },
   simple: { label: 'Simple', outer: '2px solid var(--c-borde)', inner: '0.8px solid var(--c-borde)', corner: '2px solid var(--c-borde)' },
+  sencillo: { label: 'Sencillo', outer: '1.2px solid var(--c-borde)', inner: '0.6px solid var(--c-borde)', corner: '1px solid var(--c-borde)' },
   grueso: { label: 'Grueso', outer: '4px solid var(--c-borde)', inner: '1.5px solid var(--c-borde)', corner: '3px solid var(--c-borde)' },
   fino: { label: 'Fino', outer: '1px solid var(--c-borde)', inner: '0.5px solid var(--c-borde)', corner: '1px solid var(--c-borde)' },
   punteado: { label: 'Punteado', outer: '2.5px dotted var(--c-borde)', inner: '1px dotted var(--c-borde)', corner: '2px solid var(--c-borde)' },
   rayado: { label: 'Rayado', outer: '2.5px dashed var(--c-borde)', inner: '1px dashed var(--c-borde)', corner: '2px solid var(--c-borde)' },
   esquinas: { label: 'Solo esquinas', outer: 'none', inner: 'none', corner: '3px solid var(--c-borde)' },
+  esquinas_finas: { label: 'Esquinas finas', outer: 'none', inner: 'none', corner: '1.5px solid var(--c-borde)', cornerShape: 'bracket' },
+  romanos: { label: 'Esquinas romanas', outer: '1.5px solid var(--c-borde)', inner: '0.8px solid var(--c-borde)', corner: '2px solid var(--c-borde)', cornerShape: 'bracket' },
+  cruz: { label: 'Cruces en esquinas', outer: '2.5px double var(--c-borde)', inner: '1px double var(--c-borde)', corner: '2px solid var(--c-borde)', cornerShape: 'cross' },
+  diamante: { label: 'Diamantes', outer: '2.5px double var(--c-borde)', inner: '1px double var(--c-borde)', corner: '2px solid var(--c-borde)', cornerShape: 'diamond' },
+  lazo: { label: 'Línea con puntos', outer: '1.2px solid var(--c-borde)', inner: '1px dotted var(--c-borde)', corner: '2px solid var(--c-borde)', sideDots: true },
+  gala: { label: 'Gala', outer: '3px double var(--c-borde)', inner: '1px solid var(--c-borde)', corner: '2px solid var(--c-borde)', cornerShape: 'diamond', sideDots: true },
   cincelado: { label: 'Cincelado', outer: '3px ridge var(--c-borde)', inner: '1px ridge var(--c-borde)', corner: '2px solid var(--c-borde)' },
   relieve: { label: 'Relieve', outer: '3px outset var(--c-borde)', inner: '1px outset var(--c-borde)', corner: '2px solid var(--c-borde)' },
 }
 
 function bordeRules(cfg: DiplomaConfig, prefix: string): string {
   const b = TIPOS_BORDE[cfg.tipoBorde] || TIPOS_BORDE.doble
+  const p = prefix
+  let cornerCss: string
+  switch (b.cornerShape) {
+    case 'cross':
+      cornerCss = `.${p}corner { position: absolute; width: 9mm; height: 9mm; }
+  .${p}corner::before { content: ''; position: absolute; top: 50%; left: 50%; width: 9mm; height: 2.6mm; transform: translate(-50%, -50%); background: var(--c-borde); }
+  .${p}corner::after { content: ''; position: absolute; top: 50%; left: 50%; width: 2.6mm; height: 9mm; transform: translate(-50%, -50%); background: var(--c-borde); }`
+      break
+    case 'diamond':
+      cornerCss = `.${p}corner { position: absolute; width: 6.5mm; height: 6.5mm; transform: rotate(45deg); background: var(--c-borde); }`
+      break
+    case 'bracket':
+      cornerCss = `.${p}corner { position: absolute; width: 11mm; height: 11mm; }
+  .${p}corner.tl { border-top: 1.8mm solid var(--c-borde); border-left: 1.8mm solid var(--c-borde); }
+  .${p}corner.tr { border-top: 1.8mm solid var(--c-borde); border-right: 1.8mm solid var(--c-borde); }
+  .${p}corner.bl { border-bottom: 1.8mm solid var(--c-borde); border-left: 1.8mm solid var(--c-borde); }
+  .${p}corner.br { border-bottom: 1.8mm solid var(--c-borde); border-right: 1.8mm solid var(--c-borde); }`
+      break
+    default:
+      cornerCss = `.${p}corner { position: absolute; width: 8mm; height: 8mm; border-radius: 50%; border: ${b.corner}; }
+  .${p}corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: var(--c-borde); }`
+  }
+  const dotsCss = b.sideDots ? `
+  .${p}dot { position: absolute; width: 3mm; height: 3mm; border-radius: 50%; background: var(--c-borde); }
+  .${p}dot.top { top: 9mm; left: 50%; transform: translateX(-50%); }
+  .${p}dot.bottom { bottom: 9mm; left: 50%; transform: translateX(-50%); }
+  .${p}dot.left { left: 9mm; top: 50%; transform: translateY(-50%); }
+  .${p}dot.right { right: 9mm; top: 50%; transform: translateY(-50%); }` : ''
   return `
-  .${prefix}border-outer { position: absolute; inset: 10mm; border-radius: 4px; border: ${b.outer}; }
-  .${prefix}border-inner { position: absolute; inset: 14mm; border-radius: 3px; border: ${b.inner}; }
-  .${prefix}corner { position: absolute; width: 8mm; height: 8mm; border-radius: 50%; border: ${b.corner}; }
-  .${prefix}corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: var(--c-borde); }`
+  .${p}border-outer { position: absolute; inset: 10mm; border-radius: 4px; border: ${b.outer}; }
+  .${p}border-inner { position: absolute; inset: 14mm; border-radius: 3px; border: ${b.inner}; }
+  ${cornerCss}
+  ${dotsCss}`
 }
 
 const STORAGE_KEY = 'diploma_config'
@@ -112,6 +156,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
     <div class="border-outer"></div>
     <div class="border-inner"></div>
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+    <div class="dot top"></div><div class="dot bottom"></div><div class="dot left"></div><div class="dot right"></div>
     <div class="watermark"><img src="${logoUrl}"></div>
     <div class="content">
       <div class="content-inner">
@@ -388,6 +433,7 @@ ${captureScript}
   <div class="cert-border-outer"></div>
   <div class="cert-border-inner"></div>
   <div class="cert-corner tl"></div><div class="cert-corner tr"></div><div class="cert-corner bl"></div><div class="cert-corner br"></div>
+  <div class="cert-dot top"></div><div class="cert-dot bottom"></div><div class="cert-dot left"></div><div class="cert-dot right"></div>
   <div class="cert-watermark"><img src="${logoUrl}"></div>
   <div class="cert-content">
     <div class="cert-header">
@@ -958,7 +1004,56 @@ export default function AdminDiplomasPage() {
                               : 'border-[#e0d8c8] bg-white hover:border-amber-300'
                           }`}
                         >
-                          <div className="h-7 w-full rounded-md" style={{ border: previewBorder }} />
+                          <div className="relative h-7 w-full rounded-md" style={{ border: previewBorder }}>
+                            {b.cornerShape === 'cross' && (
+                              <>
+                                <span className="absolute left-[1px] top-[1px] flex h-2 w-2 items-center justify-center">
+                                  <span className="absolute h-[1.5px] w-2" style={{ background: config.colorBorde }} />
+                                  <span className="absolute h-2 w-[1.5px]" style={{ background: config.colorBorde }} />
+                                </span>
+                                <span className="absolute right-[1px] top-[1px] flex h-2 w-2 items-center justify-center">
+                                  <span className="absolute h-[1.5px] w-2" style={{ background: config.colorBorde }} />
+                                  <span className="absolute h-2 w-[1.5px]" style={{ background: config.colorBorde }} />
+                                </span>
+                                <span className="absolute bottom-[1px] left-[1px] flex h-2 w-2 items-center justify-center">
+                                  <span className="absolute h-[1.5px] w-2" style={{ background: config.colorBorde }} />
+                                  <span className="absolute h-2 w-[1.5px]" style={{ background: config.colorBorde }} />
+                                </span>
+                                <span className="absolute bottom-[1px] right-[1px] flex h-2 w-2 items-center justify-center">
+                                  <span className="absolute h-[1.5px] w-2" style={{ background: config.colorBorde }} />
+                                  <span className="absolute h-2 w-[1.5px]" style={{ background: config.colorBorde }} />
+                                </span>
+                              </>
+                            )}
+                            {b.cornerShape === 'diamond' && (
+                              <>
+                                <span className="absolute left-[4px] top-[4px] h-1.5 w-1.5 rotate-45" style={{ background: config.colorBorde }} />
+                                <span className="absolute right-[4px] top-[4px] h-1.5 w-1.5 rotate-45" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-[4px] left-[4px] h-1.5 w-1.5 rotate-45" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-[4px] right-[4px] h-1.5 w-1.5 rotate-45" style={{ background: config.colorBorde }} />
+                              </>
+                            )}
+                            {b.cornerShape === 'bracket' && (
+                              <>
+                                <span className="absolute left-0 top-0 h-[2px] w-2.5" style={{ background: config.colorBorde }} />
+                                <span className="absolute left-0 top-0 h-2.5 w-[2px]" style={{ background: config.colorBorde }} />
+                                <span className="absolute right-0 top-0 h-[2px] w-2.5" style={{ background: config.colorBorde }} />
+                                <span className="absolute right-0 top-0 h-2.5 w-[2px]" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-0 left-0 h-[2px] w-2.5" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-0 left-0 h-2.5 w-[2px]" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-0 right-0 h-[2px] w-2.5" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-0 right-0 h-2.5 w-[2px]" style={{ background: config.colorBorde }} />
+                              </>
+                            )}
+                            {b.sideDots && (
+                              <>
+                                <span className="absolute left-1/2 top-[2px] h-[3px] w-[3px] -translate-x-1/2 rounded-full" style={{ background: config.colorBorde }} />
+                                <span className="absolute bottom-[2px] left-1/2 h-[3px] w-[3px] -translate-x-1/2 rounded-full" style={{ background: config.colorBorde }} />
+                                <span className="absolute left-[2px] top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full" style={{ background: config.colorBorde }} />
+                                <span className="absolute right-[2px] top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full" style={{ background: config.colorBorde }} />
+                              </>
+                            )}
+                          </div>
                           <span className={`text-[11px] font-semibold ${active ? 'text-amber-700' : 'text-gray-600'}`}>{b.label}</span>
                         </button>
                       )
