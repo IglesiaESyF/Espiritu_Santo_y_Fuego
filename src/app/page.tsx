@@ -66,6 +66,17 @@ export default function HomePage() {
     }).catch(() => {})
   }, [])
 
+  useEffect(() => {
+    if (fotoActiva === null) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setFotoActiva(null)
+      if (e.key === 'ArrowRight' && fotos.length) setFotoActiva(a => (a === null ? a : (a + 1) % fotos.length))
+      if (e.key === 'ArrowLeft' && fotos.length) setFotoActiva(a => (a === null ? a : (a - 1 + fotos.length) % fotos.length))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [fotoActiva, fotos.length])
+
   const heroContent = (
     <div className="relative mx-auto max-w-4xl px-4">
       <div className="flex flex-col items-center gap-6 md:flex-row md:justify-center">
@@ -245,7 +256,7 @@ export default function HomePage() {
             <X className="h-6 w-6" />
           </button>
 
-          <div className="relative flex w-full flex-1 items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <div className="relative flex w-full flex-1 items-center justify-center">
             <button
               onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva - 1 + fotos.length) % fotos.length) }}
               className="absolute left-2 z-10 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:left-6"
@@ -260,6 +271,7 @@ export default function HomePage() {
                 key={fotoActiva}
                 src={fotos[fotoActiva].imagenUrl}
                 alt={`Foto ${fotoActiva + 1}`}
+                onClick={(e) => e.stopPropagation()}
                 className={`kb-image ${fotoActiva % 2 === 1 ? 'alt' : ''} max-h-[72vh] max-w-full rounded-xl object-contain shadow-2xl`}
               />
             </div>

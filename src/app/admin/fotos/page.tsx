@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Camera, Trash2, Upload, Images } from 'lucide-react'
+import { ArrowLeft, Camera, Trash2, Upload, Images, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, addDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore'
+import { enhanceImageBlob } from '@/lib/image-enhance'
 
 interface Foto {
   id: string
@@ -17,7 +18,16 @@ interface Foto {
 }
 
 const DIAS_VIGENCIA = 15
-const TAMANO_MAX = 300 * 1024
+const TAMANO_MAX = 600 * 1024
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
 
 function readFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -34,6 +44,7 @@ export default function AdminFotosPage() {
   const [fotos, setFotos] = useState<Foto[]>([])
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [mejorar, setMejorar] = useState(true)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -71,10 +82,20 @@ export default function AdminFotosPage() {
     try {
       for (const file of files) {
         if (file.size > TAMANO_MAX) {
-          setError(`${file.name} es muy pesada. Máximo 300 KB.`)
+          setError(`${file.name} es muy pesada. Máximo 600 KB.`)
           continue
         }
-        const imagenUrl = await readFile(file)
+        let imagenUrl: string
+        if (mejorar) {
+          try {
+            const blob = await enhanceImageBlob(file)
+            imagenUrl = await blobToDataUrl(blob)
+          } catch {
+            imagenUrl = await readFile(file)
+          }
+        } else {
+          imagenUrl = await readFile(file)
+        }
         await addDoc(collection(db, 'fotos'), {
           imagenUrl,
           fechaExpiracion: Timestamp.fromDate(new Date(Date.now() + DIAS_VIGENCIA * 24 * 60 * 60 * 1000)),
@@ -131,8 +152,28 @@ export default function AdminFotosPage() {
             </div>
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-gray-800">Subir fotos</h2>
-              <p className="text-xs text-gray-400">Puedes seleccionar varias a la vez · máximo 300 KB cada una</p>
+              <p className="text-xs text-gray-400">Puedes seleccionar varias a la vez · máximo 600 KB cada una</p>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-[#f0e8d8] bg-[#faf8f4] p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-violet-50 to-purple-100">
+                <Sparkles className="h-4 w-4 text-violet-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Mejora automática al subir</p>
+                <p className="text-xs text-gray-500">Corrige tono, contraste, saturación y nitidez para que las fotos se vean mejor</p>
+              </div>
+            </div>
+            <button
+              role="switch"
+              aria-checked={mejorar}
+              onClick={() => setMejorar(v => !v)}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition ${mejorar ? 'bg-gradient-to-r from-violet-600 to-purple-600' : 'bg-gray-300'}`}
+            >
+              <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${mejorar ? 'left-6' : 'left-1'}`} />
+            </button>
           </div>
 
           <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-[#e0d8c8] bg-[#faf8f4] p-8 text-center">
