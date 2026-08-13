@@ -236,7 +236,7 @@ export default function HomePage() {
 
       {/* Lightbox galería */}
       {fotoActiva !== null && fotos[fotoActiva] && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={() => setFotoActiva(null)}>
+        <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-black/90 p-4" onClick={() => setFotoActiva(null)}>
           <button
             onClick={() => setFotoActiva(null)}
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
@@ -244,30 +244,57 @@ export default function HomePage() {
           >
             <X className="h-6 w-6" />
           </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva - 1 + fotos.length) % fotos.length) }}
-            className="absolute left-2 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:left-6"
-            aria-label="Anterior"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={fotos[fotoActiva].imagenUrl}
-            alt={`Foto ${fotoActiva + 1}`}
-            className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva + 1) % fotos.length) }}
-            className="absolute right-2 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:right-6"
-            aria-label="Siguiente"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1 text-sm text-white">
+
+          <div className="relative flex w-full flex-1 items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva - 1 + fotos.length) % fotos.length) }}
+              className="absolute left-2 z-10 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:left-6"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+
+            <div className="kb-fade flex max-h-[72vh] w-full max-w-5xl items-center justify-center overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={fotoActiva}
+                src={fotos[fotoActiva].imagenUrl}
+                alt={`Foto ${fotoActiva + 1}`}
+                className={`kb-image ${fotoActiva % 2 === 1 ? 'alt' : ''} max-h-[72vh] max-w-full rounded-xl object-contain shadow-2xl`}
+              />
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva + 1) % fotos.length) }}
+              className="absolute right-2 z-10 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:right-6"
+              aria-label="Siguiente"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          </div>
+
+          <p className="mt-3 rounded-full bg-white/10 px-4 py-1 text-sm text-white">
             {fotoActiva + 1} / {fotos.length}
           </p>
+
+          {/* cadena de miniaturas para selección directa */}
+          <div className="mt-3 flex max-w-full items-center gap-2 overflow-x-auto pb-2" onClick={(e) => e.stopPropagation()}>
+            {fotos.map((f, i) => (
+              <button
+                key={f.id}
+                onClick={() => setFotoActiva(i)}
+                className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                  i === fotoActiva
+                    ? 'border-amber-400 ring-2 ring-amber-400/40'
+                    : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/50'
+                }`}
+                aria-label={`Ir a foto ${i + 1}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={f.imagenUrl} alt={`Miniatura ${i + 1}`} className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

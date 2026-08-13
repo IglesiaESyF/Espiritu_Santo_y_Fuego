@@ -123,6 +123,35 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Lightbox Ken Burns ── */
+@keyframes kb-zoom-pan-1 {
+  0%   { transform: scale(1.15) translate(0, 0); }
+  25%  { transform: scale(1.2) translate(1.5%, -1.5%); }
+  50%  { transform: scale(1.18) translate(-1.5%, 1.5%); }
+  75%  { transform: scale(1.22) translate(1%, 1%); }
+  100% { transform: scale(1.15) translate(0, 0); }
+}
+@keyframes kb-zoom-pan-2 {
+  0%   { transform: scale(1.18) translate(0, 0); }
+  33%  { transform: scale(1.22) translate(-2%, 1%); }
+  66%  { transform: scale(1.2) translate(1.5%, -1%); }
+  100% { transform: scale(1.18) translate(0, 0); }
+}
+@keyframes kb-fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.kb-image {
+  animation: kb-zoom-pan-1 24s ease-in-out infinite;
+  will-change: transform;
+}
+.kb-image.alt {
+  animation: kb-zoom-pan-2 20s ease-in-out infinite;
+}
+.kb-fade {
+  animation: kb-fade-in 0.4s ease-out both;
+}
+
 /* ── Glass premium card ── */
 .card-glass {
   background: rgba(255, 255, 255, 0.75);
