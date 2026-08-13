@@ -27,6 +27,7 @@ interface DiplomaConfig {
   tamTitulo: number
   tamNombre: number
   tamTexto: number
+  tamVersiculo: number
   fuenteNombre: 'cursiva' | 'gotica'
   template: 'clasico' | 'elegante' | 'marco'
 }
@@ -42,6 +43,7 @@ const DEFAULT_CONFIG: DiplomaConfig = {
   tamTitulo: 28,
   tamNombre: 42,
   tamTexto: 14,
+  tamVersiculo: 12,
   fuenteNombre: 'cursiva',
   template: 'clasico',
 }
@@ -155,11 +157,12 @@ function colorVars(cfg: DiplomaConfig): string {
   --fs-titulo: ${cfg.tamTitulo}pt;
   --fs-nombre: ${cfg.tamNombre}pt;
   --fs-texto: ${cfg.tamTexto}pt;
+  --fs-versiculo: ${cfg.tamVersiculo}pt;
   --fn-nombre: ${FUENTES_NOMBRE[cfg.fuenteNombre]?.family || FUENTES_NOMBRE.cursiva.family};
 }`
 }
 
-function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
+function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, lugarEntrega: string): string {
   return `<div class="page">
     <div class="border-outer"></div>
     <div class="border-inner"></div>
@@ -188,6 +191,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
       </div>
       <div class="date-text">Fue bautizado(a) el d\u00eda</div>
       <div class="date-value">${fechaLarga}</div>
+      ${lugarEntrega ? `<div class="place-text">Entregado en ${lugarEntrega}</div>` : ''}
       <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." \u2014 <strong>G\u00e1latas 3:27</strong></div>
       <div class="bottom-section">
         <div class="signatures">
@@ -235,7 +239,8 @@ function getMmCSS(cfg: DiplomaConfig): string {
   .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: -2mm; max-width: 200mm; }
+  .place-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2.5mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-versiculo); color: var(--c-text); margin-top: 4mm; max-width: 200mm; }
   .bottom-section { margin-top: 14mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-block { display: flex; flex-direction: column; align-items: center; }
@@ -435,7 +440,8 @@ function getEleganteCss(cfg: DiplomaConfig): string {
   .e-name-underline { width: 95mm; height: 0.4mm; background: linear-gradient(90deg, transparent, var(--c-borde), transparent); margin: 1.8mm auto 0; }
   .e-date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2mm; }
   .e-date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1.5pt); color: var(--c-text); margin-top: 0.5mm; letter-spacing: 1px; }
-  .e-verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 0.5pt); color: var(--c-text); margin-top: 2.5mm; max-width: 195mm; line-height: 1.4; }
+  .e-place-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2.5mm; }
+  .e-verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: var(--fw); font-size: var(--fs-versiculo); color: var(--c-text); margin-top: 4mm; max-width: 195mm; line-height: 1.4; }
   .signatures { display: flex; justify-content: center; gap: 46mm; padding-bottom: 2mm; margin-top: 6mm; }
   .sig-block { display: flex; flex-direction: column; align-items: center; }
   .sig-line { width: 42mm; min-width: 42mm; border-top: 0.5mm solid #8a929c; margin-bottom: 1.5mm; }
@@ -447,7 +453,7 @@ function getEleganteCss(cfg: DiplomaConfig): string {
   }`
 }
 
-function getEleganteBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
+function getEleganteBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, lugarEntrega: string): string {
   return `<div class="page diploma page-elegante">
     <div class="e-border-blue"></div>
     <div class="e-frame-gold-outer"></div>
@@ -467,9 +473,10 @@ function getEleganteBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl
       <div class="e-text">Certificamos que el(la) hermano(a):</div>
       <div class="e-name">${nombreCompleto}</div>
       <div class="e-name-underline"></div>
-      <div class="e-verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." \u2014 <strong>G\u00e1latas 3:27</strong></div>
       <div class="e-date-text">Fue bautizado(a) el d\u00eda</div>
       <div class="e-date-value">${fechaLarga}</div>
+      ${lugarEntrega ? `<div class="e-place-text">Entregado en ${lugarEntrega}</div>` : ''}
+      <div class="e-verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." \u2014 <strong>G\u00e1latas 3:27</strong></div>
       <div class="signatures">
         <div class="sig-block">
           <div class="sig-line"></div>
@@ -494,7 +501,7 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
   .page.marco { position: relative; width: 279mm; height: 216mm; overflow: hidden; background: #fff; }
   .marco-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-  .marco-logo { position: absolute; top: 12mm; left: 12mm; width: 24mm; height: 24mm; z-index: 3; border-radius: 50%; padding: 1.2mm; background: rgba(255,255,255,0.95); border: 0.5mm solid var(--c-borde); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 1.5mm rgba(0,0,0,0.18); }
+  .marco-logo { position: absolute; top: 10mm; left: 10mm; width: 38mm; height: 38mm; z-index: 3; border-radius: 50%; padding: 1.5mm; background: rgba(255,255,255,0.95); border: 0.5mm solid var(--c-borde); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 1.5mm rgba(0,0,0,0.18); }
   .marco-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
   .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 26mm; -webkit-text-stroke: var(--stroke); }
   .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
@@ -508,7 +515,8 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: -2mm; max-width: 200mm; }
+  .place-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2.5mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-versiculo); color: var(--c-text); margin-top: 4mm; max-width: 200mm; }
   .bottom-section { margin-top: 18mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-block { display: flex; flex-direction: column; align-items: center; }
@@ -524,7 +532,7 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   }`
 }
 
-function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, marcoBgUrl: string): string {
+function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, lugarEntrega: string, marcoBgUrl: string): string {
   return `<div class="page diploma marco">
     <img class="marco-bg" src="${marcoBgUrl}" alt="">
     <div class="marco-logo"><img src="${logoUrl}"></div>
@@ -546,6 +554,7 @@ function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
       </div>
       <div class="date-text">Fue bautizado(a) el d\u00eda</div>
       <div class="date-value">${fechaLarga}</div>
+      ${lugarEntrega ? `<div class="place-text">Entregado en ${lugarEntrega}</div>` : ''}
       <div class="verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." \u2014 <strong>G\u00e1latas 3:27</strong></div>
       <div class="bottom-section">
         <div class="signatures">
@@ -568,7 +577,7 @@ function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
   </div>`
 }
 
-function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): string {
+function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, lugarEntrega: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): string {
   const captureScript = capturePng ? `
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
@@ -599,14 +608,14 @@ window.addEventListener('load', function() {
   let body: string
   if (elegante) {
     css = getEleganteCss(cfg)
-    body = getEleganteBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+    body = getEleganteBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, lugarEntrega)
   } else if (marco) {
     css = getMarcoCss(cfg)
     const base = (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) || ''
     const marcoBgUrl = (typeof window !== 'undefined' ? window.location.origin : '') + base + '/diploma-marco.png'
-    body = getMarcoBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, marcoBgUrl)
+    body = getMarcoBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, lugarEntrega, marcoBgUrl)
   } else {
-    body = getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+    body = getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, lugarEntrega)
   }
 
   return `<!DOCTYPE html>
@@ -658,8 +667,8 @@ function getCertificacionCss(cfg: DiplomaConfig): string {
 
 
 
-function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): Window | null {
-  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, capturePng, cfg)
+function openDiplomaWindow(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, lugarEntrega: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): Window | null {
+  const html = buildDiplomaHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario, lugarEntrega, capturePng, cfg)
   const win = window.open('', '_blank')
   if (!win) return null
   win.document.write(html)
@@ -846,6 +855,7 @@ export default function AdminDiplomasPage() {
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
   const [pastor, setPastor] = useState('')
   const [secretario, setSecretario] = useState('')
+  const [lugar, setLugar] = useState('')
   const [loading, setLoading] = useState(false)
   const [generando, setGenerando] = useState(false)
   const [generandoCert, setGenerandoCert] = useState(false)
@@ -973,7 +983,13 @@ export default function AdminDiplomasPage() {
       nombreCompleto = `${nuevoNombre.trim()} ${nuevoApellido.trim()}`
     }
 
-    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, true, config)
+    let lugarEntrega = lugar.trim()
+    if (!lugarEntrega && tipoMiembro === 'existente' && miembro) {
+      const partes = [miembro.ciudad?.trim(), miembro.departamento?.trim()].filter(Boolean)
+      if (partes.length) lugarEntrega = partes.join(', ')
+    }
+
+    const win = openDiplomaWindow(nombreCompleto, fechaLarga, logoUrl, pastorNombre, secretarioNombre, lugarEntrega, true, config)
     if (win) {
       setTimeout(() => {
         win.print()
@@ -1155,6 +1171,16 @@ export default function AdminDiplomasPage() {
                   />
                 </div>
                 <div>
+                  <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Lugar de entrega (opcional)</label>
+                  <input
+                    type="text"
+                    value={lugar}
+                    onChange={e => setLugar(e.target.value)}
+                    placeholder="Ej: Managua, Tipitapa"
+                    className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                  />
+                </div>
+                <div>
                   <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Testigo (Diácono)</label>
                   <select
                     value={testigo}
@@ -1293,6 +1319,20 @@ export default function AdminDiplomasPage() {
                         max={40}
                         value={config.tamTexto}
                         onChange={e => updateConfig({ tamTexto: Math.max(8, Math.min(40, Number(e.target.value) || DEFAULT_CONFIG.tamTexto)) })}
+                        className="w-24 rounded-xl border border-[#e0d8c8] bg-white px-3 py-2 text-sm text-gray-800"
+                      />
+                      <span className="text-xs text-gray-400">pt</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Tamaño del texto bíblico</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={6}
+                        max={40}
+                        value={config.tamVersiculo}
+                        onChange={e => updateConfig({ tamVersiculo: Math.max(6, Math.min(40, Number(e.target.value) || DEFAULT_CONFIG.tamVersiculo)) })}
                         className="w-24 rounded-xl border border-[#e0d8c8] bg-white px-3 py-2 text-sm text-gray-800"
                       />
                       <span className="text-xs text-gray-400">pt</span>
