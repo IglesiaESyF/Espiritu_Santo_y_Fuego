@@ -501,7 +501,7 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
   .page.marco { position: relative; width: 279mm; height: 216mm; overflow: hidden; background: #fff; }
   .marco-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
-  .marco-logo { position: absolute; top: 10mm; left: 10mm; width: 38mm; height: 38mm; z-index: 3; border-radius: 50%; padding: 1.5mm; background: rgba(255,255,255,0.95); border: 0.5mm solid var(--c-borde); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 1.5mm rgba(0,0,0,0.18); }
+  .marco-logo { position: absolute; top: 12mm; left: 30mm; width: 48mm; height: 48mm; z-index: 3; border-radius: 50%; padding: 1.5mm; background: rgba(255,255,255,0.95); border: 0.5mm solid var(--c-borde); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 1.5mm rgba(0,0,0,0.18); }
   .marco-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
   .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 26mm; -webkit-text-stroke: var(--stroke); }
   .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
