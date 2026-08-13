@@ -28,6 +28,7 @@ interface DiplomaConfig {
   tamNombre: number
   tamTexto: number
   fuenteNombre: 'cursiva' | 'gotica'
+  template: 'clasico' | 'elegante'
 }
 
 const DEFAULT_CONFIG: DiplomaConfig = {
@@ -42,6 +43,12 @@ const DEFAULT_CONFIG: DiplomaConfig = {
   tamNombre: 42,
   tamTexto: 14,
   fuenteNombre: 'cursiva',
+  template: 'clasico',
+}
+
+const TEMPLATES: Record<DiplomaConfig['template'], { label: string; desc: string }> = {
+  clasico: { label: 'Clásico', desc: 'Marco de borde configurable, logo y marca de agua de lluvia' },
+  elegante: { label: 'Elegante', desc: 'Marco dorado pulido, paloma blanca y ondas de agua' },
 }
 
 const FUENTES_NOMBRE: Record<DiplomaConfig['fuenteNombre'], { label: string; family: string }> = {
@@ -157,9 +164,13 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
     <div class="border-inner"></div>
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="dot top"></div><div class="dot bottom"></div><div class="dot left"></div><div class="dot right"></div>
-    <div class="watermark"><img src="${logoUrl}"></div>
+    <div class="watermark">
+      <div class="water-bg"></div>
+      <div class="water-wave w1"></div><div class="water-wave w2"></div><div class="water-wave w3"></div>
+    </div>
     <div class="content">
       <div class="content-inner">
+      <div class="logo"><img src="${logoUrl}"></div>
       <div class="title">Certificado</div>
       <div class="title" style="font-size:16pt; letter-spacing:3px; margin-top:3px;">de Bautismo</div>
       <div class="gold-line"></div>
@@ -209,8 +220,8 @@ function getMmCSS(cfg: DiplomaConfig): string {
   .corner.tr { top: 7mm; right: 7mm; }
   .corner.bl { bottom: 7mm; left: 7mm; }
   .corner.br { bottom: 7mm; right: 7mm; }
-  .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
-  .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.15; }
+  .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+  ${WATER_CSS}
   .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 27mm 24mm 37mm; -webkit-text-stroke: var(--stroke); }
   .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 5px; text-transform: uppercase; }
@@ -277,6 +288,204 @@ window.addEventListener('load', function() {
 </script>
 `
 
+const WATER_CSS = `
+.watermark, .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+.water-bg { position: absolute; inset: 0; background:
+  radial-gradient(ellipse at 25% 30%, rgba(150,200,255,0.14), transparent 55%),
+  radial-gradient(ellipse at 75% 70%, rgba(150,200,255,0.14), transparent 55%),
+  linear-gradient(180deg, rgba(190,220,255,0.06), rgba(160,205,255,0.12) 55%, rgba(140,195,255,0.18)); }
+.water-wave { position: absolute; left: -15%; width: 130%; height: 8mm; border-top: 1px solid rgba(150,205,255,0.30); border-radius: 50%; }
+.water-wave.w1 { top: 34%; animation: wave-drift 8s ease-in-out infinite alternate; }
+.water-wave.w2 { top: 58%; animation: wave-drift 11s ease-in-out infinite alternate-reverse; }
+.water-wave.w3 { top: 80%; animation: wave-drift 9s ease-in-out infinite alternate; }
+@keyframes wave-drift { from { transform: translateX(-2%); } to { transform: translateX(2%); } }
+.wr-drop { position: absolute; top: 0; left: 0; z-index: 2; opacity: 0.6; pointer-events: none; }
+.wr-drop::before { content: ''; display: block; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(180,220,255,0.85), rgba(115,170,240,0.75)); border-radius: 50% 50% 46% 54%; box-shadow: 0 0 1.5mm rgba(140,190,255,0.5); }
+.wr-ripple { position: absolute; width: 14mm; height: 14mm; margin: -7mm 0 0 -7mm; border: 1mm solid rgba(130,185,255,0.55); border-radius: 50%; opacity: 0; transform: scale(0.15); animation: wr-ripple 2s ease-out forwards; pointer-events: none; }
+@keyframes wr-ripple { 0% { opacity: 0; transform: scale(0.15); } 15% { opacity: 0.6; } 100% { opacity: 0; transform: scale(2.4); } }
+.logo { width: 26mm; height: 26mm; border-radius: 50%; padding: 1.5mm; background: #fff; border: 1px solid var(--c-borde); margin-bottom: 2.5mm; display: flex; align-items: center; justify-content: center; }
+.logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.cert-logo { width: 20mm; height: 20mm; border-radius: 50%; padding: 1.2mm; background: #fff; border: 1px solid var(--c-borde); margin: 0 auto 2.5mm; display: flex; align-items: center; justify-content: center; }
+.cert-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+`
+
+const WATER_SCRIPT = `
+<script>
+window.__startWater = function() {
+  var wrap = document.querySelector('.watermark') || document.querySelector('.cert-watermark');
+  if (!wrap || wrap.getAttribute('data-water')) return;
+  wrap.setAttribute('data-water', '1');
+  var w = wrap.clientWidth, h = wrap.clientHeight;
+  function spawnRipple(x, y) {
+    var el = document.createElement('div');
+    el.className = 'wr-ripple';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    wrap.appendChild(el);
+    setTimeout(function() { el.remove(); }, 2100);
+  }
+  function spawnDrop() {
+    var el = document.createElement('div');
+    el.className = 'wr-drop';
+    var x = 6 + Math.random() * 88;
+    var y = 16 + Math.random() * 62;
+    var size = 2.2 + Math.random() * 2.2;
+    el.style.left = (w * x / 100) + 'px';
+    el.style.width = size + 'mm';
+    el.style.height = (size * 1.45) + 'mm';
+    wrap.appendChild(el);
+    var startY = -(30 + Math.random() * 60);
+    var endY = h * y / 100;
+    var dur = 2400 + Math.random() * 2400;
+    var anim = el.animate([
+      { transform: 'translateY(' + startY + 'px)' },
+      { transform: 'translateY(' + endY + 'px)' }
+    ], { duration: dur, easing: 'ease-in' });
+    anim.onfinish = function() {
+      spawnRipple(w * x / 100, h * y / 100);
+      el.remove();
+    };
+  }
+  for (var i = 0; i < 5; i++) setTimeout(spawnDrop, 400 * i);
+  setInterval(spawnDrop, 1700);
+};
+function __waterBoot() {
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(window.__startWater);
+  else window.__startWater();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', __waterBoot);
+} else {
+  __waterBoot();
+}
+</script>
+`
+
+const DOVE_SVG = `<svg viewBox="0 0 240 190" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<radialGradient id="doveBody" cx="42%" cy="35%" r="80%">
+<stop offset="0%" stop-color="#ffffff"/>
+<stop offset="70%" stop-color="#f4f8fc"/>
+<stop offset="100%" stop-color="#dbe7f2"/>
+</radialGradient>
+<linearGradient id="doveWing" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#ffffff"/>
+<stop offset="100%" stop-color="#e3edf6"/>
+</linearGradient>
+</defs>
+<g fill="url(#doveWing)" stroke="#cfdce9" stroke-width="1">
+<path d="M82 58 C 96 22, 140 4, 186 12 C 178 20, 172 28, 170 38 C 152 34, 136 38, 126 46 C 112 44, 96 50, 84 62 Z"/>
+<path d="M104 24 C 118 19, 138 17, 158 20" fill="none"/>
+<path d="M100 40 C 114 33, 132 30, 150 35" fill="none"/>
+</g>
+<g fill="url(#doveWing)" stroke="#cfdce9" stroke-width="1">
+<path d="M84 74 C 96 106, 132 144, 188 140 C 178 126, 170 112, 166 98 C 150 106, 134 104, 122 94 C 108 98, 96 90, 86 78 Z"/>
+<path d="M108 118 C 122 126, 140 126, 156 120" fill="none"/>
+</g>
+<g fill="url(#doveBody)" stroke="#cfdce9" stroke-width="1">
+<path d="M140 66 C 168 58, 196 44, 214 28 C 212 48, 208 64, 202 78 C 198 90, 192 100, 184 108 C 174 94, 160 84, 144 80 Z"/>
+<path d="M198 38 C 200 52, 198 66, 192 78" fill="none"/>
+</g>
+<g fill="url(#doveBody)" stroke="#cfdce9" stroke-width="1.2">
+<path d="M50 64 C 52 48, 70 42, 88 46 C 108 50, 128 52, 142 62 C 148 66, 150 74, 144 80 C 132 90, 112 94, 92 90 C 72 86, 58 78, 52 70 Z"/>
+</g>
+<circle cx="52" cy="56" r="11" fill="url(#doveBody)" stroke="#cfdce9" stroke-width="1.2"/>
+<path d="M44 54 L24 57 L44 60 Z" fill="#e0b64e" stroke="#c99b3e" stroke-width="0.8"/>
+<circle cx="52" cy="54" r="1.8" fill="#2f4254"/>
+</svg>`
+
+const WATER_WAVES_SVG = `<svg viewBox="0 -6 220 104" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="110" cy="66" rx="9" ry="3" fill="rgba(150,202,255,0.5)"/>
+<ellipse cx="110" cy="66" rx="22" ry="7" fill="none" stroke="rgba(150,202,255,0.45)" stroke-width="1.4"/>
+<ellipse cx="110" cy="66" rx="40" ry="12.5" fill="none" stroke="rgba(150,202,255,0.35)" stroke-width="1.2"/>
+<ellipse cx="110" cy="66" rx="62" ry="19" fill="none" stroke="rgba(150,202,255,0.26)" stroke-width="1.1"/>
+<ellipse cx="110" cy="66" rx="88" ry="27" fill="none" stroke="rgba(150,202,255,0.18)" stroke-width="1"/>
+<ellipse cx="110" cy="66" rx="118" ry="36" fill="none" stroke="rgba(150,202,255,0.12)" stroke-width="1"/>
+<path d="M110 26 C 110 16, 102 10, 102 4 C 102 -3, 106 -6, 110 -6 C 114 -6, 118 -3, 118 4 C 118 10, 110 16, 110 26 Z" fill="rgba(140,196,255,0.85)"/>
+</svg>`
+
+function getEleganteCss(cfg: DiplomaConfig): string {
+  return `${colorVars(cfg)}
+  @page { size: landscape letter; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
+  .page.diploma { position: relative; width: 279mm; height: 216mm; overflow: hidden; background: #fff; font-family: 'Cormorant Garamond', serif; }
+  .e-border-blue { position: absolute; inset: 5.5mm; border: 0.7mm solid rgba(120,170,215,0.6); border-radius: 1mm; }
+  .e-frame-gold-outer { position: absolute; inset: 7.8mm; border: 0.45mm solid #d9b25c; border-radius: 1mm; }
+  .e-band-gold { position: absolute; inset: 9.4mm; background: linear-gradient(165deg, #f8e4ac 0%, #efca6b 30%, #dcab44 62%, #c08e2c 100%); box-shadow: 0 0 2mm rgba(200,160,60,0.35); }
+  .e-band-gold-inner { position: absolute; inset: 1.15mm; background: #fff; }
+  .e-frame-gold-inner { position: absolute; inset: 12.6mm; border: 0.4mm solid #d9b25c; border-radius: 0.5mm; }
+  .e-frame-gold-fine { position: absolute; inset: 14.4mm; border: 0.25mm solid rgba(217,178,92,0.85); }
+  .e-dove { position: absolute; top: 12mm; right: 14.5mm; width: 54mm; height: 42mm; z-index: 2; }
+  .e-dove svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 1.2mm 1.6mm rgba(120,160,210,0.28)); }
+  .e-water { position: absolute; bottom: 5mm; left: 50%; transform: translateX(-50%); width: 200mm; height: 62mm; z-index: 1; opacity: 0.9; }
+  .e-water svg { width: 100%; height: 100%; }
+  .e-logo { position: absolute; top: 17mm; left: 50%; transform: translateX(-50%); width: 18mm; height: 18mm; border-radius: 50%; padding: 1mm; background: #fff; border: 0.6mm solid #d9b25c; z-index: 3; display: flex; align-items: center; justify-content: center; }
+  .e-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+  .content { position: relative; z-index: 3; display: flex; align-items: center; justify-content: center; height: 100%; padding: 40mm 32mm 56mm; -webkit-text-stroke: var(--stroke); }
+  .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
+  .e-title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 6px; text-transform: uppercase; }
+  .e-title-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 15pt; letter-spacing: 4px; color: var(--c-main); text-transform: uppercase; margin-top: 1mm; }
+  .e-gold-line { width: 70mm; height: 0.5mm; background: linear-gradient(90deg, transparent, #d9b25c, transparent); margin: 2.5mm auto; }
+  .e-church { font-family: 'UnifrakturMaguntia', cursive; font-size: 21pt; color: var(--c-main); font-weight: 700; -webkit-text-stroke: 0; margin-top: 1mm; }
+  .e-church-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 11.5pt; letter-spacing: 2px; text-transform: uppercase; color: var(--c-main); margin-top: 0.8mm; }
+  .e-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2mm; line-height: 1.45; max-width: 195mm; }
+  .e-name { font-family: var(--fn-nombre); font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1.5mm; line-height: 1.1; }
+  .e-name-underline { width: 95mm; height: 0.4mm; background: linear-gradient(90deg, transparent, var(--c-borde), transparent); margin: 1.8mm auto 0; }
+  .e-date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2mm; }
+  .e-date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1.5pt); color: var(--c-text); margin-top: 0.5mm; letter-spacing: 1px; }
+  .e-verse { font-family: 'Cormorant Garamond', serif; font-style: italic; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 0.5pt); color: var(--c-text); margin-top: 2.5mm; max-width: 195mm; line-height: 1.4; }
+  .signatures { display: flex; justify-content: center; gap: 46mm; padding-bottom: 2mm; margin-top: 6mm; }
+  .sig-block { display: flex; flex-direction: column; align-items: center; }
+  .sig-line { width: 42mm; min-width: 42mm; border-top: 0.5mm solid #8a929c; margin-bottom: 1.5mm; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-text); }
+  @media print {
+    html, body { margin: 0 !important; padding: 0 !important; width: 279mm; height: 216mm; }
+    *, *::before, *::after { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  }`
+}
+
+function getEleganteBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string): string {
+  return `<div class="page diploma page-elegante">
+    <div class="e-border-blue"></div>
+    <div class="e-frame-gold-outer"></div>
+    <div class="e-band-gold"><div class="e-band-gold-inner"></div></div>
+    <div class="e-frame-gold-inner"></div>
+    <div class="e-frame-gold-fine"></div>
+    <div class="e-dove">${DOVE_SVG}</div>
+    <div class="e-water">${WATER_WAVES_SVG}</div>
+    <div class="e-logo"><img src="${logoUrl}"></div>
+    <div class="content">
+      <div class="content-inner">
+      <div class="e-title">Certificado</div>
+      <div class="e-title-sub">de Bautismo</div>
+      <div class="e-gold-line"></div>
+      <div class="e-church">Iglesia Esp\u00edritu Santo y Fuego</div>
+      <div class="e-church-sub">Misi\u00f3n Cristiana Perfectos en Unidad</div>
+      <div class="e-text">Certificamos que el(la) hermano(a):</div>
+      <div class="e-name">${nombreCompleto}</div>
+      <div class="e-name-underline"></div>
+      <div class="e-verse">"Porque todos ustedes, que fueron bautizados en Cristo, se han vestido de Cristo." \u2014 <strong>G\u00e1latas 3:27</strong></div>
+      <div class="e-date-text">Fue bautizado(a) el d\u00eda</div>
+      <div class="e-date-value">${fechaLarga}</div>
+      <div class="signatures">
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-name">${pastor || 'Pastor'}</div>
+          <div class="sig-role">Pastor(a) Principal</div>
+        </div>
+        <div class="sig-block">
+          <div class="sig-line"></div>
+          <div class="sig-name">${secretario || 'Secretario(a)'}</div>
+          <div class="sig-role">Secretario(a) General</div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>`
+}
+
 function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): string {
   const captureScript = capturePng ? `
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -302,17 +511,22 @@ window.addEventListener('load', function() {
 });
 </script>` : ''
 
+  const elegante = cfg.template === 'elegante'
+  const css = elegante ? getEleganteCss(cfg) : getMmCSS(cfg)
+  const body = elegante ? getEleganteBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario) : getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)
+
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Great+Vibes&family=Grenze+Gotisch:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-<style>${getMmCSS(cfg)}</style>
+<style>${css}</style>
 ${FIT_SCRIPT}
+${WATER_SCRIPT}
 ${captureScript}
 </head>
-<body><div class="page diploma">${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</div></body>
+<body>${body}</body>
 </html>`
 }
 
@@ -327,8 +541,8 @@ function getCertificacionCss(cfg: DiplomaConfig): string {
   .cert-corner.tr { top: 7mm; right: 7mm; }
   .cert-corner.bl { bottom: 7mm; left: 7mm; }
   .cert-corner.br { bottom: 7mm; right: 7mm; }
-  .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
-  .cert-watermark img { width: 140mm; height: 140mm; object-fit: contain; opacity: 0.08; }
+  .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
+  ${WATER_CSS}
   .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 22mm 20mm 18mm; -webkit-text-stroke: var(--stroke); }
   .cert-header { text-align: center; margin-bottom: 10mm; }
   .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); font-weight: 700; -webkit-text-stroke: 0; }
@@ -426,6 +640,7 @@ window.addEventListener('load', function() {
 .cert-sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-main); }
 </style>
 ${FIT_SCRIPT}
+${WATER_SCRIPT}
 ${captureScript}
 </head>
 <body>
@@ -434,9 +649,13 @@ ${captureScript}
   <div class="cert-border-inner"></div>
   <div class="cert-corner tl"></div><div class="cert-corner tr"></div><div class="cert-corner bl"></div><div class="cert-corner br"></div>
   <div class="cert-dot top"></div><div class="cert-dot bottom"></div><div class="cert-dot left"></div><div class="cert-dot right"></div>
-  <div class="cert-watermark"><img src="${logoUrl}"></div>
+  <div class="cert-watermark">
+    <div class="water-bg"></div>
+    <div class="water-wave w1"></div><div class="water-wave w2"></div><div class="water-wave w3"></div>
+  </div>
   <div class="cert-content">
     <div class="cert-header">
+      <div class="cert-logo"><img src="${logoUrl}"></div>
       <div class="church">Iglesia Esp\u00edritu Santo y Fuego</div>
       <div class="sub">Misi\u00f3n Cristiana Perfectos en Unidad</div>
       <div class="gold-line"></div>
@@ -869,6 +1088,31 @@ export default function AdminDiplomasPage() {
                   >
                     Restablecer
                   </button>
+                </div>
+
+                <div className="mb-4 border-b border-[#f0e8d8] pb-4">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-600">Plantilla del diploma</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.keys(TEMPLATES) as DiplomaConfig['template'][]).map(id => {
+                      const active = config.template === id
+                      const t = TEMPLATES[id]
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => updateConfig({ template: id })}
+                          className={`flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition ${
+                            active
+                              ? 'border-amber-400 bg-amber-50/70 ring-2 ring-amber-300/40'
+                              : 'border-[#e0d8c8] bg-white hover:border-amber-300'
+                          }`}
+                        >
+                          <span className={`text-sm font-bold ${active ? 'text-amber-700' : 'text-gray-700'}`}>{t.label}</span>
+                          <span className="text-[11px] leading-snug text-gray-400">{t.desc}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
