@@ -20,14 +20,48 @@ interface DiplomaConfig {
   colorTitulo: string
   colorNombre: string
   colorTexto: string
+  colorBorde: string
+  tipoBorde: string
   negrita: boolean
+  superNegrita: boolean
+  tamTitulo: number
+  tamNombre: number
+  tamTexto: number
 }
 
 const DEFAULT_CONFIG: DiplomaConfig = {
   colorTitulo: '#b8860b',
   colorNombre: '#b8860b',
   colorTexto: '#444444',
+  colorBorde: '#b8860b',
+  tipoBorde: 'doble',
   negrita: true,
+  superNegrita: false,
+  tamTitulo: 28,
+  tamNombre: 42,
+  tamTexto: 14,
+}
+
+const TIPOS_BORDE: Record<string, { label: string; outer: string; inner: string; corner: string }> = {
+  doble: { label: 'Doble', outer: '3px double var(--c-borde)', inner: '1px double var(--c-borde)', corner: '2px solid var(--c-borde)' },
+  doble_grueso: { label: 'Doble grueso', outer: '4px double var(--c-borde)', inner: '1.5px double var(--c-borde)', corner: '3px solid var(--c-borde)' },
+  simple: { label: 'Simple', outer: '2px solid var(--c-borde)', inner: '0.8px solid var(--c-borde)', corner: '2px solid var(--c-borde)' },
+  grueso: { label: 'Grueso', outer: '4px solid var(--c-borde)', inner: '1.5px solid var(--c-borde)', corner: '3px solid var(--c-borde)' },
+  fino: { label: 'Fino', outer: '1px solid var(--c-borde)', inner: '0.5px solid var(--c-borde)', corner: '1px solid var(--c-borde)' },
+  punteado: { label: 'Punteado', outer: '2.5px dotted var(--c-borde)', inner: '1px dotted var(--c-borde)', corner: '2px solid var(--c-borde)' },
+  rayado: { label: 'Rayado', outer: '2.5px dashed var(--c-borde)', inner: '1px dashed var(--c-borde)', corner: '2px solid var(--c-borde)' },
+  esquinas: { label: 'Solo esquinas', outer: 'none', inner: 'none', corner: '3px solid var(--c-borde)' },
+  cincelado: { label: 'Cincelado', outer: '3px ridge var(--c-borde)', inner: '1px ridge var(--c-borde)', corner: '2px solid var(--c-borde)' },
+  relieve: { label: 'Relieve', outer: '3px outset var(--c-borde)', inner: '1px outset var(--c-borde)', corner: '2px solid var(--c-borde)' },
+}
+
+function bordeRules(cfg: DiplomaConfig, prefix: string): string {
+  const b = TIPOS_BORDE[cfg.tipoBorde] || TIPOS_BORDE.doble
+  return `
+  .${prefix}border-outer { position: absolute; inset: 10mm; border-radius: 4px; border: ${b.outer}; }
+  .${prefix}border-inner { position: absolute; inset: 14mm; border-radius: 3px; border: ${b.inner}; }
+  .${prefix}corner { position: absolute; width: 8mm; height: 8mm; border-radius: 50%; border: ${b.corner}; }
+  .${prefix}corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: var(--c-borde); }`
 }
 
 const STORAGE_KEY = 'diploma_config'
@@ -56,7 +90,12 @@ function colorVars(cfg: DiplomaConfig): string {
   --c-main: ${cfg.colorTitulo};
   --c-name: ${cfg.colorNombre};
   --c-text: ${cfg.colorTexto};
+  --c-borde: ${cfg.colorBorde};
   --fw: ${cfg.negrita ? '700' : '400'};
+  --stroke: ${cfg.superNegrita ? '0.45px' : '0px'};
+  --fs-titulo: ${cfg.tamTitulo}pt;
+  --fs-nombre: ${cfg.tamNombre}pt;
+  --fs-texto: ${cfg.tamTexto}pt;
 }`
 }
 
@@ -77,7 +116,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
       <div class="name-underline"></div>
       <div class="cert-text" style="margin-top:8px;">
         ha sido bautizado(a) conforme al mandamiento del Se\u00f1or:<br>
-        <strong style="font-size:12pt; color:var(--c-text);">"Por tanto, id y haced disc\u00edpulos a todas las naciones,<br>
+        <strong style="font-size:var(--fs-texto); color:var(--c-text);">"Por tanto, id y haced disc\u00edpulos a todas las naciones,<br>
         bautiz\u00e1ndolos en el nombre del Padre, y del Hijo, y del Esp\u00edritu Santo."<br>
         \u2014 Mateo 28:19</strong>
       </div>
@@ -110,35 +149,32 @@ function getMmCSS(cfg: DiplomaConfig): string {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 279mm; height: 216mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
   .page { position: relative; width: 279mm; height: 216mm; overflow: hidden; }
-  .border-outer { position: absolute; inset: 10mm; border: 2.5px solid var(--c-main); border-radius: 4px; }
-  .border-inner { position: absolute; inset: 14mm; border: 0.8px solid var(--c-main); border-radius: 3px; }
-  .corner { position: absolute; width: 8mm; height: 8mm; border: 2px solid var(--c-main); border-radius: 50%; }
-  .corner::after { content: ''; position: absolute; inset: 2mm; border-radius: 50%; background: var(--c-main); }
+  ${bordeRules(cfg, '')}
   .corner.tl { top: 7mm; left: 7mm; }
   .corner.tr { top: 7mm; right: 7mm; }
   .corner.bl { bottom: 7mm; left: 7mm; }
   .corner.br { bottom: 7mm; right: 7mm; }
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
   .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.15; }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 27mm 24mm 37mm; text-align: center; }
-  .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 28pt; color: var(--c-main); letter-spacing: 5px; text-transform: uppercase; }
-  .gold-line { width: 80mm; height: 1px; background: var(--c-main); margin: 1.5mm auto; position: relative; }
-  .gold-line::after { content: '\u2726'; position: absolute; top: -3.5mm; left: 50%; transform: translateX(-50%); color: var(--c-main); font-size: 7pt; }
-  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); margin-top: 0.8mm; font-weight: 700; }
+  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 27mm 24mm 37mm; text-align: center; -webkit-text-stroke: var(--stroke); }
+  .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 5px; text-transform: uppercase; }
+  .gold-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto; position: relative; }
+  .gold-line::after { content: '\u2726'; position: absolute; top: -3.5mm; left: 50%; transform: translateX(-50%); color: var(--c-borde); font-size: 7pt; }
+  .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); margin-top: 0.8mm; font-weight: 700; -webkit-text-stroke: 0; }
   .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.8mm; }
-  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 14pt; color: var(--c-text); margin-top: 1.5mm; line-height: 1.4; }
-  .name { font-family: 'Great Vibes', cursive; font-size: 42pt; color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
-  .name-underline { width: 100mm; height: 1px; background: var(--c-main); margin: 1.5mm auto 0; }
-  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 15pt; color: var(--c-text); margin-top: 1.5mm; }
-  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 16pt; color: var(--c-text); margin-top: 0.5mm; }
-  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 14pt; color: var(--c-text); margin-top: -2mm; max-width: 200mm; }
+  .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; line-height: 1.4; }
+  .name { font-family: 'Great Vibes', cursive; font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
+  .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
+  .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
+  .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
+  .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: -2mm; max-width: 200mm; }
   .bottom-section { margin-top: 14mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
-  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 14pt; color: var(--c-text); }
-  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-text); }
-  .footer-line { width: 80mm; height: 1px; background: var(--c-main); margin: 3mm auto 1.5mm; position: relative; }
-  .footer-line::after { content: '\u2726'; position: absolute; top: -3mm; left: 50%; transform: translateX(-50%); color: var(--c-main); font-size: 6pt; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
+  .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-text); }
+  .footer-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 3mm auto 1.5mm; position: relative; }
+  .footer-line::after { content: '\u2726'; position: absolute; top: -3mm; left: 50%; transform: translateX(-50%); color: var(--c-borde); font-size: 6pt; }
   .footer-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 10pt; color: var(--c-text); }
   @media print {
     html, body { margin: 0 !important; padding: 0 !important; width: 279mm; height: 216mm; }
@@ -189,20 +225,23 @@ function getCertificacionCss(cfg: DiplomaConfig): string {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { width: 216mm; height: 279mm; font-family: 'Cormorant Garamond', serif; background: #fff; overflow: hidden; }
   .page.certificacion { position: relative; width: 216mm; height: 279mm; overflow: hidden; font-family: 'Cormorant Garamond', serif; background: #fff; }
-  .cert-border-outer { position: absolute; inset: 10mm; border: 2px solid var(--c-main); border-radius: 4px; }
-  .cert-border-inner { position: absolute; inset: 14mm; border: 0.8px solid var(--c-main); border-radius: 3px; }
+  ${bordeRules(cfg, 'cert-')}
+  .cert-corner.tl { top: 7mm; left: 7mm; }
+  .cert-corner.tr { top: 7mm; right: 7mm; }
+  .cert-corner.bl { bottom: 7mm; left: 7mm; }
+  .cert-corner.br { bottom: 7mm; right: 7mm; }
   .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
   .cert-watermark img { width: 140mm; height: 140mm; object-fit: contain; opacity: 0.08; }
-  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 22mm 20mm 18mm; }
+  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 22mm 20mm 18mm; -webkit-text-stroke: var(--stroke); }
   .cert-header { text-align: center; margin-bottom: 10mm; }
-  .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); font-weight: 700; }
+  .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); font-weight: 700; -webkit-text-stroke: 0; }
   .cert-header .sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 11pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
-  .cert-header .gold-line { width: 60mm; height: 1px; background: var(--c-main); margin: 4mm auto; }
-  .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 18pt; color: var(--c-main); letter-spacing: 3px; text-transform: uppercase; }
+  .cert-header .gold-line { width: 60mm; height: 1px; background: var(--c-borde); margin: 4mm auto; }
+  .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 3px; text-transform: uppercase; }
   .cert-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3mm; padding: 0 8mm; }
   .cert-row { display: flex; flex-direction: column; gap: 0.5mm; }
-  .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 11pt; color: var(--c-main); }
-  .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-text); border-bottom: 1px dashed #ccc; padding-bottom: 1mm; padding-left: 2mm; }
+  .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-main); }
+  .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); border-bottom: 1px dashed #ccc; padding-bottom: 1mm; padding-left: 2mm; }
   .cert-footer { text-align: center; margin-top: auto; padding-top: 6mm; }
   .cert-footer-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 10pt; color: var(--c-text); }
   @media print {
@@ -284,8 +323,8 @@ window.addEventListener('load', function() {
 .cert-sigs { display: flex; justify-content: space-between; margin-top: 10mm; padding: 0 8mm; }
 .cert-sig-block { text-align: center; flex: 1; }
 .cert-sig-line { width: 70%; height: 1px; background: #333; margin: 0 auto 2mm; }
-.cert-sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 11pt; color: var(--c-text); }
-.cert-sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 10pt; color: var(--c-main); }
+.cert-sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
+.cert-sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-main); }
 </style>
 ${captureScript}
 </head>
@@ -293,6 +332,7 @@ ${captureScript}
 <div class="page certificacion">
   <div class="cert-border-outer"></div>
   <div class="cert-border-inner"></div>
+  <div class="cert-corner tl"></div><div class="cert-corner tr"></div><div class="cert-corner bl"></div><div class="cert-corner br"></div>
   <div class="cert-watermark"><img src="${logoUrl}"></div>
   <div class="cert-content">
     <div class="cert-header">
@@ -716,8 +756,8 @@ export default function AdminDiplomasPage() {
               <div className="rounded-xl border border-[#f0e8d8] bg-[#faf8f4] p-5">
                 <div className="mb-4 flex items-center justify-between border-b border-[#f0e8d8] pb-3">
                   <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-800">Colores y estilo</h3>
-                    <p className="text-xs text-gray-400">Elige colores más llamativos y la negrita del texto</p>
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-gray-800">Colores, bordes, tamaño y estilo</h3>
+                    <p className="text-xs text-gray-400">Elige colores, tipo de borde, negritas y tamaño de las letras</p>
                   </div>
                   <button
                     type="button"
@@ -744,6 +784,11 @@ export default function AdminDiplomasPage() {
                     value={config.colorTexto}
                     onChange={v => updateConfig({ colorTexto: v })}
                   />
+                  <ColorField
+                    label="Bordes y líneas decorativas"
+                    value={config.colorBorde}
+                    onChange={v => updateConfig({ colorBorde: v })}
+                  />
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Texto en negrita</label>
                     <button
@@ -755,7 +800,87 @@ export default function AdminDiplomasPage() {
                     >
                       <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${config.negrita ? 'left-6' : 'left-1'}`} />
                     </button>
-                    <p className="mt-1 text-xs text-gray-400">{config.negrita ? 'Las letras (no góticas) se imprimen en negrita' : 'Las letras (no góticas) se imprimen en peso normal'}</p>
+                    <p className="mt-1 text-xs text-gray-400">{config.negrita ? 'Negrita activada' : 'Peso normal'}</p>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Súper negrita</label>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={config.superNegrita}
+                      onClick={() => updateConfig({ superNegrita: !config.superNegrita })}
+                      className={`relative h-7 w-12 rounded-full transition ${config.superNegrita ? 'bg-gradient-to-r from-gray-800 to-gray-700' : 'bg-gray-300'}`}
+                    >
+                      <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${config.superNegrita ? 'left-6' : 'left-1'}`} />
+                    </button>
+                    <p className="mt-1 text-xs text-gray-400">{config.superNegrita ? 'Letras aún más gruesas y llamativas' : 'Grosor normal'}</p>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Tamaño del título</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={8}
+                        max={60}
+                        value={config.tamTitulo}
+                        onChange={e => updateConfig({ tamTitulo: Math.max(8, Math.min(60, Number(e.target.value) || DEFAULT_CONFIG.tamTitulo)) })}
+                        className="w-24 rounded-xl border border-[#e0d8c8] bg-white px-3 py-2 text-sm text-gray-800"
+                      />
+                      <span className="text-xs text-gray-400">pt</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Tamaño del nombre</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={16}
+                        max={90}
+                        value={config.tamNombre}
+                        onChange={e => updateConfig({ tamNombre: Math.max(16, Math.min(90, Number(e.target.value) || DEFAULT_CONFIG.tamNombre)) })}
+                        className="w-24 rounded-xl border border-[#e0d8c8] bg-white px-3 py-2 text-sm text-gray-800"
+                      />
+                      <span className="text-xs text-gray-400">pt</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Tamaño del texto del cuerpo</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={8}
+                        max={40}
+                        value={config.tamTexto}
+                        onChange={e => updateConfig({ tamTexto: Math.max(8, Math.min(40, Number(e.target.value) || DEFAULT_CONFIG.tamTexto)) })}
+                        className="w-24 rounded-xl border border-[#e0d8c8] bg-white px-3 py-2 text-sm text-gray-800"
+                      />
+                      <span className="text-xs text-gray-400">pt</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 border-t border-[#f0e8d8] pt-4">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-600">Tipo de borde del marco</label>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+                    {Object.entries(TIPOS_BORDE).map(([id, b]) => {
+                      const active = config.tipoBorde === id
+                      const previewBorder = b.outer.replace(/var\(--c-borde\)/g, config.colorBorde)
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => updateConfig({ tipoBorde: id })}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition ${
+                            active
+                              ? 'border-amber-400 bg-amber-50/70 ring-2 ring-amber-300/40'
+                              : 'border-[#e0d8c8] bg-white hover:border-amber-300'
+                          }`}
+                        >
+                          <div className="h-7 w-full rounded-md" style={{ border: previewBorder }} />
+                          <span className={`text-[11px] font-semibold ${active ? 'text-amber-700' : 'text-gray-600'}`}>{b.label}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
