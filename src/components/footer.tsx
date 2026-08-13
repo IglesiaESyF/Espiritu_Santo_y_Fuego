@@ -1,14 +1,31 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Phone, Mail, Lock } from 'lucide-react'
-import { PortadaBanner } from '@/components/portada-banner'
+import { usePortada } from '@/lib/portada'
 import logoSrc from '@/../public/logo.png'
 
 export function Footer() {
+  const portada = usePortada()
+
   return (
-    <>
-    <footer className="bg-dark text-white">
-      <div className="mx-auto max-w-6xl px-4 py-12">
+    <footer className="relative overflow-hidden bg-dark text-white">
+      {portada?.imagenUrl && (
+        <>
+          {/* mitad inferior de la imagen como fondo */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={portada.imagenUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ objectPosition: 'center bottom' }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-dark/90 via-dark/80 to-black/85" />
+        </>
+      )}
+
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <div className="mb-3 flex items-center gap-2">
@@ -93,7 +110,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-    <PortadaBanner position="bottom" />
-    </>
   )
 }

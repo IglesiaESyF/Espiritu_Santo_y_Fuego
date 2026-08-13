@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X, ThumbsUp, Smile, ThumbsDown, MessageCircle, Download, Printer } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { PortadaBanner } from '@/components/portada-banner'
+import { usePortada } from '@/lib/portada'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, getDoc, addDoc, doc, runTransaction, query, orderBy, limit, Timestamp } from 'firebase/firestore'
 import logoSrc from '@/../public/logo.png'
@@ -32,6 +34,7 @@ interface Comentario {
 export default function HomePage() {
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [selected, setSelected] = useState<Noticia | null>(null)
+  const portada = usePortada()
 
   useEffect(() => {
     getDocs(collection(db, 'noticias')).then(snap => {
@@ -45,43 +48,57 @@ export default function HomePage() {
     }).catch(() => {})
   }, [])
 
+  const heroContent = (
+    <div className="relative mx-auto max-w-4xl px-4">
+      <div className="flex flex-col items-center gap-6 md:flex-row md:justify-center">
+        <span className="logo-wrapper shrink-0">
+          <Image src={logoSrc} alt="IESFuego" width={96} height={96} className="logo-spin h-24 w-24 object-contain md:h-28 md:w-28" />
+        </span>
+        <div className="text-center md:text-left">
+          <h1 className="mb-2 text-4xl font-bold leading-tight md:text-5xl">
+            Iglesia Espíritu Santo{' '}
+            <span className="text-primary-light">y Fuego</span>
+          </h1>
+          <p className="mb-2 text-sm text-gray-400">
+            Misión Cristiana Perfectos en Unidad
+          </p>
+          <p className="mb-8 text-lg text-gray-300">
+            Transformando vidas con el poder del Espíritu Santo
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-wrap justify-center gap-4">
+        <Link href="/cultos" className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white shadow-lg transition hover:bg-primary-dark">
+          <Tv className="h-5 w-5" /> Nuestros Cultos
+        </Link>
+        <Link href="/en-vivo" className="inline-flex items-center gap-2 rounded-xl border-2 border-primary-light px-8 py-3.5 font-semibold text-primary-light transition hover:bg-primary-light hover:text-white">
+          <Flame className="h-5 w-5" /> En Vivo
+        </Link>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <Header />
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-dark via-dark-light to-dark py-24 text-center text-white">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary blur-3xl" />
-          </div>
-          <div className="relative mx-auto max-w-4xl px-4">
-            <div className="flex flex-col items-center gap-6 md:flex-row md:justify-center">
-              <span className="logo-wrapper shrink-0">
-                <Image src={logoSrc} alt="IESFuego" width={96} height={96} className="logo-spin h-24 w-24 object-contain md:h-28 md:w-28" />
-              </span>
-              <div className="text-center md:text-left">
-                <h1 className="mb-2 text-4xl font-bold leading-tight md:text-5xl">
-                  Iglesia Espíritu Santo{' '}
-                  <span className="text-primary-light">y Fuego</span>
-                </h1>
-                <p className="mb-2 text-sm text-gray-400">
-                  Misión Cristiana Perfectos en Unidad
-                </p>
-                <p className="mb-8 text-lg text-gray-300">
-                  Transformando vidas con el poder del Espíritu Santo
-                </p>
-              </div>
+        {portada?.imagenUrl ? (
+          <section className="relative overflow-hidden bg-dark text-center text-white">
+            <PortadaBanner position="top" />
+            <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/60 via-black/40 to-dark/70" />
+            <div className="absolute inset-0 z-20 flex items-center justify-center">
+              {heroContent}
             </div>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/cultos" className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 font-semibold text-white shadow-lg transition hover:bg-primary-dark">
-                <Tv className="h-5 w-5" /> Nuestros Cultos
-              </Link>
-              <Link href="/en-vivo" className="inline-flex items-center gap-2 rounded-xl border-2 border-primary-light px-8 py-3.5 font-semibold text-primary-light transition hover:bg-primary-light hover:text-white">
-                <Flame className="h-5 w-5" /> En Vivo
-              </Link>
+          </section>
+        ) : (
+          <section className="relative overflow-hidden bg-gradient-to-br from-dark via-dark-light to-dark py-24 text-center text-white">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary blur-3xl" />
             </div>
-          </div>
-        </section>
+            {heroContent}
+          </section>
+        )}
 
         {/* Info cards */}
         <section className="mx-auto max-w-6xl px-4 -mt-10 relative z-10">
