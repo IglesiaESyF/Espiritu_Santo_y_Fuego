@@ -27,6 +27,7 @@ interface DiplomaConfig {
   tamTitulo: number
   tamNombre: number
   tamTexto: number
+  fuenteNombre: 'cursiva' | 'gotica'
 }
 
 const DEFAULT_CONFIG: DiplomaConfig = {
@@ -40,6 +41,12 @@ const DEFAULT_CONFIG: DiplomaConfig = {
   tamTitulo: 28,
   tamNombre: 42,
   tamTexto: 14,
+  fuenteNombre: 'cursiva',
+}
+
+const FUENTES_NOMBRE: Record<DiplomaConfig['fuenteNombre'], { label: string; family: string }> = {
+  cursiva: { label: 'Cursiva (Great Vibes)', family: "'Great Vibes', cursive" },
+  gotica: { label: 'Gótica legible (Grenze Gotisch)', family: "'Grenze Gotisch', 'UnifrakturMaguntia', cursive" },
 }
 
 const TIPOS_BORDE: Record<string, { label: string; outer: string; inner: string; corner: string }> = {
@@ -96,6 +103,7 @@ function colorVars(cfg: DiplomaConfig): string {
   --fs-titulo: ${cfg.tamTitulo}pt;
   --fs-nombre: ${cfg.tamNombre}pt;
   --fs-texto: ${cfg.tamTexto}pt;
+  --fn-nombre: ${FUENTES_NOMBRE[cfg.fuenteNombre]?.family || FUENTES_NOMBRE.cursiva.family};
 }`
 }
 
@@ -106,6 +114,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
     <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
     <div class="watermark"><img src="${logoUrl}"></div>
     <div class="content">
+      <div class="content-inner">
       <div class="title">Certificado</div>
       <div class="title" style="font-size:16pt; letter-spacing:3px; margin-top:3px;">de Bautismo</div>
       <div class="gold-line"></div>
@@ -139,6 +148,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
         <div class="footer-line"></div>
         <div class="footer-text">Iglesia Esp\u00edritu Santo y Fuego \u2014 Misi\u00f3n Cristiana Perfectos en Unidad</div>
       </div>
+      </div>
     </div>
   </div>`
 }
@@ -156,21 +166,23 @@ function getMmCSS(cfg: DiplomaConfig): string {
   .corner.br { bottom: 7mm; right: 7mm; }
   .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 0; pointer-events: none; }
   .watermark img { width: 160mm; height: 160mm; object-fit: contain; opacity: 0.15; }
-  .content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 27mm 24mm 37mm; text-align: center; -webkit-text-stroke: var(--stroke); }
+  .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 27mm 24mm 37mm; -webkit-text-stroke: var(--stroke); }
+  .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 5px; text-transform: uppercase; }
   .gold-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto; position: relative; }
   .gold-line::after { content: '\u2726'; position: absolute; top: -3.5mm; left: 50%; transform: translateX(-50%); color: var(--c-borde); font-size: 7pt; }
   .church-name { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); margin-top: 0.8mm; font-weight: 700; -webkit-text-stroke: 0; }
   .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.8mm; }
   .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; line-height: 1.4; }
-  .name { font-family: 'Great Vibes', cursive; font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
+  .name { font-family: var(--fn-nombre); font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
   .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
   .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: -2mm; max-width: 200mm; }
   .bottom-section { margin-top: 14mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
-  .sig-line { width: 50mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
+  .sig-block { display: flex; flex-direction: column; align-items: center; }
+  .sig-line { width: 42mm; min-width: 42mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
   .sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
   .sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-text); }
   .footer-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 3mm auto 1.5mm; position: relative; }
@@ -182,6 +194,44 @@ function getMmCSS(cfg: DiplomaConfig): string {
   }`
 }
 
+const FIT_SCRIPT = `
+<script>
+window.__fitDiplomas = function() {
+  var content = document.querySelector('.content');
+  var inner = document.querySelector('.content-inner');
+  if (content && inner) {
+    inner.style.transform = 'none';
+    var scale = Math.min(content.clientHeight / inner.scrollHeight, content.clientWidth / inner.scrollWidth, 1);
+    if (scale < 1) inner.style.transform = 'scale(' + scale + ')';
+  }
+  document.querySelectorAll('.sig-block').forEach(function(block) {
+    var name = block.querySelector('.sig-name');
+    var line = block.querySelector('.sig-line');
+    if (name && line) line.style.width = (name.getBoundingClientRect().width + 8) + 'px';
+  });
+  var cbody = document.querySelector('.cert-body');
+  var cinner = document.querySelector('.cert-body-inner');
+  if (cbody && cinner) {
+    cinner.style.transform = 'none';
+    var cscale = Math.min(cbody.clientHeight / cinner.scrollHeight, cbody.clientWidth / cinner.scrollWidth, 1);
+    if (cscale < 1) cinner.style.transform = 'scale(' + cscale + ')';
+  }
+  document.querySelectorAll('.cert-sig-block').forEach(function(block) {
+    var name = block.querySelector('.cert-sig-name');
+    var line = block.querySelector('.cert-sig-line');
+    if (name && line) line.style.width = (name.getBoundingClientRect().width + 6) + 'px';
+  });
+};
+window.addEventListener('load', function() {
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(window.__fitDiplomas);
+  } else {
+    window.__fitDiplomas();
+  }
+});
+</script>
+`
+
 function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: string, pastor: string, secretario: string, capturePng?: boolean, cfg: DiplomaConfig = DEFAULT_CONFIG): string {
   const captureScript = capturePng ? `
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -189,6 +239,7 @@ function buildDiplomaHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
 window.addEventListener('load', function() {
   setTimeout(async function() {
     try {
+      if (window.__fitDiplomas) window.__fitDiplomas();
       await document.fonts.ready;
       var target = document.querySelector('.page.diploma') || document.body;
       var canvas = await html2canvas(target, {
@@ -211,8 +262,9 @@ window.addEventListener('load', function() {
 <head>
 <meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Great+Vibes&family=Grenze+Gotisch:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
 <style>${getMmCSS(cfg)}</style>
+${FIT_SCRIPT}
 ${captureScript}
 </head>
 <body><div class="page diploma">${getDiplomaBodyHtml(nombreCompleto, fechaLarga, logoUrl, pastor, secretario)}</div></body>
@@ -238,7 +290,8 @@ function getCertificacionCss(cfg: DiplomaConfig): string {
   .cert-header .sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 11pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
   .cert-header .gold-line { width: 60mm; height: 1px; background: var(--c-borde); margin: 4mm auto; }
   .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 3px; text-transform: uppercase; }
-  .cert-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3mm; padding: 0 8mm; }
+  .cert-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 8mm; }
+  .cert-body-inner { width: 100%; display: flex; flex-direction: column; gap: 3mm; }
   .cert-row { display: flex; flex-direction: column; gap: 0.5mm; }
   .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-main); }
   .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); border-bottom: 1px dashed #ccc; padding-bottom: 1mm; padding-left: 2mm; }
@@ -296,6 +349,7 @@ function buildCertificacionHtml(miembro: Miembro, logoUrl: string, pastor: strin
 window.addEventListener('load', function() {
   setTimeout(async function() {
     try {
+      if (window.__fitDiplomas) window.__fitDiplomas();
       await document.fonts.ready;
       var target = document.querySelector('.page.certificacion') || document.body;
       var canvas = await html2canvas(target, {
@@ -326,6 +380,7 @@ window.addEventListener('load', function() {
 .cert-sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
 .cert-sig-role { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) - 2pt); color: var(--c-main); }
 </style>
+${FIT_SCRIPT}
 ${captureScript}
 </head>
 <body>
@@ -342,6 +397,7 @@ ${captureScript}
       <div class="title">Certificaci\u00f3n de Datos del Bautizado</div>
     </div>
     <div class="cert-body">
+      <div class="cert-body-inner">
       <div class="cert-row"><span class="cert-label">Nombre completo:</span><span class="cert-value">${miembro.nombre} ${miembro.apellido}</span></div>
       <div class="cert-row"><span class="cert-label">Fecha de nacimiento:</span><span class="cert-value">${fechaNac}</span></div>
       <div class="cert-row"><span class="cert-label">Nacionalidad:</span><span class="cert-value">${nacionalidad}</span></div>
@@ -350,6 +406,7 @@ ${captureScript}
       <div class="cert-row"><span class="cert-label">Fecha de 1ra. llegada a la iglesia:</span><span class="cert-value">${fechaLleg}</span></div>
       <div class="cert-row"><span class="cert-label">Tiempo en la iglesia:</span><span class="cert-value">${tiempoIglesia}</span></div>
       <div class="cert-row"><span class="cert-label">\u00bfLleg\u00f3 bautizado de otra iglesia?:</span><span class="cert-value">${llegoBautizado}</span></div>
+      </div>
     </div>
     <div class="cert-sigs">
       <div class="cert-sig-block">
@@ -856,6 +913,31 @@ export default function AdminDiplomasPage() {
                       />
                       <span className="text-xs text-gray-400">pt</span>
                     </div>
+                  </div>
+                </div>
+
+                <div className="mt-5 border-t border-[#f0e8d8] pt-4">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-600">Tipo de letra del nombre del bautizado</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(Object.keys(FUENTES_NOMBRE) as DiplomaConfig['fuenteNombre'][]).map(id => {
+                      const active = config.fuenteNombre === id
+                      const f = FUENTES_NOMBRE[id]
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => updateConfig({ fuenteNombre: id })}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 transition ${
+                            active
+                              ? 'border-amber-400 bg-amber-50/70 ring-2 ring-amber-300/40'
+                              : 'border-[#e0d8c8] bg-white hover:border-amber-300'
+                          }`}
+                        >
+                          <span className="text-2xl leading-tight" style={{ fontFamily: f.family }}>Juan Pérez</span>
+                          <span className={`text-[11px] font-semibold ${active ? 'text-amber-700' : 'text-gray-600'}`}>{f.label}</span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 
