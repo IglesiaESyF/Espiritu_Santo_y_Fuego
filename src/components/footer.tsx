@@ -1,10 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Phone, Mail, Lock } from 'lucide-react'
+import { PortadaBanner } from '@/components/portada-banner'
 import logoSrc from '@/../public/logo.png'
 
 export function Footer() {
   return (
+    <>
     <footer className="bg-dark text-white">
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-8 md:grid-cols-3">
@@ -91,5 +93,7 @@ export function Footer() {
         </div>
       </div>
     </footer>
+    <PortadaBanner position="bottom" />
+    </>
   )
 }
