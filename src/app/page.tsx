@@ -42,6 +42,7 @@ export default function HomePage() {
   const [selected, setSelected] = useState<Noticia | null>(null)
   const [fotos, setFotos] = useState<Foto[]>([])
   const [fotoActiva, setFotoActiva] = useState<number | null>(null)
+  const [fotosOcultas, setFotosOcultas] = useState(false)
   const portada = usePortada()
 
   useEffect(() => {
@@ -76,6 +77,22 @@ export default function HomePage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [fotoActiva, fotos.length])
+
+  useEffect(() => {
+    function onVisChange() {
+      setFotosOcultas(document.visibilityState === 'hidden')
+    }
+    function onBlur() { setFotosOcultas(true) }
+    function onFocus() { setFotosOcultas(false) }
+    document.addEventListener('visibilitychange', onVisChange)
+    window.addEventListener('blur', onBlur)
+    window.addEventListener('focus', onFocus)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisChange)
+      window.removeEventListener('blur', onBlur)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [])
 
   const heroContent = (
     <div className="relative mx-auto max-w-4xl px-4">
@@ -207,29 +224,43 @@ export default function HomePage() {
 
         {/* Galería de fotos */}
         {fotos.length > 0 && (
-          <section className="mx-auto max-w-6xl px-4 py-20">
+          <section
+            className="mx-auto max-w-6xl select-none px-4 py-20"
+            onContextMenu={(e) => e.preventDefault()}
+          >
             <h2 className="mb-4 text-center text-3xl font-bold text-dark">
               Galería de <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Fotos</span>
             </h2>
             <p className="mb-10 text-center text-sm text-gray-500">Momentos de nuestras actividades y cultos</p>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="relative grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {fotos.map((f, i) => (
                 <button
                   key={f.id}
                   onClick={() => setFotoActiva(i)}
-                  className="group relative overflow-hidden rounded-2xl bg-gray-100 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                  className={`group relative overflow-hidden rounded-2xl bg-gray-100 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                    fotosOcultas ? 'blur-md' : ''
+                  }`}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={f.imagenUrl}
                     alt={`Foto ${i + 1}`}
-                    className="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-110 md:h-48"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    className="pointer-events-none h-40 w-full object-cover transition-transform duration-500 group-hover:scale-110 md:h-48"
+                    style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <Images className="absolute right-3 top-3 h-5 w-5 text-white/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 </button>
               ))}
             </div>
+            {fotosOcultas && (
+              <div className="pointer-events-none mt-6 text-center text-xs font-semibold uppercase tracking-widest text-gray-400">
+                Fotos protegidas · vuelve a esta pestaña para verlas
+              </div>
+            )}
           </section>
         )}
 
@@ -247,7 +278,11 @@ export default function HomePage() {
 
       {/* Lightbox galería */}
       {fotoActiva !== null && fotos[fotoActiva] && (
-        <div className="fixed inset-0 z-[70] flex flex-col items-center justify-center bg-black/90 p-4" onClick={() => setFotoActiva(null)}>
+        <div
+          className="fixed inset-0 z-[70] flex select-none flex-col items-center justify-center bg-black/90 p-4"
+          onClick={() => setFotoActiva(null)}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <button
             onClick={() => setFotoActiva(null)}
             className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
@@ -265,14 +300,17 @@ export default function HomePage() {
               <ChevronLeft className="h-6 w-6" />
             </button>
 
-            <div className="kb-fade flex max-h-[72vh] w-full max-w-5xl items-center justify-center overflow-hidden">
+            <div className={`kb-fade flex max-h-[72vh] w-full max-w-5xl items-center justify-center overflow-hidden ${fotosOcultas ? 'blur-lg' : ''}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 key={fotoActiva}
                 src={fotos[fotoActiva].imagenUrl}
                 alt={`Foto ${fotoActiva + 1}`}
                 onClick={(e) => e.stopPropagation()}
+                onDragStart={(e) => e.preventDefault()}
+                draggable={false}
                 className={`kb-image ${fotoActiva % 2 === 1 ? 'alt' : ''} max-h-[72vh] max-w-full rounded-xl object-contain shadow-2xl`}
+                style={{ WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
               />
             </div>
 
@@ -301,12 +339,24 @@ export default function HomePage() {
                     : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/50'
                 }`}
                 aria-label={`Ir a foto ${i + 1}`}
+                onContextMenu={(e) => e.preventDefault()}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={f.imagenUrl} alt={`Miniatura ${i + 1}`} className="h-full w-full object-cover" />
+                <img
+                  src={f.imagenUrl}
+                  alt={`Miniatura ${i + 1}`}
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
+                  className="pointer-events-none h-full w-full object-cover"
+                />
               </button>
             ))}
           </div>
+          {fotosOcultas && (
+            <p className="pointer-events-none mt-2 text-xs font-semibold uppercase tracking-widest text-white/60">
+              Foto protegida · vuelve a esta pestaña para verla
+            </p>
+          )}
         </div>
       )}
 
