@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X, ThumbsUp, Smile, ThumbsDown, MessageCircle, Download, Printer } from 'lucide-react'
+import { Cross, Tv, Calendar, Heart, ArrowRight, Flame, X, ThumbsUp, Smile, ThumbsDown, MessageCircle, Download, Printer, ChevronLeft, ChevronRight, Images } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { PortadaBanner } from '@/components/portada-banner'
@@ -31,9 +31,17 @@ interface Comentario {
   timestamp: Timestamp
 }
 
+interface Foto {
+  id: string
+  imagenUrl: string
+  fechaExpiracion: Timestamp
+}
+
 export default function HomePage() {
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [selected, setSelected] = useState<Noticia | null>(null)
+  const [fotos, setFotos] = useState<Foto[]>([])
+  const [fotoActiva, setFotoActiva] = useState<number | null>(null)
   const portada = usePortada()
 
   useEffect(() => {
@@ -45,6 +53,16 @@ export default function HomePage() {
         if (n.fechaExpiracion?.toMillis() > now) list.push(n)
       })
       setNoticias(list)
+    }).catch(() => {})
+    getDocs(collection(db, 'fotos')).then(snap => {
+      const now = Date.now()
+      const list: Foto[] = []
+      snap.forEach(d => {
+        const f = { id: d.id, ...d.data() } as Foto
+        if (f.fechaExpiracion?.toMillis() > now) list.push(f)
+      })
+      list.sort((a, b) => (b.fechaExpiracion?.toMillis() || 0) - (a.fechaExpiracion?.toMillis() || 0))
+      setFotos(list)
     }).catch(() => {})
   }, [])
 
@@ -176,6 +194,34 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* Galería de fotos */}
+        {fotos.length > 0 && (
+          <section className="mx-auto max-w-6xl px-4 py-20">
+            <h2 className="mb-4 text-center text-3xl font-bold text-dark">
+              Galería de <span className="bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Fotos</span>
+            </h2>
+            <p className="mb-10 text-center text-sm text-gray-500">Momentos de nuestras actividades y cultos</p>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {fotos.map((f, i) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFotoActiva(i)}
+                  className="group relative overflow-hidden rounded-2xl bg-gray-100 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={f.imagenUrl}
+                    alt={`Foto ${i + 1}`}
+                    className="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-110 md:h-48"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  <Images className="absolute right-3 top-3 h-5 w-5 text-white/80 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Versículo */}
         <section className="mx-auto max-w-3xl px-4 py-20 text-center">
           <blockquote className="text-2xl italic text-dark md:text-3xl">
@@ -187,6 +233,43 @@ export default function HomePage() {
 
       {/* Modal noticia */}
       {selected && <NewsModal noticia={selected} onClose={() => setSelected(null)} />}
+
+      {/* Lightbox galería */}
+      {fotoActiva !== null && fotos[fotoActiva] && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={() => setFotoActiva(null)}>
+          <button
+            onClick={() => setFotoActiva(null)}
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+            aria-label="Cerrar"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva - 1 + fotos.length) % fotos.length) }}
+            className="absolute left-2 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:left-6"
+            aria-label="Anterior"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={fotos[fotoActiva].imagenUrl}
+            alt={`Foto ${fotoActiva + 1}`}
+            className="max-h-[85vh] max-w-full rounded-xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setFotoActiva((fotoActiva + 1) % fotos.length) }}
+            className="absolute right-2 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20 md:right-6"
+            aria-label="Siguiente"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1 text-sm text-white">
+            {fotoActiva + 1} / {fotos.length}
+          </p>
+        </div>
+      )}
 
       <Footer />
     </>

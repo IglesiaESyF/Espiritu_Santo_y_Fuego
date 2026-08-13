@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
   CalendarDays, Tv, DollarSign, LogOut,
-  Church, Menu, X, Wifi, Shield, Users, BarChart3, ShieldAlert, Award, Image as ImageIcon,
+  Church, Menu, X, Wifi, Shield, Users, BarChart3, ShieldAlert, Award, Image as ImageIcon, Camera,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { auditLog } from '@/lib/audit'
@@ -62,6 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/actividades', label: 'Actividades', icon: CalendarDays, permiso: 'actividades' as const },
     { href: '/admin/cultos', label: 'Cultos', icon: Tv, permiso: 'cultos' as const },
     { href: '/admin/noticias', label: 'Noticias', icon: CalendarDays, permiso: 'noticias' as const },
+    { href: '/admin/fotos', label: 'Fotos', icon: Camera, permiso: 'noticias' as const },
     { href: '/admin/en-vivo', label: 'En Vivo', icon: Wifi, permiso: 'envivo' as const },
     { href: '/admin/caja', label: 'Caja', icon: DollarSign, permiso: 'caja' as const },
     { href: '/admin/dashboard', label: 'Estadísticas', icon: BarChart3, permiso: 'caja' as const },
