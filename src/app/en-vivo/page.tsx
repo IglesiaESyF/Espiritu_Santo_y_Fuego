@@ -29,6 +29,14 @@ function extractYouTubeId(url: string): string | null {
   return m ? m[1] : null
 }
 
+function extractFacebookVideoId(url: string): string | null {
+  const m1 = url.match(/facebook\.com\/[^/]+\/videos\/(\d+)/)
+  const m2 = url.match(/[?&]v=(\d+)/)
+  const m3 = url.match(/video_id=(\d+)/)
+  const m4 = url.match(/facebook\.com\/[^/]+\/posts\/(\d+)/)
+  return m1?.[1] || m2?.[1] || m3?.[1] || m4?.[1] || null
+}
+
 function buildEmbedUrl(plataforma: string, videoUrl: string): string {
   if (!videoUrl) return ''
   switch (plataforma) {
@@ -36,13 +44,28 @@ function buildEmbedUrl(plataforma: string, videoUrl: string): string {
       const id = extractYouTubeId(videoUrl)
       return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1` : ''
     }
-    case 'facebook':
+    case 'facebook': {
+      const id = extractFacebookVideoId(videoUrl)
+      if (id) return `https://www.facebook.com/video/embed?video_id=${id}&autoplay=1`
       return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
+    }
     case 'otro':
       return videoUrl
     default:
       return ''
   }
+}
+
+function getPlatformUrl(plataforma: string, videoUrl: string): string {
+  if (!videoUrl) return ''
+  if (plataforma === 'youtube') {
+    const id = extractYouTubeId(videoUrl)
+    return id ? `https://www.youtube.com/watch?v=${id}` : videoUrl
+  }
+  if (plataforma === 'facebook') {
+    return videoUrl
+  }
+  return videoUrl
 }
 
 const PARTICLES = Array.from({ length: 20 }, (_, i) => ({
@@ -120,7 +143,9 @@ export default function EnVivoPage() {
   })
   const [countdown, setCountdown] = useState<number | null>(null)
   const [esPantallaCompleta, setEsPantallaCompleta] = useState(false)
+  const [embedFailed, setEmbedFailed] = useState(false)
   const videoWrapRef = useRef<HTMLDivElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     function onFsChange() {
@@ -161,6 +186,7 @@ export default function EnVivoPage() {
       setCountdown(null)
       return
     }
+    setEmbedFailed(false)
     setCountdown(SEGUNDOS_ESPERA)
     const iv = setInterval(() => {
       setCountdown(c => {
@@ -170,7 +196,22 @@ export default function EnVivoPage() {
       })
     }, 1000)
     return () => clearInterval(iv)
-  }, [enVivo])
+  }, [enVivo, videoUrl])
+
+  useEffect(() => {
+    if (!enVivo || countdown !== 0) return
+    const timer = setTimeout(() => {
+      try {
+        const iframe = iframeRef.current
+        if (iframe && !iframe.contentWindow?.document?.body?.childElementCount) {
+          setEmbedFailed(true)
+        }
+      } catch {
+        setEmbedFailed(true)
+      }
+    }, 6000)
+    return () => clearTimeout(timer)
+  }, [enVivo, countdown])
 
   const mostrandoConteo = enVivo && countdown !== null && countdown > 0
 
@@ -196,23 +237,52 @@ export default function EnVivoPage() {
                 <Wifi className="ml-auto h-4 w-4" />
               </div>
               <div className="relative w-full bg-black" ref={videoWrapRef} style={{ height: 450 }}>
-                <iframe
-                  src={embedUrl}
-                  className="h-full w-full"
-                  style={{ border: 'none', overflow: 'hidden' }}
-                  scrolling="no"
-                  frameBorder={0}
-                  allowFullScreen
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                />
-                <button
-                  onClick={toggleFullscreen}
-                  className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80"
-                  title={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
-                  aria-label={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
-                >
-                  {esPantallaCompleta ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-                </button>
+                {embedFailed ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-dark to-dark-light p-6 text-center">
+                    <Video className="h-12 w-12 text-gold" />
+                    <p className="text-lg font-semibold text-white">No se pudo cargar el video embebido</p>
+                    <p className="max-w-sm text-sm text-white/60">Facebook puede bloquear la reproducción incrustada. Abrí el video directamente:</p>
+                    <a
+                      href={getPlatformUrl(plataforma, videoUrl)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3.5 text-lg font-semibold text-white shadow-lg transition hover:bg-primary-dark hover:shadow-xl"
+                    >
+                      <Video className="h-5 w-5" /> {plataforma === 'youtube' ? 'Ver en YouTube' : plataforma === 'facebook' ? 'Ver en Facebook' : 'Ver transmisión'}
+                    </a>
+                    {paginaFacebook && plataforma === 'facebook' && (
+                      <a
+                        href={paginaFacebook.startsWith('http') ? paginaFacebook : `https://www.facebook.com/${paginaFacebook}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
+                      >
+                        Ir a la página de Facebook
+                      </a>
+                    )}
+                  </div>
+                ) : (
+                  <iframe
+                    ref={iframeRef}
+                    src={embedUrl}
+                    className="h-full w-full"
+                    style={{ border: 'none', overflow: 'hidden' }}
+                    scrolling="no"
+                    frameBorder={0}
+                    allowFullScreen
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  />
+                )}
+                {!embedFailed && (
+                  <button
+                    onClick={toggleFullscreen}
+                    className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80"
+                    title={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                    aria-label={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                  >
+                    {esPantallaCompleta ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                  </button>
+                )}
               </div>
             </Card>
           )

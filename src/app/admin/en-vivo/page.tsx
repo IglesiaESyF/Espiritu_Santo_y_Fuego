@@ -81,8 +81,11 @@ export default function AdminEnVivoPage() {
         const id = extractYouTubeId(videoUrl)
         return id ? `https://www.youtube.com/embed/${id}?autoplay=1&mute=1` : ''
       }
-      case 'facebook':
+      case 'facebook': {
+        const id = extractFacebookVideoId(videoUrl)
+        if (id) return `https://www.facebook.com/video/embed?video_id=${id}&autoplay=1`
         return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(videoUrl)}&show_text=false&width=734`
+      }
       case 'otro':
         return videoUrl
       default:
@@ -220,8 +223,8 @@ export default function AdminEnVivoPage() {
               <p>1. Abrí la página de la iglesia en la app de Facebook en tu celular.</p>
               <p>2. Tocá <strong>"Publicar"</strong> → <strong>"Video en vivo"</strong>.</p>
               <p>3. Configurá y presioná <strong>"Transmitir en vivo"</strong>.</p>
-              <p>4. Pegá acá la URL del video para mostrarlo en la web.</p>
-              <p className="mt-2 text-xs text-gray-400">Facebook no pide mínimo de seguidores para transmitir desde una página.</p>
+              <p>4. Copiá la URL del video. Debe ser formato: <code className="text-xs bg-gray-100 px-1 rounded">facebook.com/PAGE/videos/123456</code></p>
+              <p className="mt-2 text-xs text-gray-400">Si el embed no carga, el visitante verá un botón para abrir el video directamente en Facebook.</p>
             </>
           )}
           {plataforma === 'youtube' && (
@@ -255,4 +258,12 @@ function extractYouTubeId(url: string): string | null {
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   )
   return m ? m[1] : null
+}
+
+function extractFacebookVideoId(url: string): string | null {
+  const m1 = url.match(/facebook\.com\/[^/]+\/videos\/(\d+)/)
+  const m2 = url.match(/[?&]v=(\d+)/)
+  const m3 = url.match(/video_id=(\d+)/)
+  const m4 = url.match(/facebook\.com\/[^/]+\/posts\/(\d+)/)
+  return m1?.[1] || m2?.[1] || m3?.[1] || m4?.[1] || null
 }
