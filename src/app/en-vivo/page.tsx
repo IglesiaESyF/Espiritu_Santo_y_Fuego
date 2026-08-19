@@ -254,8 +254,8 @@ export default function EnVivoPage() {
                         <Image
                           src={logoSrc}
                           alt="Iglesia"
-                          width={90}
-                          height={90}
+                          width={106}
+                          height={106}
                           className="rounded-full"
                           priority
                         />
