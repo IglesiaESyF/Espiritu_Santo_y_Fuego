@@ -218,7 +218,32 @@ export default function EnVivoPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-4xl px-4 py-12">
+      <main className="relative mx-auto max-w-4xl px-4 py-12">
+        <div
+          className="pointer-events-none absolute right-4 top-4 z-20 hidden sm:block"
+          style={{ perspective: 600 }}
+        >
+          <div
+            style={{
+              transform: 'rotateY(-12deg) rotateX(8deg) rotateZ(-3deg)',
+              transformStyle: 'preserve-3d',
+              filter: 'drop-shadow(4px 6px 12px rgba(0,0,0,0.45))',
+              transition: 'transform 0.3s ease',
+            }}
+            className="hover:scale-110 hover:!rotate-0"
+          >
+            <div className="rounded-2xl bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-sm" style={{ border: '2px solid rgba(218,165,32,0.4)' }}>
+              <Image
+                src={logoSrc}
+                alt="Iglesia Espíritu Santo y Fuego"
+                width={80}
+                height={80}
+                className="rounded-xl"
+                priority
+              />
+            </div>
+          </div>
+        </div>
         <div className="mb-10 text-center">
           <Flame className="mx-auto mb-3 h-10 w-10 text-primary animate-pulse" />
           <h1 className="text-3xl font-bold text-dark">En Vivo</h1>
