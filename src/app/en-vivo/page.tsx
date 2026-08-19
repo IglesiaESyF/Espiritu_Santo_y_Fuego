@@ -12,9 +12,9 @@ import { doc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, d
 import logoSrc from '@/../public/logo.png'
 
 const FIRESTORE_PATH = 'config/live'
-const CHAT_PATH = 'config/live-chat/messages'
-const VIEWERS_PATH = 'config/live-viewers'
-const REACTIONS_PATH = 'config/live-reactions'
+const CHAT_PATH = 'live-chat'
+const VIEWERS_PATH = 'live-viewers'
+const REACTIONS_PATH = 'live-reactions'
 const SEGUNDOS_ESPERA = 5
 const VIEWER_HEARTBEAT_MS = 15000
 const VIEWER_TIMEOUT_MS = 45000
