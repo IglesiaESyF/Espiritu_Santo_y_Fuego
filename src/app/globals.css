@@ -313,8 +313,8 @@ body {
 }
 
 .logo-3d-large {
-  width: 130px;
-  height: 130px;
+  width: min(18vw, 130px);
+  height: min(18vw, 130px);
 }
 
 .logo-3d-inner img {

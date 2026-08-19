@@ -248,7 +248,7 @@ export default function EnVivoPage() {
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
-                  <div className="pointer-events-none absolute right-6 top-1 z-10 sm:right-8 sm:top-1" style={{ perspective: 500 }}>
+                  <div className="pointer-events-none absolute right-3 top-1 z-10 sm:right-6 sm:top-1" style={{ perspective: 500 }}>
                     <div className="logo-3d-wrap">
                       <div className="logo-3d-inner logo-3d-large">
                         <Image
@@ -257,6 +257,7 @@ export default function EnVivoPage() {
                           width={126}
                           height={126}
                           className="rounded-full"
+                          style={{ width: 'min(18vw, 130px)', height: 'auto' }}
                           priority
                         />
                       </div>
