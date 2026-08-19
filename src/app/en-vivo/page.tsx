@@ -24,7 +24,7 @@ interface LiveData {
 
 function extractYouTubeId(url: string): string | null {
   const m = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
   )
   return m ? m[1] : null
 }
@@ -229,39 +229,15 @@ export default function EnVivoPage() {
           mostrandoConteo ? (
             <CountdownOverlay countdown={countdown!} mensaje={mensaje} plataforma={plataforma} />
           ) : (
-            <Card className="mb-8 overflow-hidden">
-              <div className="flex items-center gap-2 bg-blue-600 px-4 py-2 text-white">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
-                <span className="text-sm font-semibold">EN VIVO</span>
-                <span className="ml-2 text-xs text-white/70 uppercase">{plataforma === 'youtube' ? 'YouTube' : plataforma === 'facebook' ? 'Facebook' : 'Streaming'}</span>
-                <Wifi className="ml-auto h-4 w-4" />
-              </div>
-              <div className="relative w-full bg-black" ref={videoWrapRef} style={{ height: 450 }}>
-                {embedFailed ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-dark to-dark-light p-6 text-center">
-                    <Video className="h-12 w-12 text-gold" />
-                    <p className="text-lg font-semibold text-white">No se pudo cargar el video embebido</p>
-                    <p className="max-w-sm text-sm text-white/60">Facebook puede bloquear la reproducción incrustada. Abrí el video directamente:</p>
-                    <a
-                      href={getPlatformUrl(plataforma, videoUrl)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3.5 text-lg font-semibold text-white shadow-lg transition hover:bg-primary-dark hover:shadow-xl"
-                    >
-                      <Video className="h-5 w-5" /> {plataforma === 'youtube' ? 'Ver en YouTube' : plataforma === 'facebook' ? 'Ver en Facebook' : 'Ver transmisión'}
-                    </a>
-                    {paginaFacebook && plataforma === 'facebook' && (
-                      <a
-                        href={paginaFacebook.startsWith('http') ? paginaFacebook : `https://www.facebook.com/${paginaFacebook}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
-                      >
-                        Ir a la página de Facebook
-                      </a>
-                    )}
-                  </div>
-                ) : (
+            plataforma === 'youtube' ? (
+              <Card className="mb-8 overflow-hidden">
+                <div className="flex items-center gap-2 bg-blue-600 px-4 py-2 text-white">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                  <span className="text-sm font-semibold">EN VIVO</span>
+                  <span className="ml-2 text-xs text-white/70 uppercase">YouTube</span>
+                  <Wifi className="ml-auto h-4 w-4" />
+                </div>
+                <div className="relative w-full bg-black" ref={videoWrapRef} style={{ height: 450 }}>
                   <iframe
                     ref={iframeRef}
                     src={embedUrl}
@@ -272,8 +248,6 @@ export default function EnVivoPage() {
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
-                )}
-                {!embedFailed && (
                   <button
                     onClick={toggleFullscreen}
                     className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80"
@@ -282,9 +256,44 @@ export default function EnVivoPage() {
                   >
                     {esPantallaCompleta ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                   </button>
-                )}
-              </div>
-            </Card>
+                </div>
+              </Card>
+            ) : (
+              <Card className="mb-8 overflow-hidden">
+                <div className="flex items-center gap-2 bg-blue-600 px-4 py-2 text-white">
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                  <span className="text-sm font-semibold">EN VIVO</span>
+                  <span className="ml-2 text-xs text-white/70 uppercase">Facebook</span>
+                  <Wifi className="ml-auto h-4 w-4" />
+                </div>
+                <div className="flex flex-col items-center justify-center gap-6 bg-gradient-to-br from-dark via-dark-light to-dark p-12 text-center" style={{ minHeight: 360 }}>
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/20">
+                    <Video className="h-10 w-10 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white">¡Estamos en vivo!</h2>
+                  <p className="max-w-sm text-sm text-white/70">La transmisión está activa. Hacé clic abajo para verla directamente en Facebook.</p>
+                  <a
+                    href={videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-3 rounded-xl bg-[#1877F2] px-10 py-4 text-xl font-bold text-white shadow-lg transition-all duration-200 hover:bg-[#1565C0] hover:shadow-xl hover:scale-105"
+                  >
+                    <svg className="h-7 w-7" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    Ver en Facebook
+                  </a>
+                  {paginaFacebook && (
+                    <a
+                      href={paginaFacebook.startsWith('http') ? paginaFacebook : `https://www.facebook.com/${paginaFacebook}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex items-center gap-2 rounded-lg border border-white/20 px-6 py-2.5 text-sm font-semibold text-white/80 transition hover:border-white/40 hover:text-white"
+                    >
+                      Ir a la página de Facebook
+                    </a>
+                  )}
+                </div>
+              </Card>
+            )
           )
         ) : (
           <PreStream mensaje={mensaje} />
