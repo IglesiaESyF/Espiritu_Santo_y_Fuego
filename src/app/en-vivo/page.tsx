@@ -218,32 +218,7 @@ export default function EnVivoPage() {
   return (
     <>
       <Header />
-      <main className="relative mx-auto max-w-4xl px-4 py-12">
-        <div
-          className="pointer-events-none absolute right-4 top-4 z-20 hidden sm:block"
-          style={{ perspective: 600 }}
-        >
-          <div
-            style={{
-              transform: 'rotateY(-12deg) rotateX(8deg) rotateZ(-3deg)',
-              transformStyle: 'preserve-3d',
-              filter: 'drop-shadow(4px 6px 12px rgba(0,0,0,0.45))',
-              transition: 'transform 0.3s ease',
-            }}
-            className="hover:scale-110 hover:!rotate-0"
-          >
-            <div className="rounded-2xl bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.6)] backdrop-blur-sm" style={{ border: '2px solid rgba(218,165,32,0.4)' }}>
-              <Image
-                src={logoSrc}
-                alt="Iglesia Espíritu Santo y Fuego"
-                width={80}
-                height={80}
-                className="rounded-xl"
-                priority
-              />
-            </div>
-          </div>
-        </div>
+      <main className="mx-auto max-w-4xl px-4 py-12">
         <div className="mb-10 text-center">
           <Flame className="mx-auto mb-3 h-10 w-10 text-primary animate-pulse" />
           <h1 className="text-3xl font-bold text-dark">En Vivo</h1>
@@ -273,6 +248,20 @@ export default function EnVivoPage() {
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
+                  <div className="pointer-events-none absolute right-3 top-14 z-10 sm:right-5 sm:top-16" style={{ perspective: 500 }}>
+                    <div className="logo-3d-wrap">
+                      <div className="logo-3d-inner">
+                        <Image
+                          src={logoSrc}
+                          alt="Iglesia"
+                          width={56}
+                          height={56}
+                          className="rounded-full"
+                          priority
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <button
                     onClick={toggleFullscreen}
                     className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80"
