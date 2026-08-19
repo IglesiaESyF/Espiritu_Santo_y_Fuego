@@ -237,27 +237,26 @@ export default function EnVivoPage() {
                   <span className="ml-2 text-xs text-white/70 uppercase">YouTube</span>
                   <Wifi className="ml-auto h-4 w-4" />
                 </div>
-                <div className="relative w-full bg-black" ref={videoWrapRef} style={{ height: 450 }}>
+                <div className="relative w-full bg-black" ref={videoWrapRef} style={{ aspectRatio: '16/9', height: 'auto', minHeight: 200 }}>
                   <iframe
                     ref={iframeRef}
                     src={embedUrl}
-                    className="h-full w-full"
+                    className="absolute inset-0 h-full w-full"
                     style={{ border: 'none', overflow: 'hidden' }}
                     scrolling="no"
                     frameBorder={0}
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
-                  <div className="pointer-events-none absolute right-3 top-1 z-10 sm:right-6 sm:top-1" style={{ perspective: 500 }}>
+                  <div className="pointer-events-none absolute z-10 logo-responsive-position" style={{ perspective: 500 }}>
                     <div className="logo-3d-wrap">
-                      <div className="logo-3d-inner logo-3d-large">
+                      <div className="logo-3d-inner logo-3d-responsive">
                         <Image
                           src={logoSrc}
                           alt="Iglesia"
                           width={126}
                           height={126}
                           className="rounded-full"
-                          style={{ width: 'min(18vw, 130px)', height: 'auto' }}
                           priority
                         />
                       </div>
@@ -265,11 +264,11 @@ export default function EnVivoPage() {
                   </div>
                   <button
                     onClick={toggleFullscreen}
-                    className="absolute right-3 top-3 z-10 rounded-lg bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80"
+                    className="absolute right-2 top-2 z-10 rounded-lg bg-black/60 p-1.5 text-white backdrop-blur transition hover:bg-black/80 sm:right-3 sm:top-3 sm:p-2"
                     title={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
                     aria-label={esPantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'}
                   >
-                    {esPantallaCompleta ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                    {esPantallaCompleta ? <Minimize className="h-4 w-4 sm:h-5 sm:w-5" /> : <Maximize className="h-4 w-4 sm:h-5 sm:w-5" />}
                   </button>
                 </div>
               </Card>

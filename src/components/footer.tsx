@@ -66,6 +66,11 @@ export function Footer() {
           <div className="flex flex-wrap justify-center gap-8">
             {[
               {
+                label: 'YouTube',
+                url: 'https://www.youtube.com/@IglesiaEsp%C3%ADrituSantoyFuego-r8o',
+                color: 'hover:text-red-400',
+              },
+              {
                 label: 'TikTok',
                 url: 'https://www.tiktok.com/@iglesiespiritusantofuego',
                 color: 'hover:text-pink-400',
