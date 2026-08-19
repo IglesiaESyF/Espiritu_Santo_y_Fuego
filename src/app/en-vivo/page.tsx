@@ -248,7 +248,7 @@ export default function EnVivoPage() {
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
-                  <div className="pointer-events-none absolute right-2 top-12 z-10 sm:right-4 sm:top-14" style={{ perspective: 500 }}>
+                  <div className="pointer-events-none absolute right-6 top-1 z-10 sm:right-8 sm:top-1" style={{ perspective: 500 }}>
                     <div className="logo-3d-wrap">
                       <div className="logo-3d-inner logo-3d-large">
                         <Image
