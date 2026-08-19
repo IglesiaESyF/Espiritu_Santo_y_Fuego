@@ -248,14 +248,14 @@ export default function EnVivoPage() {
                     allowFullScreen
                     allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                   />
-                  <div className="pointer-events-none absolute right-3 top-14 z-10 sm:right-5 sm:top-16" style={{ perspective: 500 }}>
+                  <div className="pointer-events-none absolute right-2 top-12 z-10 sm:right-4 sm:top-14" style={{ perspective: 500 }}>
                     <div className="logo-3d-wrap">
-                      <div className="logo-3d-inner">
+                      <div className="logo-3d-inner logo-3d-large">
                         <Image
                           src={logoSrc}
                           alt="Iglesia"
-                          width={56}
-                          height={56}
+                          width={90}
+                          height={90}
                           className="rounded-full"
                           priority
                         />

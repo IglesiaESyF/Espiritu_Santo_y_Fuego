@@ -312,6 +312,11 @@ body {
   transform-style: preserve-3d;
 }
 
+.logo-3d-large {
+  width: 96px;
+  height: 96px;
+}
+
 .logo-3d-inner img {
   width: 100%;
   height: 100%;
