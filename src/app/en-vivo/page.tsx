@@ -124,32 +124,13 @@ function CountdownOverlay({ countdown, mensaje, plataforma }: { countdown: numbe
 }
 
 function ReactionBar({ enVivo, viewerId }: { enVivo: boolean; viewerId: string }) {
-  const [floating, setFloating] = useState<FloatingReaction[]>([])
-
   const enviarReaccion = useCallback(async (emoji: string) => {
-    await addDoc(collection(db, REACTIONS_PATH), { emoji, viewerId, timestamp: serverTimestamp() })
+    try {
+      await addDoc(collection(db, REACTIONS_PATH), { emoji, viewerId, timestamp: serverTimestamp() })
+    } catch (e) {
+      console.error('Error enviando reacción:', e)
+    }
   }, [viewerId])
-
-  useEffect(() => {
-    if (!enVivo) return
-    const q = query(collection(db, REACTIONS_PATH), orderBy('timestamp', 'desc'), limit(50))
-    const unsub = onSnapshot(q, (snap) => {
-      const now = Date.now()
-      const newFloats: FloatingReaction[] = []
-      snap.forEach(d => {
-        const data = d.data()
-        if (data.timestamp?.toMillis) {
-          const age = now - data.timestamp.toMillis()
-          if (age < 4000) {
-            newFloats.push({ id: d.id, emoji: data.emoji, x: 5 + Math.random() * 90 })
-          }
-        }
-      })
-      setFloating(newFloats)
-      setTimeout(() => setFloating([]), 4000)
-    })
-    return () => unsub()
-  }, [enVivo])
 
   useEffect(() => {
     if (!enVivo) return
@@ -172,30 +153,69 @@ function ReactionBar({ enVivo, viewerId }: { enVivo: boolean; viewerId: string }
   if (!enVivo) return null
 
   return (
-    <div className="relative">
-      <div className="pointer-events-auto absolute inset-0 overflow-hidden" style={{ bottom: 'auto', height: '100%', width: '100%' }}>
-        {floating.map(f => (
-          <div
-            key={f.id}
-            className="absolute animate-[reactionFloat_3.5s_ease-out_forwards] text-3xl drop-shadow-lg"
-            style={{ left: `${f.x}%`, bottom: 0, opacity: 0 }}
-          >
-            {f.emoji}
-          </div>
-        ))}
-      </div>
-      <div className="flex items-center justify-center gap-1 rounded-xl bg-white border border-gray-200 px-2 py-2 shadow-md">
-        {REACTIONS.map(r => (
-          <button
-            key={r.emoji}
-            onClick={() => enviarReaccion(r.emoji)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition-all hover:scale-125 hover:bg-gray-100 active:scale-90"
-            title={r.label}
-          >
-            {r.emoji}
-          </button>
-        ))}
-      </div>
+    <div className="flex items-center justify-center gap-1 rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-md">
+      {REACTIONS.map(r => (
+        <button
+          key={r.emoji}
+          onClick={() => enviarReaccion(r.emoji)}
+          className="flex h-10 w-10 items-center justify-center rounded-full text-xl transition-all hover:scale-125 hover:bg-gray-100 active:scale-90"
+          title={r.label}
+        >
+          {r.emoji}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function FloatingReactions({ enVivo }: { enVivo: boolean }) {
+  const [floating, setFloating] = useState<FloatingReaction[]>([])
+
+  useEffect(() => {
+    if (!enVivo) return
+    const q = query(collection(db, REACTIONS_PATH), orderBy('timestamp', 'desc'), limit(30))
+    const unsub = onSnapshot(q, (snap) => {
+      const now = Date.now()
+      const newFloats: FloatingReaction[] = []
+      snap.forEach(d => {
+        const data = d.data()
+        if (data.timestamp?.toMillis) {
+          const age = now - data.timestamp.toMillis()
+          if (age < 4000) {
+            newFloats.push({ id: d.id, emoji: data.emoji, x: 10 + Math.random() * 30 })
+          }
+        }
+      })
+      if (newFloats.length > 0) {
+        setFloating(prev => {
+          const existing = new Set(prev.map(f => f.id))
+          const unique = newFloats.filter(f => !existing.has(f.id))
+          return [...prev, ...unique].slice(-15)
+        })
+        setTimeout(() => {
+          setFloating(prev => prev.filter(f => !newFloats.find(nf => nf.id === f.id)))
+        }, 4000)
+      }
+    })
+    return () => unsub()
+  }, [enVivo])
+
+  if (!enVivo || floating.length === 0) return null
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
+      {floating.map(f => (
+        <div
+          key={f.id}
+          className="absolute bottom-4 text-4xl drop-shadow-lg"
+          style={{
+            left: `${f.x}%`,
+            animation: 'reactionFloat 3.5s ease-out forwards',
+          }}
+        >
+          {f.emoji}
+        </div>
+      ))}
     </div>
   )
 }
@@ -456,7 +476,8 @@ export default function EnVivoPage() {
                   </div>
                   <div className="relative w-full bg-black" ref={videoWrapRef} style={{ aspectRatio: '16/9', height: 'auto', minHeight: 200 }}>
                     <iframe ref={iframeRef} src={embedUrl} className="absolute inset-0 h-full w-full" style={{ border: 'none', overflow: 'hidden' }} scrolling="no" frameBorder={0} allowFullScreen allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" />
-                    <div className="pointer-events-none absolute z-10 logo-responsive-position" style={{ perspective: 500 }}>
+                    <FloatingReactions enVivo={!mostrandoConteo} />
+                    <div className="pointer-events-none absolute z-30 logo-responsive-position" style={{ perspective: 500 }}>
                       <div className="logo-3d-wrap">
                         <div className="logo-3d-inner logo-3d-responsive">
                           <Image src={logoSrc} alt="Iglesia" width={126} height={126} className="rounded-full" priority />
