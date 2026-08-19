@@ -43,6 +43,7 @@ interface FloatingReaction {
 const REACTIONS = [
   { emoji: '👍', label: 'Me gusta' },
   { emoji: '❤️', label: 'Me encanta' },
+  { emoji: '🙏', label: 'Amén' },
   { emoji: '😂', label: 'Me divierte' },
   { emoji: '😮', label: 'Me asombra' },
   { emoji: '😢', label: 'Me entristece' },
