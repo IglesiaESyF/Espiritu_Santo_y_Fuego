@@ -822,10 +822,9 @@ export default function AdminDiplomasPage() {
   }, [bautizados, searchText])
 
   const filteredNoBautizados = useMemo(() => {
-    const noBautizados = miembros.filter(m => m.estado !== 'bautizado')
-    if (!nuevoSearch.trim()) return noBautizados
+    if (!nuevoSearch.trim()) return []
     const q = nuevoSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    return noBautizados.filter(m =>
+    return miembros.filter(m =>
       `${m.nombre} ${m.apellido}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
     ).slice(0, 10)
   }, [miembros, nuevoSearch])
@@ -1017,10 +1016,14 @@ export default function AdminDiplomasPage() {
                             <button
                               key={m.id}
                               onClick={() => seleccionarNuevoMiembro(m)}
-                              className="flex w-full items-center justify-between px-4 py-2.5 text-sm hover:bg-amber-50/50 transition-colors"
+                              className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-sm hover:bg-amber-50/50 transition-colors"
                             >
                               <span className="font-medium text-gray-800">{m.nombre} {m.apellido}</span>
-                              <span className="text-xs text-gray-400">{m.categoria ? CATEGORIA_LABEL[m.categoria] : ''}</span>
+                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                m.estado === 'bautizado' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {m.estado === 'bautizado' ? 'Bautizado' : 'No bautizado'}
+                              </span>
                             </button>
                           ))}
                         </div>
