@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Printer, ScrollText, Search } from 'lucide-react'
+import { ArrowLeft, Printer, ScrollText, Search, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth-context'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, setDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, setDoc, doc, updateDoc } from 'firebase/firestore'
 import type { Miembro } from '@/types'
 import { CARGOS_MIEMBRO } from '@/types'
 
@@ -735,6 +735,10 @@ export default function AdminDiplomasPage() {
   const [showDropdown, setShowDropdown] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState('')
   const [nuevoApellido, setNuevoApellido] = useState('')
+  const [nuevoSearch, setNuevoSearch] = useState('')
+  const [showNuevoDropdown, setShowNuevoDropdown] = useState(false)
+  const [nuevoRef, setNuevoRef] = useState<HTMLDivElement | null>(null)
+  const [nuevoMiembroId, setNuevoMiembroId] = useState('')
   const [guardarMiembro, setGuardarMiembro] = useState(true)
   const searchRef = useRef<HTMLDivElement>(null)
   const [testigo, setTestigo] = useState('')
@@ -776,6 +780,9 @@ export default function AdminDiplomasPage() {
     if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
       setShowDropdown(false)
     }
+    if (nuevoRef && !nuevoRef.contains(e.target as Node)) {
+      setShowNuevoDropdown(false)
+    }
   }
 
   async function loadMiembros() {
@@ -800,6 +807,26 @@ export default function AdminDiplomasPage() {
       `${m.nombre} ${m.apellido}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
     ).slice(0, 10)
   }, [bautizados, searchText])
+
+  const filteredNoBautizados = useMemo(() => {
+    const noBautizados = miembros.filter(m => m.estado !== 'bautizado')
+    if (!nuevoSearch.trim()) return noBautizados
+    const q = nuevoSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    return noBautizados.filter(m =>
+      `${m.nombre} ${m.apellido}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+    ).slice(0, 10)
+  }, [miembros, nuevoSearch])
+
+  function seleccionarNuevoMiembro(m: Miembro) {
+    setNuevoNombre(m.nombre)
+    setNuevoApellido(m.apellido)
+    setNuevoSearch('')
+    setShowNuevoDropdown(false)
+    setNuevoMiembroId(m.id)
+    setGuardarMiembro(false)
+    const ciudad = [m.ciudad, m.departamento].filter(Boolean).join(', ')
+    if (ciudad) setLugar(ciudad)
+  }
 
   function seleccionarMiembro(m: Miembro) {
     setMiembroId(m.id)
@@ -865,7 +892,13 @@ export default function AdminDiplomasPage() {
       setTimeout(() => {
         win.print()
         setGenerando(false)
-        if (tipoMiembro === 'nuevo' && guardarMiembro && nuevoNombre.trim() && nuevoApellido.trim()) {
+        if (tipoMiembro === 'nuevo' && nuevoMiembroId) {
+          updateDoc(doc(db, 'miembros', nuevoMiembroId), {
+            estado: 'bautizado',
+            fecha_bautismo: fecha,
+            llego_bautizado: true,
+          }).then(() => loadMiembros()).catch(() => {})
+        } else if (tipoMiembro === 'nuevo' && guardarMiembro && nuevoNombre.trim() && nuevoApellido.trim()) {
           setDoc(doc(db, 'miembros', crypto.randomUUID()), {
             nombre: nuevoNombre.trim(), apellido: nuevoApellido.trim(),
             fecha_nacimiento: '', edad: 0, pais: 'Nicaragua', departamento: '',
@@ -873,7 +906,7 @@ export default function AdminDiplomasPage() {
             estado: 'bautizado', fecha_bautismo: fecha, fecha_llegada_iglesia: '',
             llego_bautizado: false, motivo_llegada: '', categoria: '', cargo: [],
             familiares: [], notas: '', activo: true, creadoEn: Date.now(),
-          }).catch(() => {})
+          }).then(() => loadMiembros()).catch(() => {})
         }
       }, 3500)
     } else {
@@ -939,7 +972,7 @@ export default function AdminDiplomasPage() {
                 <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Tipo de certificado</label>
                 <div className="flex gap-4 pt-1">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="tipoMiembro" checked={tipoMiembro === 'nuevo'} onChange={() => { setTipoMiembro('nuevo'); setMiembroId(''); setSearchText('') }} className="accent-amber-600" />
+                    <input type="radio" name="tipoMiembro" checked={tipoMiembro === 'nuevo'} onChange={() => { setTipoMiembro('nuevo'); setMiembroId(''); setSearchText(''); setNuevoMiembroId(''); setNuevoSearch('') }} className="accent-amber-600" />
                     <span className="text-sm text-gray-700">Nuevo bautizado</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -950,28 +983,74 @@ export default function AdminDiplomasPage() {
               </div>
 
               {tipoMiembro === 'nuevo' ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Nombre</label>
-                    <input
-                      type="text" value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)}
-                      placeholder="Nombre del bautizado"
-                      className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Apellido</label>
-                    <input
-                      type="text" value={nuevoApellido} onChange={e => setNuevoApellido(e.target.value)}
-                      placeholder="Apellido del bautizado"
-                      className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={guardarMiembro} onChange={e => setGuardarMiembro(e.target.checked)} className="accent-amber-600" />
-                      <span className="text-sm text-gray-600">Guardar como nuevo miembro en la base de datos</span>
+                <div className="space-y-4">
+                  <div className="col-span-2" ref={setNuevoRef}>
+                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">
+                      ¿Ya está registrado? Buscar en la base de datos
                     </label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={nuevoSearch}
+                        onChange={e => { setNuevoSearch(e.target.value); setShowNuevoDropdown(true) }}
+                        onFocus={() => setShowNuevoDropdown(true)}
+                        placeholder="Escriba para buscar si ya es miembro..."
+                        className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] pl-9 pr-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                      />
+                      {showNuevoDropdown && nuevoSearch.trim() && filteredNoBautizados.length > 0 && (
+                        <div className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-[#e0d8c8] bg-white shadow-lg">
+                          {filteredNoBautizados.map(m => (
+                            <button
+                              key={m.id}
+                              onClick={() => seleccionarNuevoMiembro(m)}
+                              className="flex w-full items-center justify-between px-4 py-2.5 text-sm hover:bg-amber-50/50 transition-colors"
+                            >
+                              <span className="font-medium text-gray-800">{m.nombre} {m.apellido}</span>
+                              <span className="text-xs text-gray-400">{m.categoria ? CATEGORIA_LABEL[m.categoria] : ''}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {showNuevoDropdown && nuevoSearch.trim() && filteredNoBautizados.length === 0 && (
+                        <div className="absolute z-10 mt-1 w-full rounded-xl border border-[#e0d8c8] bg-white px-4 py-3 text-sm text-gray-400 shadow-lg">
+                          No se encontraron miembros con ese nombre
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Nombre</label>
+                      <input
+                        type="text" value={nuevoNombre} onChange={e => { setNuevoNombre(e.target.value); if (nuevoMiembroId) { setNuevoMiembroId(''); setGuardarMiembro(true) } }}
+                        placeholder="Nombre del bautizado"
+                        className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600">Apellido</label>
+                      <input
+                        type="text" value={nuevoApellido} onChange={e => { setNuevoApellido(e.target.value); if (nuevoMiembroId) { setNuevoMiembroId(''); setGuardarMiembro(true) } }}
+                        placeholder="Apellido del bautizado"
+                        className="w-full rounded-xl border border-[#e0d8c8] bg-[#faf8f4] px-4 py-3 text-sm text-gray-800 transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200/30 focus:outline-none"
+                      />
+                    </div>
+                    {nuevoMiembroId && (
+                      <div className="col-span-2 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                        <p className="text-xs text-emerald-800">
+                          Miembro encontrado. Los datos se actualizarán al generar el diploma (estado: Bautizado).
+                        </p>
+                      </div>
+                    )}
+                    <div className="col-span-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={guardarMiembro} onChange={e => setGuardarMiembro(e.target.checked)} className="accent-amber-600" />
+                        <span className="text-sm text-gray-600">Guardar como nuevo miembro en la base de datos</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               ) : (
