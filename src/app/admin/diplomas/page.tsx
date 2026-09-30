@@ -259,12 +259,21 @@ function getMmCSS(cfg: DiplomaConfig): string {
 
 const FIT_SCRIPT = `
 <script>
+function __box(el) {
+  var cs = getComputedStyle(el);
+  return {
+    w: el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+    h: el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+  };
+}
 window.__fitDiplomas = function() {
+  var SAFE = 0.97;
   var content = document.querySelector('.content');
   var inner = document.querySelector('.content-inner');
   if (content && inner) {
     inner.style.transform = 'none';
-    var scale = Math.min(content.clientHeight / inner.scrollHeight, content.clientWidth / inner.scrollWidth, 1);
+    var b = __box(content);
+    var scale = Math.min(b.h / inner.scrollHeight, b.w / inner.scrollWidth, 1, SAFE);
     if (scale < 1) inner.style.transform = 'scale(' + scale + ')';
   }
   document.querySelectorAll('.sig-block').forEach(function(block) {
@@ -276,7 +285,8 @@ window.__fitDiplomas = function() {
   var cinner = document.querySelector('.cert-body-inner');
   if (cbody && cinner) {
     cinner.style.transform = 'none';
-    var cscale = Math.min(cbody.clientHeight / cinner.scrollHeight, cbody.clientWidth / cinner.scrollWidth, 1);
+    var cb = __box(cbody);
+    var cscale = Math.min(cb.h / cinner.scrollHeight, cb.w / cinner.scrollWidth, 1, SAFE);
     if (cscale < 1) cinner.style.transform = 'scale(' + cscale + ')';
   }
   document.querySelectorAll('.cert-sig-block').forEach(function(block) {
@@ -285,13 +295,16 @@ window.__fitDiplomas = function() {
     if (name && line) line.style.width = (name.getBoundingClientRect().width + 6) + 'px';
   });
 };
-window.addEventListener('load', function() {
+function __retryFit() {
+  window.__fitDiplomas();
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(window.__fitDiplomas);
-  } else {
-    window.__fitDiplomas();
+    document.fonts.ready.then(function() { window.__fitDiplomas(); });
   }
-});
+}
+window.addEventListener('load', function() { __retryFit(); });
+window.addEventListener('resize', function() { window.__fitDiplomas(); });
+setTimeout(function() { window.__fitDiplomas(); }, 300);
+setTimeout(function() { window.__fitDiplomas(); }, 800);
 </script>
 `
 
@@ -378,7 +391,7 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   .marco-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
   .marco-logo { position: absolute; top: 12mm; left: 30mm; width: 48mm; height: 48mm; z-index: 3; border-radius: 50%; padding: 1.5mm; background: rgba(255,255,255,0.95); border: 0.5mm solid var(--c-borde); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 1.5mm rgba(0,0,0,0.18); }
   .marco-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
-  .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 26mm; -webkit-text-stroke: var(--stroke); }
+  .content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; padding: 28mm 30mm 20mm 30mm; overflow: hidden; -webkit-text-stroke: var(--stroke); }
   .content-inner { width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; transform-origin: center; }
   .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 5px; text-transform: uppercase; }
   .gold-line { width: 80mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto; position: relative; }
@@ -392,7 +405,7 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
   .place-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2.5mm; }
   .verse { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-versiculo); color: var(--c-text); margin-top: 4mm; max-width: 200mm; }
-  .bottom-section { margin-top: 18mm; width: 100%; }
+  .bottom-section { margin-top: 16mm; width: 100%; }
   .signatures { display: flex; justify-content: center; gap: 50mm; padding-bottom: 2mm; }
   .sig-block { display: flex; flex-direction: column; align-items: center; }
   .sig-line { width: 42mm; min-width: 42mm; border-top: 1px solid #333; margin-bottom: 1.5mm; }
