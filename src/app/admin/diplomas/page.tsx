@@ -530,18 +530,18 @@ function getCertificacionCss(cfg: DiplomaConfig): string {
   .cert-corner.br { bottom: 7mm; right: 7mm; }
   .cert-watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: hidden; }
   ${WATER_CSS}
-  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 22mm 20mm 18mm; -webkit-text-stroke: var(--stroke); }
-  .cert-header { text-align: center; margin-bottom: 10mm; }
+  .cert-content { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: 24mm 24mm 20mm; overflow: hidden; -webkit-text-stroke: var(--stroke); }
+  .cert-header { text-align: center; margin-bottom: 8mm; flex-shrink: 0; }
   .cert-header .church { font-family: 'UnifrakturMaguntia', cursive; font-size: 20pt; color: var(--c-main); font-weight: 700; -webkit-text-stroke: 0; }
   .cert-header .sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 11pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 1mm; }
   .cert-header .gold-line { width: 60mm; height: 1px; background: var(--c-borde); margin: 4mm auto; }
   .cert-header .title { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-titulo); color: var(--c-main); letter-spacing: 3px; text-transform: uppercase; }
-  .cert-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 8mm; }
-  .cert-body-inner { width: 100%; display: flex; flex-direction: column; gap: 3mm; }
+  .cert-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 4mm; min-height: 0; overflow: hidden; }
+  .cert-body-inner { width: 100%; display: flex; flex-direction: column; gap: 2.5mm; transform-origin: center; }
   .cert-row { display: flex; flex-direction: column; gap: 0.5mm; }
   .cert-label { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-main); }
   .cert-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); border-bottom: 1px dashed #ccc; padding-bottom: 1mm; padding-left: 2mm; }
-  .cert-footer { text-align: center; margin-top: auto; padding-top: 6mm; }
+  .cert-footer { text-align: center; margin-top: auto; padding-top: 5mm; flex-shrink: 0; }
   .cert-footer-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 10pt; color: var(--c-text); }
   @media print {
     html, body { margin: 0 !important; padding: 0 !important; width: 216mm; height: 279mm; }
@@ -620,7 +620,7 @@ window.addEventListener('load', function() {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
 <style>${getCertificacionCss(cfg)}
-.cert-sigs { display: flex; justify-content: space-between; margin-top: 10mm; padding: 0 8mm; }
+.cert-sigs { display: flex; justify-content: space-between; margin-top: 8mm; padding: 0 4mm; flex-shrink: 0; }
 .cert-sig-block { text-align: center; flex: 1; }
 .cert-sig-line { width: 70%; height: 1px; background: #333; margin: 0 auto 2mm; }
 .cert-sig-name { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); }
@@ -908,7 +908,6 @@ export default function AdminDiplomasPage() {
           updateDoc(doc(db, 'miembros', nuevoMiembroId), {
             estado: 'bautizado',
             fecha_bautismo: fecha,
-            llego_bautizado: true,
           }).then(() => loadMiembros()).catch(() => {})
         } else if (tipoMiembro === 'nuevo' && guardarMiembro && nuevoNombre.trim() && nuevoApellido.trim()) {
           setDoc(doc(db, 'miembros', crypto.randomUUID()), {
