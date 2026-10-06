@@ -282,7 +282,7 @@ window.__fitDiplomas = function() {
     var name = block.querySelector('.sig-name');
     var line = block.querySelector('.sig-line');
     if (name && line) {
-      var w = name.getBoundingClientRect().width + 10;
+      var w = name.scrollWidth + 10;
       line.style.width = w + 'px';
     }
   });
@@ -297,13 +297,13 @@ window.__fitDiplomas = function() {
   var uname = document.querySelector('.name');
   var uline = document.querySelector('.name-underline');
   if (uname && uline) {
-    uline.style.width = (uname.getBoundingClientRect().width + 12) + 'px';
+    uline.style.width = (uname.scrollWidth + 12) + 'px';
   }
     document.querySelectorAll('.cert-sig-block').forEach(function(block) {
       var name = block.querySelector('.cert-sig-name');
       var line = block.querySelector('.cert-sig-line');
       if (name && line) {
-        var w = name.getBoundingClientRect().width + 10;
+        var w = name.scrollWidth + 10;
         line.style.width = w + 'px';
       }
     });
