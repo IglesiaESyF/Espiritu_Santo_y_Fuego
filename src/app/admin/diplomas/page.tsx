@@ -176,7 +176,7 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
     <div class="content">
       <div class="content-inner">
       <div class="logo"><img src="${logoUrl}"></div>
-      <div class="title">Certificado</div>
+      <div class="title">Diploma</div>
       <div class="title" style="font-size:16pt; letter-spacing:3px; margin-top:3px;">de Bautismo</div>
       <div class="gold-line"></div>
       <div class="church-name">Iglesia Espíritu Santo y Fuego</div>
@@ -205,11 +205,6 @@ function getDiplomaBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl:
             <div class="sig-line"></div>
             <div class="sig-name">${secretario || 'Secretario(a)'}</div>
             <div class="sig-role">Secretario(a) General</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <div class="sig-name">${diacono || 'Di\u00e1cono(a)'}</div>
-            <div class="sig-role">Di\u00e1cono(a)</div>
           </div>
         </div>
         <div class="footer-line"></div>
@@ -437,7 +432,7 @@ function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
     <div class="marco-logo"><img src="${logoUrl}"></div>
     <div class="content">
       <div class="content-inner">
-      <div class="title">Certificado</div>
+      <div class="title">Diploma</div>
       <div class="title" style="font-size:16pt; letter-spacing:3px; margin-top:3px;">de Bautismo</div>
       <div class="gold-line"></div>
       <div class="church-name">Iglesia Espíritu Santo y Fuego</div>
@@ -466,11 +461,6 @@ function getMarcoBodyHtml(nombreCompleto: string, fechaLarga: string, logoUrl: s
             <div class="sig-line"></div>
             <div class="sig-name">${secretario || 'Secretario(a)'}</div>
             <div class="sig-role">Secretario(a) General</div>
-          </div>
-          <div class="sig-block">
-            <div class="sig-line"></div>
-            <div class="sig-name">${diacono || 'Di\u00e1cono(a)'}</div>
-            <div class="sig-role">Di\u00e1cono(a)</div>
           </div>
         </div>
         <div class="footer-line"></div>
@@ -948,9 +938,9 @@ export default function AdminDiplomasPage() {
     const logoUrl = getLogoUrl()
     const pastorNombre = pastor || 'Pastor'
     const secretarioNombre = secretario || 'Secretario(a)'
-    const testigoNombre = testigo || 'Líder'
+    const diaconoNombre = testigo || 'Diácono(a)'
     const fechaLarga = fechaFormateada(fecha)
-    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, testigoNombre, fechaLarga, true, config)
+    const win = openCertificacionWindow(miembro, logoUrl, pastorNombre, secretarioNombre, diaconoNombre, fechaLarga, true, config)
     if (win) {
       setTimeout(() => { win.print(); setGenerandoCert(false) }, 1500)
     } else {
