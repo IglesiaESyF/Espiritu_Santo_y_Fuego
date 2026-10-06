@@ -237,7 +237,7 @@ function getMmCSS(cfg: DiplomaConfig): string {
   .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.8mm; }
   .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; line-height: 1.4; }
   .name { font-family: var(--fn-nombre); font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
-  .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
+  .name-underline { width: auto; min-width: 40mm; max-width: 95%; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
   .place-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2.5mm; }
@@ -282,7 +282,7 @@ window.__fitDiplomas = function() {
     var name = block.querySelector('.sig-name');
     var line = block.querySelector('.sig-line');
     if (name && line) {
-      var w = Math.min(name.getBoundingClientRect().width + 10, 55);
+      var w = name.getBoundingClientRect().width + 10;
       line.style.width = w + 'px';
     }
   });
@@ -294,11 +294,16 @@ window.__fitDiplomas = function() {
     var cscale = Math.min(cb.h / cinner.scrollHeight, cb.w / cinner.scrollWidth, 1, SAFE);
     if (cscale < 1) cinner.style.transform = 'scale(' + cscale + ')';
   }
+  var uname = document.querySelector('.name');
+  var uline = document.querySelector('.name-underline');
+  if (uname && uline) {
+    uline.style.width = (uname.getBoundingClientRect().width + 12) + 'px';
+  }
     document.querySelectorAll('.cert-sig-block').forEach(function(block) {
       var name = block.querySelector('.cert-sig-name');
       var line = block.querySelector('.cert-sig-line');
       if (name && line) {
-        var w = Math.min(name.getBoundingClientRect().width + 10, 46);
+        var w = name.getBoundingClientRect().width + 10;
         line.style.width = w + 'px';
       }
     });
@@ -408,7 +413,7 @@ function getMarcoCss(cfg: DiplomaConfig): string {
   .church-sub { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: 12pt; color: var(--c-main); letter-spacing: 2px; text-transform: uppercase; margin-top: 0.8mm; }
   .cert-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; line-height: 1.4; }
   .name { font-family: var(--fn-nombre); font-size: var(--fs-nombre); color: var(--c-name); margin-top: 1mm; line-height: 1.1; }
-  .name-underline { width: 100mm; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
+  .name-underline { width: auto; min-width: 40mm; max-width: 95%; height: 1px; background: var(--c-borde); margin: 1.5mm auto 0; }
   .date-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 1.5mm; }
   .date-value { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: calc(var(--fs-texto) + 1pt); color: var(--c-text); margin-top: 0.5mm; }
   .place-text { font-family: 'Cormorant Garamond', serif; font-weight: var(--fw); font-size: var(--fs-texto); color: var(--c-text); margin-top: 2.5mm; }
